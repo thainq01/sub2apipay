@@ -23,7 +23,7 @@ export interface Sub2ApiResponse<T> {
   message?: string;
 }
 
-// ── 分组 ──
+// ── Group ──
 
 export interface Sub2ApiGroup {
   id: number;
@@ -43,7 +43,7 @@ export interface Sub2ApiGroup {
   default_mapped_model?: string;
 }
 
-// ── 订阅 ──
+// ── Subscription ──
 
 export interface Sub2ApiSubscription {
   id: number;

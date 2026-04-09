@@ -8,6 +8,7 @@ import OrderSummaryCards from '@/components/OrderSummaryCards';
 import OrderTable from '@/components/OrderTable';
 import PaginationBar from '@/components/PaginationBar';
 import { applyLocaleToSearchParams, pickLocaleText, resolveLocale } from '@/lib/locale';
+import { PRODUCT_NAME } from '@/lib/constants';
 import { detectDeviceIsMobile, type UserInfo, type MyOrder, type OrderStatusFilter } from '@/lib/pay-utils';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
@@ -29,19 +30,19 @@ function OrdersContent() {
   const isDark = theme === 'dark';
 
   const text = {
-    missingAuth: pickLocaleText(locale, '缺少认证信息', 'Missing authentication information'),
-    visitOrders: pickLocaleText(locale, '请从 Sub2API 平台正确访问订单页面', 'Please open the orders page from Sub2API'),
-    sessionExpired: pickLocaleText(locale, '登录态已失效，请从 Sub2API 重新进入支付页。', 'Session expired. Please re-enter from Sub2API.'),
-    loadFailed: pickLocaleText(locale, '订单加载失败，请稍后重试。', 'Failed to load orders. Please try again later.'),
-    networkError: pickLocaleText(locale, '网络错误，请稍后重试。', 'Network error. Please try again later.'),
-    switchingMobileTab: pickLocaleText(locale, '正在切换到移动端订单 Tab...', 'Switching to mobile orders tab...'),
-    myOrders: pickLocaleText(locale, '我的订单', 'My Orders'),
-    refresh: pickLocaleText(locale, '刷新', 'Refresh'),
-    backToPay: pickLocaleText(locale, '返回充值', 'Back to Top Up'),
-    loading: pickLocaleText(locale, '加载中...', 'Loading...'),
-    userPrefix: pickLocaleText(locale, '用户', 'User'),
-    authError: pickLocaleText(locale, '缺少认证信息，请从 Sub2API 平台正确访问订单页面', 'Missing authentication information. Please open the orders page from Sub2API.'),
-    refundRequestFailed: pickLocaleText(locale, '退款申请失败，请稍后重试。', 'Refund request failed. Please try again later.'),
+    missingAuth: pickLocaleText(locale, 'Missing authentication information', 'Missing authentication information'),
+    visitOrders: pickLocaleText(locale, `Please open the orders page from ${PRODUCT_NAME}`, `Please open the orders page from ${PRODUCT_NAME}`),
+    sessionExpired: pickLocaleText(locale, `Session expired. Please re-enter from ${PRODUCT_NAME}.`, `Session expired. Please re-enter from ${PRODUCT_NAME}.`),
+    loadFailed: pickLocaleText(locale, 'Failed to load orders. Please try again later.', 'Failed to load orders. Please try again later.'),
+    networkError: pickLocaleText(locale, 'Network error. Please try again later.', 'Network error. Please try again later.'),
+    switchingMobileTab: pickLocaleText(locale, 'Switching to mobile orders tab...', 'Switching to mobile orders tab...'),
+    myOrders: pickLocaleText(locale, 'My Orders', 'My Orders'),
+    refresh: pickLocaleText(locale, 'Refresh', 'Refresh'),
+    backToPay: pickLocaleText(locale, 'Back to Top Up', 'Back to Top Up'),
+    loading: pickLocaleText(locale, 'Loading...', 'Loading...'),
+    userPrefix: pickLocaleText(locale, 'User', 'User'),
+    authError: pickLocaleText(locale, `Missing authentication information. Please open the orders page from ${PRODUCT_NAME}.`, `Missing authentication information. Please open the orders page from ${PRODUCT_NAME}.`),
+    refundRequestFailed: pickLocaleText(locale, 'Refund request failed. Please try again later.', 'Refund request failed. Please try again later.'),
   };
 
   const [isIframeContext, setIsIframeContext] = useState(true);
@@ -258,7 +259,7 @@ function OrdersPageFallback() {
 
   return (
     <div className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
-      <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>{pickLocaleText(locale, '加载中...', 'Loading...')}</div>
+      <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>{pickLocaleText(locale, 'Loading...', 'Loading...')}</div>
     </div>
   );
 }

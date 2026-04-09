@@ -164,3 +164,25 @@ model PaymentProviderInstance {
   @@index([providerKey, enabled])
   @@map("payment_provider_instances")
 }
+
+// ── SePay 交易记录（原始 webhook 事件） ──
+model SepayTransaction {
+  id              String   @id @default(cuid())
+  sepayId         Int      @unique @map("sepay_id")
+  gateway         String?
+  transactionDate String?  @map("transaction_date")
+  accountNumber   String?  @map("account_number")
+  code            String?
+  content         String?
+  transferType    String?  @map("transfer_type")
+  transferAmount  Int      @map("transfer_amount")
+  accumulated     Int?
+  subAccount      String?  @map("sub_account")
+  referenceCode   String?  @map("reference_code")
+  description     String?
+  orderId         String?  @map("order_id")
+  matched         Boolean  @default(false)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("sepay_transactions")
+}

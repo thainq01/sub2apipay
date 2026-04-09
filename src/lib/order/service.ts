@@ -24,12 +24,11 @@ import { buildOrderResultUrl, createOrderStatusAccessToken } from '@/lib/order/s
 import { getSystemConfig, getSystemConfigs } from '@/lib/system-config';
 import { selectInstance, getInstanceConfig, type LoadBalanceStrategy } from '@/lib/payment/load-balancer';
 
-const DEFAULT_MAX_PENDING_ORDERS = 3;
-/** Decimal(10,2) 允许的最大金额 */
+/** Maximum amount allowed by Decimal(10,2) */
 export const MAX_AMOUNT = 99999999.99;
 
-function message(locale: Locale, zh: string, en: string): string {
-  return pickLocaleText(locale, zh, en);
+function message(locale: Locale, vi: string, en: string): string {
+  return pickLocaleText(locale, vi, en);
 }
 
 export interface CreateOrderInput {
@@ -41,7 +40,7 @@ export interface CreateOrderInput {
   srcHost?: string;
   srcUrl?: string;
   locale?: Locale;
-  // 订阅订单专用
+  // Subscription-specific order types
   orderType?: 'balance' | 'subscription';
   planId?: string;
 }
@@ -60,15 +59,22 @@ export interface CreateOrderResult {
   clientSecret?: string | null;
   expiresAt: Date;
   statusAccessToken: string;
+  // SePay bank transfer info
+  sepayBankInfo?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    transferCode: string;
+  } | null;
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<CreateOrderResult> {
   const env = getEnv();
-  const locale = input.locale ?? 'zh';
+  const locale = input.locale ?? 'en';
   const todayStart = getBizDayStartUTC();
   const orderType = input.orderType ?? 'balance';
 
-  // ── 订阅订单前置校验 ──
+  // ── Subscription order pre-validation ──
   let subscriptionPlan: {
     id: string;
     groupId: number | null;
@@ -80,13 +86,13 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
   } | null = null;
   let subscriptionGroupName = '';
 
-  // R6: 余额充值禁用检查
+  // R6: Balance recharge disabled check
   if (orderType === 'balance') {
     const balanceDisabled = await getSystemConfig('BALANCE_PAYMENT_DISABLED');
     if (balanceDisabled === 'true') {
       throw new OrderError(
         'BALANCE_PAYMENT_DISABLED',
-        message(locale, '余额充值已被管理员关闭', 'Balance recharge has been disabled by the administrator'),
+        message(locale, 'Nạp tiền đã bị quản trị viên tắt', 'Balance recharge has been disabled by the administrator'),
         403,
       );
     }
@@ -96,7 +102,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     if (!input.planId) {
       throw new OrderError(
         'INVALID_INPUT',
-        message(locale, '订阅订单必须指定套餐', 'Subscription order requires a plan'),
+        message(locale, 'Đơn đăng ký phải chọn gói dịch vụ', 'Subscription order requires a plan'),
         400,
       );
     }
@@ -104,47 +110,47 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     if (!plan || !plan.forSale) {
       throw new OrderError(
         'PLAN_NOT_AVAILABLE',
-        message(locale, '该套餐不存在或未上架', 'Plan not found or not for sale'),
+        message(locale, 'Gói dịch vụ không tồn tại hoặc chưa mở bán', 'Plan not found or not for sale'),
         404,
       );
     }
-    // 校验分组绑定有效
+    // Validate group binding is valid
     if (plan.groupId === null) {
       throw new OrderError(
         'GROUP_NOT_BOUND',
-        message(locale, '该套餐尚未绑定分组，无法购买', 'Plan is not bound to a group'),
+        message(locale, 'Gói dịch vụ chưa được gắn với nhóm, không thể mua', 'Plan is not bound to a group'),
         400,
       );
     }
-    // 校验 Sub2API 分组仍然存在
+    // Validate Sub2API group still exists
     const group = await getGroup(plan.groupId);
     if (!group || group.status !== 'active') {
       throw new OrderError(
         'GROUP_NOT_FOUND',
-        message(locale, '订阅分组已下架，无法购买', 'Subscription group is no longer available'),
+        message(locale, 'Nhóm đăng ký không còn khả dụng, không thể mua', 'Subscription group is no longer available'),
         410,
       );
     }
-    // R4: 校验分组必须为订阅类型
+    // R4: Validate group must be subscription type
     if (group.subscription_type !== 'subscription') {
       throw new OrderError(
         'GROUP_TYPE_MISMATCH',
-        message(locale, '该分组不是订阅类型，无法购买订阅', 'This group is not a subscription type'),
+        message(locale, 'Nhóm này không phải loại đăng ký, không thể mua đăng ký', 'This group is not a subscription type'),
         400,
       );
     }
     subscriptionGroupName = group?.name || plan.name;
     subscriptionPlan = plan;
-    // 订阅订单金额使用服务端套餐价格，不信任客户端
+    // Subscription order amount uses server-side plan price, don't trust client
     input.amount = Number(plan.price);
   }
 
   const user = await getUser(input.userId);
   if (user.status !== 'active') {
-    throw new OrderError('USER_INACTIVE', message(locale, '用户账号已被禁用', 'User account is disabled'), 422);
+    throw new OrderError('USER_INACTIVE', message(locale, 'Tài khoản người dùng đã bị vô hiệu hóa', 'User account is disabled'), 422);
   }
 
-  // ── 取消频率限制：超限后禁止创建新订单 ──
+  // ── Cancel rate limit: when exceeded, block order creation ──
   const rateLimitConfigs = await getSystemConfigs([
     'CANCEL_RATE_LIMIT_ENABLED',
     'CANCEL_RATE_LIMIT_WINDOW',
@@ -235,46 +241,50 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
   }
 
   const feeRate = getMethodFeeRate(input.paymentType);
-  const payAmountStr = calculatePayAmount(input.amount, feeRate);
+
+  // SePay: input.amount is VND. Convert to credits for Sub2API.
+  // amount = credits (what Sub2API receives), payAmount = VND (what user pays)
+  let creditAmount = input.amount;
+  let payAmountVND = input.amount;
+  if (input.paymentType === 'sepay') {
+    const vndPerCreditConfig = await getSystemConfig('SEPAY_VND_PER_CREDIT');
+    const vndPerCredit = vndPerCreditConfig
+      ? parseFloat(vndPerCreditConfig) || 2000
+      : env.SEPAY_VND_PER_CREDIT ?? 2000;
+    creditAmount = input.amount / vndPerCredit;
+    payAmountVND = input.amount; // VND amount (no fee for bank transfer)
+  }
+
+  const payAmountStr = input.paymentType === 'sepay'
+    ? payAmountVND.toFixed(2)
+    : calculatePayAmount(input.amount, feeRate);
   const payAmountNum = Number(payAmountStr);
+  const orderAmount = input.paymentType === 'sepay' ? creditAmount : input.amount;
 
   const orderTimeoutConfig = await getSystemConfig('ORDER_TIMEOUT_MINUTES');
-  const orderTimeoutMinutes = orderTimeoutConfig
+  const defaultTimeoutMinutes = orderTimeoutConfig
     ? parseInt(orderTimeoutConfig, 10) || env.ORDER_TIMEOUT_MINUTES
     : env.ORDER_TIMEOUT_MINUTES;
+
+  // SePay (bank transfer) uses a longer timeout since users need time to manually transfer
+  let orderTimeoutMinutes = defaultTimeoutMinutes;
+  if (input.paymentType === 'sepay') {
+    const sepayTimeoutConfig = await getSystemConfig('SEPAY_ORDER_TIMEOUT_MINUTES');
+    orderTimeoutMinutes = sepayTimeoutConfig
+      ? parseInt(sepayTimeoutConfig, 10) || 30
+      : env.SEPAY_ORDER_TIMEOUT_MINUTES ?? 30;
+  }
   const expiresAt = new Date(Date.now() + orderTimeoutMinutes * 60 * 1000);
 
-  // 读取最大支付中订单数配置
-  const maxPendingConfig = await getSystemConfig('MAX_PENDING_ORDERS');
-  const maxPendingOrders = maxPendingConfig
-    ? parseInt(maxPendingConfig, 10) || DEFAULT_MAX_PENDING_ORDERS
-    : DEFAULT_MAX_PENDING_ORDERS;
-
-  // 每日充值限额配置（参考 /api/user 覆盖模式：getSystemConfig → env 兜底）
+  // Daily recharge limit config (see /api/user override mode: getSystemConfig → env fallback)
   const dailyLimitConfig = await getSystemConfig('DAILY_RECHARGE_LIMIT');
   const maxDailyRechargeAmount = dailyLimitConfig
     ? parseFloat(dailyLimitConfig) || env.MAX_DAILY_RECHARGE_AMOUNT
     : env.MAX_DAILY_RECHARGE_AMOUNT;
 
-  // 将限额校验与订单创建放在同一个 serializable 事务中，防止并发突破限额
+  // Place limit validation and order creation in same serializable transaction to prevent concurrent breakthrough
   const order = await prisma.$transaction(async (tx) => {
-    // 待支付订单数限制
-    const pendingCount = await tx.order.count({
-      where: { userId: input.userId, status: ORDER_STATUS.PENDING },
-    });
-    if (pendingCount >= maxPendingOrders) {
-      throw new OrderError(
-        'TOO_MANY_PENDING',
-        message(
-          locale,
-          `待支付订单过多（最多 ${maxPendingOrders} 笔）`,
-          `Too many pending orders (${maxPendingOrders})`,
-        ),
-        429,
-      );
-    }
-
-    // 每日累计充值限额校验（0 = 不限制）
+    // Daily cumulative recharge limit validation (0 = unlimited)
     if (maxDailyRechargeAmount > 0) {
       const dailyAgg = await tx.order.aggregate({
         where: {
@@ -291,7 +301,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           'DAILY_LIMIT_EXCEEDED',
           message(
             locale,
-            `今日累计充值已达上限，剩余可充值 ${remaining.toFixed(2)} 元`,
+            `Đã đạt giới hạn nạp tiền hôm nay, còn có thể nạp ${remaining.toFixed(2)} CNY`,
             `Daily recharge limit reached. Remaining amount: ${remaining.toFixed(2)} CNY`,
           ),
           429,
@@ -299,7 +309,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       }
     }
 
-    // 渠道每日全平台限额校验（0 = 不限）
+    // Channel daily global limit validation (0 = unlimited)
     const methodDailyLimit = await getMethodDailyLimit(input.paymentType);
     if (methodDailyLimit > 0) {
       const methodAgg = await tx.order.aggregate({
@@ -318,12 +328,12 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           remaining > 0
             ? message(
                 locale,
-                `${input.paymentType} 今日剩余额度 ${remaining.toFixed(2)} 元，请减少充值金额或使用其他支付方式`,
+                `Phương thức ${input.paymentType} hôm nay còn lại ${remaining.toFixed(2)} CNY, vui lòng giảm số tiền hoặc sử dụng phương thức khác`,
                 `${input.paymentType} remaining daily quota: ${remaining.toFixed(2)} CNY. Reduce the amount or use another payment method`,
               )
             : message(
                 locale,
-                `${input.paymentType} 今日充值额度已满，请使用其他支付方式`,
+                `Phương thức ${input.paymentType} hôm nay đã hết hạn mức, vui lòng sử dụng phương thức thanh toán khác`,
                 `${input.paymentType} daily quota is full. Please use another payment method`,
               ),
           429,
@@ -337,7 +347,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
         userEmail: user.email,
         userName: user.username,
         userNotes: user.notes || null,
-        amount: new Prisma.Decimal(input.amount.toFixed(2)),
+        amount: new Prisma.Decimal(orderAmount.toFixed(2)),
         payAmount: new Prisma.Decimal(payAmountStr),
         feeRate: feeRate > 0 ? new Prisma.Decimal(feeRate.toFixed(4)) : null,
         rechargeCode: '',
@@ -369,7 +379,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     await ensureDBProviders();
     const provider = paymentRegistry.getProvider(input.paymentType);
 
-    // 多实例负载均衡：尝试为当前 provider 选择实例
+    // Multi-instance load balancing: select instance for current provider
     let actualProvider = provider;
     let selectedInstanceId: string | undefined;
 
@@ -384,10 +394,13 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       } else if (provider.providerKey === 'stripe') {
         const { StripeProvider } = await import('@/lib/stripe/provider');
         actualProvider = new StripeProvider(instanceResult.instanceId, instanceResult.config);
+      } else if (provider.providerKey === 'sepay') {
+        const { SepayProvider } = await import('@/lib/sepay/provider');
+        actualProvider = new SepayProvider(instanceResult.instanceId, instanceResult.config);
       }
       selectedInstanceId = instanceResult.instanceId;
     } else {
-      // 检查是否有配置的实例但全部被限额过滤掉
+      // Check if configured instances exist but all filtered out by limits
       const instanceCount = await prisma.paymentProviderInstance.count({
         where: { providerKey: provider.providerKey, enabled: true },
       });
@@ -396,7 +409,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           'NO_AVAILABLE_INSTANCE',
           message(
             locale,
-            '当前支付方式暂无可用渠道（所有实例已达限额），请稍后重试或更换支付方式',
+            'Không có kênh khả dụng cho phương thức thanh toán này (tất cả thể hiện đã đạt giới hạn), vui lòng thử lại sau hoặc đổi phương thức thanh toán',
             'No available payment instance (all instances have reached their limits). Please try later or use another payment method',
           ),
           429,
@@ -407,7 +420,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     const statusAccessToken = createOrderStatusAccessToken(order.id, input.userId);
     const orderResultUrl = buildOrderResultUrl(env.NEXT_PUBLIC_APP_URL, order.id, input.userId);
 
-    // 只有 easypay 从外部传入 notifyUrl，return_url 统一回到带访问令牌的结果页
+    // Only easypay from external notifyUrl, return_url unified back to result page with access token
     let notifyUrl: string | undefined;
     let returnUrl: string | undefined = orderResultUrl;
     if (actualProvider.providerKey === 'easypay') {
@@ -419,13 +432,13 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       returnUrl = orderResultUrl;
     }
 
-    // R3+R5: 构建支付商品名称
+    // R3+R5: Build payment product name
     let paymentSubject: string;
     if (subscriptionPlan) {
-      // R3: 订阅订单优先使用套餐自定义商品名称
-      paymentSubject = subscriptionPlan.productName || `Sub2API 订阅 ${subscriptionGroupName || subscriptionPlan.name}`;
+      // R3: Subscription order prioritizes plan custom product name
+      paymentSubject = subscriptionPlan.productName || `Sub2API Subscription ${subscriptionGroupName || subscriptionPlan.name}`;
     } else {
-      // R5: 余额订单使用前缀/后缀配置
+      // R5: Balance order uses prefix/suffix config
       const nameConfigs = await getSystemConfigs(['PRODUCT_NAME_PREFIX', 'PRODUCT_NAME_SUFFIX']);
       const prefix = nameConfigs['PRODUCT_NAME_PREFIX']?.trim();
       const suffix = nameConfigs['PRODUCT_NAME_SUFFIX']?.trim();
@@ -437,7 +450,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     }
 
     const paymentResult = await actualProvider.createPayment({
-      orderId: order.id,
+      orderId: input.paymentType === 'sepay' ? order.rechargeCode : order.id,
       amount: payAmountNum,
       paymentType: input.paymentType,
       subject: paymentSubject,
@@ -476,9 +489,25 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       },
     });
 
+    // Build SePay bank transfer info for the frontend
+    let sepayBankInfo: CreateOrderResult['sepayBankInfo'] = null;
+    if (input.paymentType === 'sepay') {
+      const [bankName, accountNumber, accountName] = await Promise.all([
+        getSystemConfig('SEPAY_BANK_NAME').then((v) => v || env.SEPAY_BANK_NAME || ''),
+        getSystemConfig('SEPAY_BANK_ACCOUNT').then((v) => v || env.SEPAY_BANK_ACCOUNT || ''),
+        getSystemConfig('SEPAY_ACCOUNT_NAME').then((v) => v || env.SEPAY_ACCOUNT_NAME || ''),
+      ]);
+      sepayBankInfo = {
+        bankName,
+        accountNumber,
+        accountName,
+        transferCode: order.rechargeCode,
+      };
+    }
+
     return {
       orderId: order.id,
-      amount: input.amount,
+      amount: orderAmount,
       payAmount: payAmountNum,
       feeRate,
       status: ORDER_STATUS.PENDING,
@@ -490,14 +519,15 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       clientSecret: paymentResult.clientSecret,
       expiresAt,
       statusAccessToken,
+      sepayBankInfo,
     };
   } catch (error) {
     await prisma.order.delete({ where: { id: order.id } });
 
-    // 已经是业务错误，直接向上抛
+    // Already a business error, throw directly
     if (error instanceof OrderError) throw error;
 
-    // 支付网关配置缺失或调用失败，转成友好错误
+    // Payment gateway config missing or call failed, convert to friendly error
     const msg = error instanceof Error ? error.message : String(error);
     console.error(`Payment gateway error (${input.paymentType}):`, error);
     if (msg.includes('environment variables') || msg.includes('not configured') || msg.includes('not found')) {
@@ -505,7 +535,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
         'PAYMENT_GATEWAY_ERROR',
         message(
           locale,
-          `支付渠道（${input.paymentType}）暂未配置，请联系管理员`,
+          `Phương thức thanh toán (${input.paymentType}) chưa được cấu hình, vui lòng liên hệ quản trị viên`,
           `Payment method (${input.paymentType}) is not configured. Please contact the administrator`,
         ),
         503,
@@ -515,7 +545,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       'PAYMENT_GATEWAY_ERROR',
       message(
         locale,
-        '支付渠道暂时不可用，请稍后重试或更换支付方式',
+        'Phương thức thanh toán tạm thời không khả dụng, vui lòng thử lại sau hoặc sử dụng phương thức khác',
         'Payment method is temporarily unavailable. Please try again later or use another payment method',
       ),
       502,
@@ -526,8 +556,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
 export type CancelOutcome = 'cancelled' | 'already_paid';
 
 /**
- * 核心取消逻辑 — 所有取消路径共用。
- * 调用前由 caller 负责权限校验（userId / admin 身份）。
+ * Core cancel logic — all cancel paths share this.
+ * Caller is responsible for permission validation (userId / admin identity) before calling.
  */
 export async function cancelOrderCore(options: {
   orderId: string;
@@ -540,15 +570,15 @@ export async function cancelOrderCore(options: {
 }): Promise<CancelOutcome> {
   const { orderId, paymentTradeNo, paymentType, providerInstanceId, finalStatus, operator, auditDetail } = options;
 
-  // 1. 平台侧处理
+  // 1. Platform-side processing
   if (paymentTradeNo && paymentType) {
     try {
       let provider;
-      // 多实例：使用实例配置创建 provider
+      // Multi-instance: use instance config to create provider
       if (providerInstanceId) {
         const instConfig = await getInstanceConfig(providerInstanceId);
         if (instConfig) {
-          // 目前仅 easypay 支持多实例
+          // Currently only easypay supports multi-instance
           const { EasyPayProvider } = await import('@/lib/easy-pay/provider');
           provider = new EasyPayProvider(providerInstanceId, instConfig);
         }
@@ -582,13 +612,13 @@ export async function cancelOrderCore(options: {
     }
   }
 
-  // 2. DB 更新 (WHERE status='PENDING' 保证幂等)
+  // 2. DB update (WHERE status='PENDING' ensures idempotency)
   const result = await prisma.order.updateMany({
     where: { id: orderId, status: ORDER_STATUS.PENDING },
     data: { status: finalStatus, updatedAt: new Date() },
   });
 
-  // 3. 审计日志
+  // 3. Audit log
   if (result.count > 0) {
     await prisma.auditLog.create({
       data: {
@@ -603,16 +633,16 @@ export async function cancelOrderCore(options: {
   return 'cancelled';
 }
 
-export async function cancelOrder(orderId: string, userId: number, locale: Locale = 'zh'): Promise<CancelOutcome> {
+export async function cancelOrder(orderId: string, userId: number, locale: Locale = 'en'): Promise<CancelOutcome> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     select: { id: true, userId: true, status: true, paymentTradeNo: true, paymentType: true, providerInstanceId: true },
   });
 
-  if (!order) throw new OrderError('NOT_FOUND', message(locale, '订单不存在', 'Order not found'), 404);
-  if (order.userId !== userId) throw new OrderError('FORBIDDEN', message(locale, '无权操作该订单', 'Forbidden'), 403);
+  if (!order) throw new OrderError('NOT_FOUND', message(locale, 'Đơn hàng không tồn tại', 'Order not found'), 404);
+  if (order.userId !== userId) throw new OrderError('FORBIDDEN', message(locale, 'Không có quyền truy cập', 'Forbidden'), 403);
   if (order.status !== ORDER_STATUS.PENDING)
-    throw new OrderError('INVALID_STATUS', message(locale, '订单当前状态不可取消', 'Order cannot be cancelled'), 400);
+    throw new OrderError('INVALID_STATUS', message(locale, 'Đơn hàng không thể hủy ở trạng thái hiện tại', 'Order cannot be cancelled'), 400);
 
   return cancelOrderCore({
     orderId: order.id,
@@ -621,19 +651,19 @@ export async function cancelOrder(orderId: string, userId: number, locale: Local
     providerInstanceId: order.providerInstanceId,
     finalStatus: ORDER_STATUS.CANCELLED,
     operator: `user:${userId}`,
-    auditDetail: message(locale, '用户取消订单', 'User cancelled order'),
+    auditDetail: message(locale, 'Người dùng đã hủy đơn hàng', 'User cancelled order'),
   });
 }
 
-export async function adminCancelOrder(orderId: string, locale: Locale = 'zh'): Promise<CancelOutcome> {
+export async function adminCancelOrder(orderId: string, locale: Locale = 'en'): Promise<CancelOutcome> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     select: { id: true, status: true, paymentTradeNo: true, paymentType: true, providerInstanceId: true },
   });
 
-  if (!order) throw new OrderError('NOT_FOUND', message(locale, '订单不存在', 'Order not found'), 404);
+  if (!order) throw new OrderError('NOT_FOUND', message(locale, 'Đơn hàng không tồn tại', 'Order not found'), 404);
   if (order.status !== ORDER_STATUS.PENDING)
-    throw new OrderError('INVALID_STATUS', message(locale, '订单当前状态不可取消', 'Order cannot be cancelled'), 400);
+    throw new OrderError('INVALID_STATUS', message(locale, 'Đơn hàng không thể hủy ở trạng thái hiện tại', 'Order cannot be cancelled'), 400);
 
   return cancelOrderCore({
     orderId: order.id,
@@ -642,7 +672,7 @@ export async function adminCancelOrder(orderId: string, locale: Locale = 'zh'): 
     providerInstanceId: order.providerInstanceId,
     finalStatus: ORDER_STATUS.CANCELLED,
     operator: 'admin',
-    auditDetail: message(locale, '管理员取消订单', 'Admin cancelled order'),
+    auditDetail: message(locale, 'Quản trị viên đã hủy đơn hàng', 'Admin cancelled order'),
   });
 }
 
@@ -679,7 +709,7 @@ export async function confirmPayment(input: {
   if (!paidAmount.equals(expectedAmount)) {
     const diff = paidAmount.minus(expectedAmount).abs();
     if (diff.gt(new Prisma.Decimal('0.01'))) {
-      // 写审计日志
+      // Write audit log
       await prisma.auditLog.create({
         data: {
           orderId: order.id,
@@ -706,7 +736,7 @@ export async function confirmPayment(input: {
     );
   }
 
-  // 只接受 PENDING 状态，或过期不超过 5 分钟的 EXPIRED 订单（支付在过期边缘完成的宽限窗口）
+  // Only accept PENDING status or EXPIRED orders less than 5 minutes expired (grace window for edge-case completions)
   const graceDeadline = new Date(Date.now() - 5 * 60 * 1000);
   const result = await prisma.order.updateMany({
     where: {
@@ -724,35 +754,35 @@ export async function confirmPayment(input: {
   });
 
   if (result.count === 0) {
-    // 重新查询当前状态，区分「已成功」和「需重试」
+    // Requery current status to distinguish "already success" from "needs retry"
     const current = await prisma.order.findUnique({
       where: { id: order.id },
       select: { status: true },
     });
     if (!current) return true;
 
-    // 已完成或已退款 — 告知支付平台成功
+    // Already completed or refunded — inform payment platform success
     if (current.status === ORDER_STATUS.COMPLETED || current.status === ORDER_STATUS.REFUNDED) {
       return true;
     }
 
-    // FAILED 状态 — 之前充值失败，利用重试通知自动重试充值
+    // FAILED status — previous recharge failed, retry fulfillment using this notification
     if (current.status === ORDER_STATUS.FAILED) {
       try {
         await executeFulfillment(order.id);
         return true;
       } catch (err) {
         console.error('Fulfillment retry failed for order:', order.id, err);
-        return false; // 让支付平台继续重试
+        return false; // Let payment platform retry
       }
     }
 
-    // PAID / RECHARGING — 正在处理中，让支付平台稍后重试
+    // PAID / RECHARGING — being processed, let payment platform retry later
     if (current.status === ORDER_STATUS.PAID || current.status === ORDER_STATUS.RECHARGING) {
       return false;
     }
 
-    // 其他状态（CANCELLED 等）— 不应该出现，返回 true 停止重试
+    // Other statuses (CANCELLED etc) — shouldn't happen, return true to stop retry
     return true;
   }
 
@@ -799,7 +829,7 @@ export async function handlePaymentNotify(notification: PaymentNotification, pro
 }
 
 /**
- * 统一履约入口 — 根据 orderType 分派到余额充值或订阅分配。
+ * Unified fulfillment entry point — dispatches to balance recharge or subscription allocation based on orderType.
  */
 export async function executeFulfillment(orderId: string): Promise<void> {
   const order = await prisma.order.findUnique({
@@ -816,7 +846,7 @@ export async function executeFulfillment(orderId: string): Promise<void> {
 }
 
 /**
- * 订阅履约 — 支付成功后调用 Sub2API 分配订阅。
+ * Subscription fulfillment — calls Sub2API to allocate subscription after payment succeeds.
  */
 export async function executeSubscriptionFulfillment(orderId: string): Promise<void> {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
@@ -832,7 +862,7 @@ export async function executeSubscriptionFulfillment(orderId: string): Promise<v
     throw new OrderError('INVALID_STATUS', 'Missing subscription info on order', 400);
   }
 
-  // CAS 锁
+  // CAS lock
   const lockResult = await prisma.order.updateMany({
     where: { id: orderId, status: { in: [ORDER_STATUS.PAID, ORDER_STATUS.FAILED] } },
     data: { status: ORDER_STATUS.RECHARGING },
@@ -840,13 +870,13 @@ export async function executeSubscriptionFulfillment(orderId: string): Promise<v
   if (lockResult.count === 0) return;
 
   try {
-    // 校验分组是否仍然存在
+    // Validate group still exists
     const group = await getGroup(order.subscriptionGroupId);
     if (!group || group.status !== 'active') {
       throw new Error(`Subscription group ${order.subscriptionGroupId} no longer exists or inactive`);
     }
 
-    // 检测是否续费：查找同分组的活跃订阅，决定天数计算起点
+    // Detect renewal: find active subscription in same group to decide days calculation start point
     let validityDays = order.subscriptionDays;
     let fulfillMethod: 'renew' | 'new' = 'new';
     let renewedSubscriptionId: number | undefined;
@@ -855,7 +885,7 @@ export async function executeSubscriptionFulfillment(orderId: string): Promise<v
     const activeSub = userSubs.find((s) => s.group_id === order.subscriptionGroupId && s.status === 'active');
 
     if (activeSub) {
-      // 续费：从到期日往后推算天数（使用订单关联的具体套餐，而非分组下任意套餐）
+      // Renewal: calculate days from expiration date (use order's specific plan, not any plan under group)
       const plan = order.planId
         ? await prisma.subscriptionPlan.findUnique({
             where: { id: order.planId },
@@ -945,13 +975,13 @@ export async function executeRecharge(orderId: string): Promise<void> {
     throw new OrderError('INVALID_STATUS', `Order cannot recharge in status ${order.status}`, 400);
   }
 
-  // 原子 CAS：将状态从 PAID/FAILED → RECHARGING，防止并发竞态
+  // Atomic CAS: transition status from PAID/FAILED → RECHARGING to prevent race conditions
   const lockResult = await prisma.order.updateMany({
     where: { id: orderId, status: { in: [ORDER_STATUS.PAID, ORDER_STATUS.FAILED] } },
     data: { status: ORDER_STATUS.RECHARGING },
   });
   if (lockResult.count === 0) {
-    // 另一个并发请求已经在处理
+    // Another concurrent request is already processing
     return;
   }
 
@@ -1003,7 +1033,7 @@ function assertRetryAllowed(order: { status: string; paidAt: Date | null }, loca
   if (!order.paidAt) {
     throw new OrderError(
       'INVALID_STATUS',
-      message(locale, '订单未支付，不允许重试', 'Order is not paid, retry denied'),
+      message(locale, 'Đơn hàng chưa được thanh toán, không được phép thử lại', 'Order is not paid, retry denied'),
       400,
     );
   }
@@ -1011,7 +1041,7 @@ function assertRetryAllowed(order: { status: string; paidAt: Date | null }, loca
   if (isRefundStatus(order.status)) {
     throw new OrderError(
       'INVALID_STATUS',
-      message(locale, '退款相关订单不允许重试', 'Refund-related order cannot retry'),
+      message(locale, 'Đơn hàng liên quan đến hoàn tiền không được phép thử lại', 'Refund-related order cannot retry'),
       400,
     );
   }
@@ -1023,23 +1053,23 @@ function assertRetryAllowed(order: { status: string; paidAt: Date | null }, loca
   if (order.status === ORDER_STATUS.RECHARGING) {
     throw new OrderError(
       'CONFLICT',
-      message(locale, '订单正在充值中，请稍后重试', 'Order is recharging, retry later'),
+      message(locale, 'Đơn hàng đang được nạp, vui lòng thử lại sau', 'Order is recharging, retry later'),
       409,
     );
   }
 
   if (order.status === ORDER_STATUS.COMPLETED) {
-    throw new OrderError('INVALID_STATUS', message(locale, '订单已完成', 'Order already completed'), 400);
+    throw new OrderError('INVALID_STATUS', message(locale, 'Đơn hàng đã hoàn thành', 'Order already completed'), 400);
   }
 
   throw new OrderError(
     'INVALID_STATUS',
-    message(locale, '仅已支付和失败订单允许重试', 'Only paid and failed orders can retry'),
+    message(locale, 'Chỉ cho phép thử lại các đơn hàng đã thanh toán và thất bại', 'Only paid and failed orders can retry'),
     400,
   );
 }
 
-export async function retryRecharge(orderId: string, locale: Locale = 'zh'): Promise<void> {
+export async function retryRecharge(orderId: string, locale: Locale = 'en'): Promise<void> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     select: {
@@ -1051,7 +1081,7 @@ export async function retryRecharge(orderId: string, locale: Locale = 'zh'): Pro
   });
 
   if (!order) {
-    throw new OrderError('NOT_FOUND', message(locale, '订单不存在', 'Order not found'), 404);
+    throw new OrderError('NOT_FOUND', message(locale, 'Đơn hàng không tồn tại', 'Order not found'), 404);
   }
 
   assertRetryAllowed(order, locale);
@@ -1076,33 +1106,33 @@ export async function retryRecharge(orderId: string, locale: Locale = 'zh'): Pro
     });
 
     if (!latest) {
-      throw new OrderError('NOT_FOUND', message(locale, '订单不存在', 'Order not found'), 404);
+      throw new OrderError('NOT_FOUND', message(locale, 'Đơn hàng không tồn tại', 'Order not found'), 404);
     }
 
     const derived = deriveOrderState(latest);
     if (derived.rechargeStatus === 'recharging' || latest.status === ORDER_STATUS.PAID) {
       throw new OrderError(
         'CONFLICT',
-        message(locale, '订单正在充值中，请稍后重试', 'Order is recharging, retry later'),
+        message(locale, 'Đơn hàng đang được nạp, vui lòng thử lại sau', 'Order is recharging, retry later'),
         409,
       );
     }
 
     if (derived.rechargeStatus === 'success') {
-      throw new OrderError('INVALID_STATUS', message(locale, '订单已完成', 'Order already completed'), 400);
+      throw new OrderError('INVALID_STATUS', message(locale, 'Đơn hàng đã hoàn thành', 'Order already completed'), 400);
     }
 
     if (isRefundStatus(latest.status)) {
       throw new OrderError(
         'INVALID_STATUS',
-        message(locale, '退款相关订单不允许重试', 'Refund-related order cannot retry'),
+        message(locale, 'Đơn hàng liên quan đến hoàn tiền không được phép thử lại', 'Refund-related order cannot retry'),
         400,
       );
     }
 
     throw new OrderError(
       'CONFLICT',
-      message(locale, '订单状态已变更，请刷新后重试', 'Order status changed, refresh and retry'),
+      message(locale, 'Trạng thái đơn hàng đã thay đổi, vui lòng làm mới và thử lại', 'Order status changed, refresh and retry'),
       409,
     );
   }
@@ -1111,7 +1141,7 @@ export async function retryRecharge(orderId: string, locale: Locale = 'zh'): Pro
     data: {
       orderId,
       action: 'RECHARGE_RETRY',
-      detail: message(locale, '管理员手动重试充值', 'Admin manual retry recharge'),
+      detail: message(locale, 'Quản trị viên thử lại nạp tiền thủ công', 'Admin manual retry recharge'),
       operator: 'admin',
     },
   });
@@ -1128,23 +1158,23 @@ export interface RefundRequestInput {
 }
 
 export async function requestRefund(input: RefundRequestInput): Promise<{ success: boolean }> {
-  const locale = input.locale ?? 'zh';
+  const locale = input.locale ?? 'en';
   const order = await prisma.order.findUnique({ where: { id: input.orderId } });
-  if (!order) throw new OrderError('NOT_FOUND', message(locale, '订单不存在', 'Order not found'), 404);
+  if (!order) throw new OrderError('NOT_FOUND', message(locale, 'Đơn hàng không tồn tại', 'Order not found'), 404);
   if (order.userId !== input.userId) {
-    throw new OrderError('FORBIDDEN', message(locale, '无权申请该订单退款', 'Forbidden'), 403);
+    throw new OrderError('FORBIDDEN', message(locale, 'Không có quyền yêu cầu hoàn tiền cho đơn hàng này', 'Forbidden'), 403);
   }
   if (order.orderType !== 'balance') {
     throw new OrderError(
       'INVALID_ORDER_TYPE',
-      message(locale, '仅余额充值订单支持退款申请', 'Only balance orders can request refund'),
+      message(locale, 'Chỉ các đơn hàng nạp tiền số dư mới hỗ trợ yêu cầu hoàn tiền', 'Only balance orders can request refund'),
       400,
     );
   }
   if (order.status !== ORDER_STATUS.COMPLETED) {
     throw new OrderError(
       'INVALID_STATUS',
-      message(locale, '仅已完成订单可申请退款', 'Only completed orders can request refund'),
+      message(locale, 'Chỉ các đơn hàng đã hoàn thành mới có thể yêu cầu hoàn tiền', 'Only completed orders can request refund'),
       400,
     );
   }
@@ -1153,7 +1183,7 @@ export async function requestRefund(input: RefundRequestInput): Promise<{ succes
   if (!Number.isFinite(refundAmount) || refundAmount <= 0) {
     throw new OrderError(
       'INVALID_REFUND_AMOUNT',
-      message(locale, '退款金额必须大于 0', 'Refund amount must be greater than 0'),
+      message(locale, 'Số tiền hoàn phải lớn hơn 0', 'Refund amount must be greater than 0'),
       400,
     );
   }
@@ -1162,7 +1192,7 @@ export async function requestRefund(input: RefundRequestInput): Promise<{ succes
   if (refundAmount > maxRefundAmount) {
     throw new OrderError(
       'REFUND_AMOUNT_EXCEEDED',
-      message(locale, '退款金额不能超过充值金额', 'Refund amount cannot exceed recharge amount'),
+      message(locale, 'Số tiền hoàn không được vượt quá số tiền nạp', 'Refund amount cannot exceed recharge amount'),
       400,
     );
   }
@@ -1171,7 +1201,7 @@ export async function requestRefund(input: RefundRequestInput): Promise<{ succes
   if (user.balance < refundAmount) {
     throw new OrderError(
       'BALANCE_NOT_ENOUGH',
-      message(locale, '退款金额不能超过当前余额', 'Refund amount cannot exceed current balance'),
+      message(locale, 'Số tiền hoàn không được vượt quá số dư hiện tại', 'Refund amount cannot exceed current balance'),
       400,
     );
   }
@@ -1192,7 +1222,7 @@ export async function requestRefund(input: RefundRequestInput): Promise<{ succes
   if (updated.count === 0) {
     throw new OrderError(
       'CONFLICT',
-      message(locale, '订单状态已变更，请刷新后重试', 'Order status changed, refresh and retry'),
+      message(locale, 'Trạng thái đơn hàng đã thay đổi, vui lòng làm mới và thử lại', 'Order status changed, refresh and retry'),
       409,
     );
   }
@@ -1230,7 +1260,7 @@ export interface RefundResult {
   subscriptionDaysDeducted?: number;
 }
 
-// ── 退款内部类型与辅助函数 ──
+// ── Refund internal types and helper functions ──
 
 function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
@@ -1243,7 +1273,7 @@ interface DeductionPlan {
   subscriptionId: number | null;
 }
 
-/** 查询用户余额/订阅信息，计算扣减量。返回 DeductionPlan 或提前返回的 RefundResult。 */
+/** Query user balance/subscription info, calculate deduction amount. Returns DeductionPlan or early RefundResult. */
 async function prepareDeduction(
   order: {
     userId: number;
@@ -1285,7 +1315,7 @@ async function prepareDeduction(
       if (!force) {
         return {
           success: false,
-          warning: message(locale, '无法获取订阅信息，请勾选强制退款', 'Cannot fetch subscription info, use force'),
+          warning: message(locale, 'Không thể lấy thông tin đăng ký, vui lòng chọn hoàn tiền cưỡng chế', 'Cannot fetch subscription info, use force'),
           requireForce: true,
         };
       }
@@ -1293,7 +1323,7 @@ async function prepareDeduction(
     }
   }
 
-  // 余额订单
+  // Balance order
   try {
     const user = await getUser(order.userId);
     return {
@@ -1306,7 +1336,7 @@ async function prepareDeduction(
     if (!force) {
       return {
         success: false,
-        warning: message(locale, '无法获取用户余额，请勾选强制退款', 'Cannot fetch user balance, use force'),
+        warning: message(locale, 'Không thể lấy số dư người dùng, vui lòng chọn hoàn tiền cưỡng chế', 'Cannot fetch user balance, use force'),
         requireForce: true,
       };
     }
@@ -1318,7 +1348,7 @@ function isDeductionPlan(v: DeductionPlan | RefundResult): v is DeductionPlan {
   return 'type' in v;
 }
 
-/** 执行扣减（先扣后退的"扣"步骤） */
+/** Execute deduction (the "deduct" step of "deduct then refund") */
 async function executeDeduction(orderId: string, userId: number, plan: DeductionPlan): Promise<void> {
   const ts = Date.now();
   if (plan.type === 'subscription' && plan.subscriptionId && plan.subscriptionDays > 0) {
@@ -1333,7 +1363,7 @@ async function executeDeduction(orderId: string, userId: number, plan: Deduction
   }
 }
 
-/** 回滚已扣减的余额/订阅。返回 true 表示回滚成功，false 表示回滚也失败。 */
+/** Rollback already deducted balance/subscription. Returns true if rollback succeeds, false if rollback also fails. */
 async function rollbackDeduction(
   orderId: string,
   userId: number,
@@ -1399,17 +1429,17 @@ async function rollbackDeduction(
     }
   }
 
-  // 无需回滚（未执行扣减）
+  // No rollback needed (deduction not executed)
   return true;
 }
 
-// ── processRefund 主流程 ──
+// ── processRefund main flow ──
 
 export async function processRefund(input: RefundInput): Promise<RefundResult> {
-  const locale = input.locale ?? 'zh';
+  const locale = input.locale ?? 'en';
   const deductBalance = input.deductBalance ?? true;
   const order = await prisma.order.findUnique({ where: { id: input.orderId } });
-  if (!order) throw new OrderError('NOT_FOUND', message(locale, '订单不存在', 'Order not found'), 404);
+  if (!order) throw new OrderError('NOT_FOUND', message(locale, 'Đơn hàng không tồn tại', 'Order not found'), 404);
 
   const allowedStatuses = [ORDER_STATUS.COMPLETED, ORDER_STATUS.REFUND_REQUESTED, ORDER_STATUS.REFUND_FAILED];
   if (!allowedStatuses.includes(order.status as (typeof allowedStatuses)[number])) {
@@ -1417,7 +1447,7 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
       'INVALID_STATUS',
       message(
         locale,
-        '仅已完成、已申请退款或退款失败的订单允许退款',
+        'Chỉ các đơn hàng đã hoàn thành, đã yêu cầu hoàn tiền hoặc hoàn tiền thất bại mới có thể được hoàn tiền',
         'Only completed, refund-requested, or refund-failed orders can be refunded',
       ),
       400,
@@ -1427,34 +1457,34 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
   const rechargeAmount = Number(order.amount);
   const maxGatewayRefund = Number(order.payAmount ?? order.amount);
 
-  // 部分退款支持：优先使用传入金额，否则全额
+  // Partial refund support: use submitted amount first, otherwise full amount
   const refundAmount = input.amount ?? rechargeAmount;
   if (!Number.isFinite(refundAmount) || refundAmount <= 0) {
     throw new OrderError(
       'INVALID_REFUND_AMOUNT',
-      message(locale, '退款金额必须大于 0', 'Refund amount must be greater than 0'),
+      message(locale, 'Số tiền hoàn phải lớn hơn 0', 'Refund amount must be greater than 0'),
       400,
     );
   }
   if (refundAmount > rechargeAmount) {
     throw new OrderError(
       'REFUND_AMOUNT_EXCEEDED',
-      message(locale, '退款金额不能超过充值金额', 'Refund amount cannot exceed recharge amount'),
+      message(locale, 'Số tiền hoàn không được vượt quá số tiền nạp', 'Refund amount cannot exceed recharge amount'),
       400,
     );
   }
 
-  // 网关退款金额：部分退款时用 refundAmount，全额时用 payAmount
+  // Gateway refund amount: use refundAmount for partial refund, payAmount for full refund
   const gatewayRefundAmount = input.amount ?? maxGatewayRefund;
   const refundReason =
     input.reason?.trim() || order.refundRequestReason?.trim() || `sub2apipay refund order:${order.id}`;
 
-  // 1. 准备扣减计划（可能提前返回 requireForce）
+  // 1. Prepare deduction plan (might return early with requireForce)
   const planOrResult = await prepareDeduction(order, deductBalance, input.force ?? false, locale, input.amount);
   if (!isDeductionPlan(planOrResult)) return planOrResult;
   const plan = planOrResult;
 
-  // 2. CAS 乐观锁
+  // 2. CAS optimistic lock
   const lockResult = await prisma.order.updateMany({
     where: {
       id: input.orderId,
@@ -1465,16 +1495,16 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
   if (lockResult.count === 0) {
     throw new OrderError(
       'CONFLICT',
-      message(locale, '订单状态已变更，请刷新后重试', 'Order status changed, refresh and retry'),
+      message(locale, 'Trạng thái đơn hàng đã thay đổi, vui lòng làm mới và thử lại', 'Order status changed, refresh and retry'),
       409,
     );
   }
 
   try {
-    // 3. 执行扣减（安全方向：先扣后退）
+    // 3. Execute deduction (safe direction: deduct first then refund)
     await executeDeduction(order.id, order.userId, plan);
 
-    // 4. 调用支付网关退款
+    // 4. Call payment gateway refund
     if (order.paymentTradeNo) {
       let provider;
       if (order.providerInstanceId) {
@@ -1497,11 +1527,11 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
           reason: refundReason,
         });
       } catch (gatewayError) {
-        // 网关退款失败 — 回滚扣减
+        // Gateway refund failed — rollback deduction
         const rollbackOk = await rollbackDeduction(input.orderId, order.userId, plan, gatewayError);
 
         if (rollbackOk) {
-          // 回滚成功 — 恢复原状态，返回失败结果（不 throw）
+          // Rollback successful — restore original status, return failed result (no throw)
           const restoreStatus =
             order.status === ORDER_STATUS.REFUND_REQUESTED ? ORDER_STATUS.REFUND_REQUESTED : ORDER_STATUS.COMPLETED;
           await prisma.order.update({ where: { id: input.orderId }, data: { status: restoreStatus } });
@@ -1517,13 +1547,13 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
             success: false,
             warning: message(
               locale,
-              `支付网关退款失败：${errorMessage(gatewayError)}，已回滚扣减`,
+              `Lỗi hoàn tiền: ${errorMessage(gatewayError)}, đã hoàn nguyên trừ`,
               `Gateway refund failed: ${errorMessage(gatewayError)}, deduction rolled back`,
             ),
           };
         }
 
-        // 回滚失败 — 标记 REFUND_FAILED，需人工介入
+        // Rollback failed — mark REFUND_FAILED, requires manual intervention
         await prisma.order.update({
           where: { id: input.orderId },
           data: { status: ORDER_STATUS.REFUND_FAILED, failedAt: new Date(), failedReason: errorMessage(gatewayError) },
@@ -1549,7 +1579,7 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
       });
     }
 
-    // 5. 标记退款成功（部分/全额）
+    // 5. Mark refund as successful (partial/full)
     const finalStatus = refundAmount < rechargeAmount ? ORDER_STATUS.PARTIALLY_REFUNDED : ORDER_STATUS.REFUNDED;
 
     await prisma.order.update({
@@ -1583,7 +1613,7 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
 
     return { success: true, balanceDeducted: plan.balanceAmount, subscriptionDaysDeducted: plan.subscriptionDays };
   } catch (error) {
-    // 未被内部处理的异常（如扣减阶段失败）— 标记 REFUND_FAILED
+    // Unhandled exceptions (e.g. deduction phase failures) — mark REFUND_FAILED
     if (!(error instanceof OrderError && error.code === 'REFUND_FAILED')) {
       await prisma.order.update({
         where: { id: input.orderId },

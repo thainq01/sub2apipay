@@ -3,10 +3,10 @@ import { getEnv } from '@/lib/config';
 
 export const ORDER_STATUS_ACCESS_QUERY_KEY = 'access_token';
 const ORDER_STATUS_ACCESS_PURPOSE = 'order-status-access:v2';
-/** access_token 有效期（24 小时） */
+/** access_token TTL (24 hours) */
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
-/** 使用独立派生密钥，不直接使用 ADMIN_TOKEN */
+/** Use independent derived key, not directly use ADMIN_TOKEN */
 function deriveKey(): string {
   return crypto.createHmac('sha256', getEnv().ADMIN_TOKEN).update('order-status-access-key').digest('hex');
 }
@@ -18,7 +18,7 @@ function buildSignature(orderId: string, userId: number, expiresAt: number): str
     .digest('base64url');
 }
 
-/** 生成格式: {expiresAt}.{userId}.{signature} */
+/** Format: {expiresAt}.{userId}.{signature} */
 export function createOrderStatusAccessToken(orderId: string, userId?: number): string {
   const expiresAt = Date.now() + TOKEN_TTL_MS;
   const uid = userId ?? 0;
@@ -38,7 +38,7 @@ export function verifyOrderStatusAccessToken(orderId: string, token: string | nu
 
   if (!Number.isFinite(expiresAt) || !Number.isFinite(userId)) return false;
 
-  // 检查过期
+  // Check expiration
   if (Date.now() > expiresAt) return false;
 
   const expected = buildSignature(orderId, userId, expiresAt);

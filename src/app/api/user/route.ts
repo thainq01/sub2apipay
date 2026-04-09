@@ -13,29 +13,29 @@ export async function GET(request: NextRequest) {
   const locale = resolveLocale(request.nextUrl.searchParams.get('lang'));
   const userId = Number(request.nextUrl.searchParams.get('user_id'));
   if (!userId || isNaN(userId) || userId <= 0) {
-    return NextResponse.json({ error: locale === 'en' ? 'Invalid user ID' : '无效的用户 ID' }, { status: 400 });
+    return NextResponse.json({ error: locale === 'vi' ? 'ID người dùng không hợp lệ' : 'Invalid user ID' }, { status: 400 });
   }
 
   const token = request.nextUrl.searchParams.get('token')?.trim();
   if (!token) {
     return NextResponse.json(
-      { error: locale === 'en' ? 'Missing token parameter' : '缺少 token 参数' },
+      { error: locale === 'vi' ? 'Thiếu tham số token' : 'Missing token parameter' },
       { status: 401 },
     );
   }
 
   try {
-    // 验证 token 并确保请求的 user_id 与 token 对应的用户匹配
+    // Verify token and ensure requested user_id matches the token's user
     let tokenUser;
     try {
       tokenUser = await getCurrentUserByToken(token);
     } catch {
-      return NextResponse.json({ error: locale === 'en' ? 'Invalid token' : '无效的 token' }, { status: 401 });
+      return NextResponse.json({ error: locale === 'vi' ? 'Token không hợp lệ' : 'Invalid token' }, { status: 401 });
     }
 
     if (tokenUser.id !== userId) {
       return NextResponse.json(
-        { error: locale === 'en' ? 'Forbidden to access this user' : '无权访问该用户信息' },
+        { error: locale === 'vi' ? 'Không có quyền truy cập người dùng này' : 'Forbidden to access this user' },
         { status: 403 },
       );
     }
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     await ensureDBProviders();
     const supportedTypes = paymentRegistry.getSupportedTypes();
 
-    // getUser 与 config 查询并行；config 完成后立即启动 queryMethodLimits
+    // Parallel getUser and config queries; start queryMethodLimits immediately after config completes
     const configPromise = Promise.all([
       getSystemConfig('ENABLED_PAYMENT_TYPES'),
       getSystemConfig('BALANCE_PAYMENT_DISABLED'),
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       ]) => {
         let enabledTypes = resolveEnabledPaymentTypes(supportedTypes, configuredPaymentTypesRaw);
 
-        // 覆盖模式下，过滤掉没有活跃实例的支付类型
+        // Override mode: filter out payment types without active instances
         const overrideEnabled = await getSystemConfig('OVERRIDE_ENV_ENABLED');
         if (overrideEnabled === 'true' && enabledTypes.length > 0) {
           const providerKeys = [
@@ -103,10 +103,10 @@ export async function GET(request: NextRequest) {
     const { enabledTypes, methodLimits, balanceDisabled, maxPendingOrders, minAmount, maxAmount, maxDailyAmount } =
       await configPromise;
 
-    // 收集 sublabel 覆盖
+    // Collect sublabel overrides
     const sublabelOverrides: Record<string, string> = {};
 
-    // 1. 检测同 label 冲突：多个启用渠道有相同的显示名，自动标记默认 sublabel（provider 名）
+    // 1. Detect same label conflicts: multiple enabled channels with same display name, auto mark default sublabel (provider name)
     const labelCount = new Map<string, string[]>();
     for (const type of enabledTypes) {
       const { channel } = getPaymentDisplayInfo(type, locale);
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 2. 用户手动配置的 PAYMENT_SUBLABEL_* 优先级最高，覆盖自动生成的
+    // 2. Manually configured PAYMENT_SUBLABEL_* has highest priority, overrides auto-generated
     if (env.PAYMENT_SUBLABEL_ALIPAY) sublabelOverrides.alipay = env.PAYMENT_SUBLABEL_ALIPAY;
     if (env.PAYMENT_SUBLABEL_ALIPAY_DIRECT) sublabelOverrides.alipay_direct = env.PAYMENT_SUBLABEL_ALIPAY_DIRECT;
     if (env.PAYMENT_SUBLABEL_WXPAY) sublabelOverrides.wxpay = env.PAYMENT_SUBLABEL_WXPAY;
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
         helpText: env.PAY_HELP_TEXT ?? null,
         stripePublishableKey: (() => {
           if (!enabledTypes.includes('stripe')) return null;
-          // 优先从注册的 StripeProvider 实例读取
+          // Prioritize from registered StripeProvider instance
           try {
             const sp = paymentRegistry.getProvider('stripe' as import('@/lib/payment').PaymentType);
             const pk = 'getPublishableKey' in sp ? (sp as { getPublishableKey(): string | undefined }).getPublishableKey() : undefined;
@@ -161,11 +161,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message === 'USER_NOT_FOUND') {
-      return NextResponse.json({ error: locale === 'en' ? 'User not found' : '用户不存在' }, { status: 404 });
+      return NextResponse.json({ error: locale === 'vi' ? 'Người dùng không tồn tại' : 'User not found' }, { status: 404 });
     }
     console.error('Get user error:', error);
     return NextResponse.json(
-      { error: locale === 'en' ? 'Failed to fetch user info' : '获取用户信息失败' },
+      { error: locale === 'vi' ? 'Lỗi lấy thông tin người dùng' : 'Failed to fetch user info' },
       { status: 500 },
     );
   }

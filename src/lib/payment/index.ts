@@ -4,6 +4,7 @@ import { EasyPayProvider } from '@/lib/easy-pay/provider';
 import { StripeProvider } from '@/lib/stripe/provider';
 import { AlipayProvider } from '@/lib/alipay/provider';
 import { WxpayProvider } from '@/lib/wxpay/provider';
+import { SepayProvider } from '@/lib/sepay/provider';
 import { getEnv } from '@/lib/config';
 import { getSystemConfig } from '@/lib/system-config';
 import { prisma } from '@/lib/db';
@@ -29,7 +30,7 @@ type Env = ReturnType<typeof getEnv>;
 function registerFromList(providers: string[], env: Env, strict: boolean): void {
   if (providers.includes('easypay') && !registeredKeys.has('easypay')) {
     if (!env.EASY_PAY_PID || !env.EASY_PAY_PKEY) {
-      if (strict) throw new Error('PAYMENT_PROVIDERS 含 easypay，但缺少 EASY_PAY_PID 或 EASY_PAY_PKEY');
+      if (strict) throw new Error('PAYMENT_PROVIDERS includes easypay, but EASY_PAY_PID or EASY_PAY_PKEY is missing');
       console.warn('[payment] easypay enabled in DB but EASY_PAY_PID/EASY_PAY_PKEY not set, skipping');
     } else {
       paymentRegistry.register(new EasyPayProvider());
@@ -74,11 +75,21 @@ function registerFromList(providers: string[], env: Env, strict: boolean): void 
 
   if (providers.includes('stripe') && !registeredKeys.has('stripe')) {
     if (!env.STRIPE_SECRET_KEY) {
-      if (strict) throw new Error('PAYMENT_PROVIDERS 含 stripe，但缺少 STRIPE_SECRET_KEY');
+      if (strict) throw new Error('PAYMENT_PROVIDERS includes stripe, but STRIPE_SECRET_KEY is missing');
       console.warn('[payment] stripe enabled in DB but STRIPE_SECRET_KEY not set, skipping');
     } else {
       paymentRegistry.register(new StripeProvider());
       registeredKeys.add('stripe');
+    }
+  }
+
+  if (providers.includes('sepay') && !registeredKeys.has('sepay')) {
+    if (!env.SEPAY_API_KEY) {
+      if (strict) throw new Error('PAYMENT_PROVIDERS includes sepay, but SEPAY_API_KEY is missing');
+      console.warn('[payment] sepay enabled in DB but SEPAY_API_KEY not set, skipping');
+    } else {
+      paymentRegistry.register(new SepayProvider());
+      registeredKeys.add('sepay');
     }
   }
 }
@@ -91,9 +102,9 @@ export function initPaymentProviders(): void {
 }
 
 /**
- * 异步初始化：当数据库覆盖模式开启时，根据 ENABLED_PROVIDERS 补注册 provider。
- * 对于有活跃实例且实例配置中包含密钥的 provider，即使没有环境变量也能注册。
- * 在所有使用 paymentRegistry 的异步入口调用。
+ * Async init: when database override mode is enabled, register additional providers based on ENABLED_PROVIDERS.
+ * For providers with active instances and keys in instance config, can register even without environment variables.
+ * Call in all async entry points using paymentRegistry.
  */
 export async function ensureDBProviders(): Promise<void> {
   initPaymentProviders();
@@ -111,10 +122,10 @@ export async function ensureDBProviders(): Promise<void> {
 
   const env = getEnv();
 
-  // 先用环境变量注册能注册的
+  // First register from environment variables
   registerFromList(dbProviders, env, false);
 
-  // 对于环境变量缺失但有活跃实例的 provider，从实例配置注册
+  // For providers with missing env vars but active instances, register from instance config
   for (const key of dbProviders) {
     if (registeredKeys.has(key)) continue;
 
@@ -147,9 +158,15 @@ export async function ensureDBProviders(): Promise<void> {
           registeredKeys.add(key);
         }
         break;
+      case 'sepay':
+        if (config.apiKey) {
+          paymentRegistry.register(new SepayProvider(instance.id, config));
+          registeredKeys.add(key);
+        }
+        break;
     }
   }
 }
 
-// 注入 lazy init：Registry 方法会自动调用 initPaymentProviders()（同步回退）
+// Inject lazy init: Registry methods will automatically call initPaymentProviders() (sync fallback)
 paymentRegistry.setInitializer(initPaymentProviders);

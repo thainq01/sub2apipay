@@ -4,7 +4,7 @@ export class PaymentProviderRegistry {
   private providers = new Map<PaymentType, PaymentProvider>();
   private _ensureInitialized: (() => void) | null = null;
 
-  /** 设置 lazy init 回调，由 initPaymentProviders 注入 */
+  /** Set lazy init callback, injected by initPaymentProviders */
   setInitializer(fn: () => void): void {
     this._ensureInitialized = fn;
   }
@@ -40,14 +40,14 @@ export class PaymentProviderRegistry {
     return Array.from(this.providers.keys());
   }
 
-  /** 获取指定渠道的提供商默认限额（未注册时返回 undefined） */
+  /** Get default limit for specified channel (returns undefined if not registered) */
   getDefaultLimit(type: string): MethodDefaultLimits | undefined {
     this.autoInit();
     const provider = this.providers.get(type as PaymentType);
     return provider?.defaultLimits?.[type];
   }
 
-  /** 获取指定渠道对应的提供商 key（如 'easypay'、'stripe'） */
+  /** Get provider key for specified channel (e.g., 'easypay', 'stripe') */
   getProviderKey(type: string): string | undefined {
     this.autoInit();
     const provider = this.providers.get(type as PaymentType);

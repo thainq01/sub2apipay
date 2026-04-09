@@ -34,7 +34,7 @@ export default function RefundDialog({
   warning,
   requireForce,
   dark = false,
-  locale = 'zh',
+  locale = 'en',
 }: RefundDialogProps) {
   const [reason, setReason] = useState('');
   const [refundAmount, setRefundAmount] = useState((requestedAmount ?? amount).toFixed(2));
@@ -45,8 +45,34 @@ export default function RefundDialog({
   const currency = '¥';
   const isSub = orderType === 'subscription';
   const text =
-    locale === 'en'
+    locale === 'vi'
       ? {
+          title: 'Xác nhận hoàn tiền',
+          orderId: 'Mã đơn hàng',
+          maxAmount: 'Số tiền đơn hàng',
+          refundAmount: 'Số tiền hoàn',
+          refundAmountPlaceholder: 'Nhập số tiền hoàn',
+          reason: 'Lý do hoàn tiền',
+          reasonPlaceholder: 'Nhập lý do hoàn tiền (tùy chọn)',
+          forceRefund: 'Hoàn tiền bắt buộc (bỏ qua kiểm tra số dư)',
+          deductLabel: isSub ? 'Trừ ngày đăng ký' : 'Trừ số dư người dùng',
+          deductHint: isSub
+            ? 'Rút ngắn thời gian đăng ký cho đơn hàng này'
+            : 'Trừ số tiền nạp khỏi số dư của người dùng',
+          userBalance: 'Số dư người dùng',
+          rechargeAmount: 'Số tiền nạp',
+          subDays: 'Ngày đơn hàng',
+          subRemaining: 'Ngày còn lại',
+          insufficientBalance: `Số dư không đủ — sẽ trừ đến ${currency}0`,
+          insufficientDays: 'Ngày không đủ — sẽ trừ đến 0 ngày',
+          noDeduction: 'SẼ KHÔNG trừ số dư người dùng / đăng ký',
+          amountInvalid: 'Số tiền hoàn phải lớn hơn 0',
+          amountExceeded: 'Số tiền hoàn không thể vượt quá số tiền đơn hàng',
+          cancel: 'Hủy',
+          confirm: 'Xác nhận hoàn tiền',
+          processing: 'Đang xử lý...',
+        }
+      : {
           title: 'Confirm Refund',
           orderId: 'Order ID',
           maxAmount: 'Order Amount',
@@ -71,30 +97,6 @@ export default function RefundDialog({
           cancel: 'Cancel',
           confirm: 'Confirm Refund',
           processing: 'Processing...',
-        }
-      : {
-          title: '确认退款',
-          orderId: '订单号',
-          maxAmount: '订单金额',
-          refundAmount: '退款金额',
-          refundAmountPlaceholder: '请输入退款金额',
-          reason: '退款原因',
-          reasonPlaceholder: '请输入退款原因（可选）',
-          forceRefund: '强制退款（忽略余额检查）',
-          deductLabel: isSub ? '扣减订阅天数' : '扣除用户余额',
-          deductHint: isSub ? '缩短该订单对应的订阅期限' : '从用户余额中扣回充值金额',
-          userBalance: '用户余额',
-          rechargeAmount: '充值金额',
-          subDays: '订单天数',
-          subRemaining: '剩余天数',
-          insufficientBalance: `余额不足，将扣至 ${currency}0`,
-          insufficientDays: '剩余天数不足，将扣至 0 天',
-          noDeduction: '将不扣除用户余额/订阅期限',
-          amountInvalid: '退款金额必须大于 0',
-          amountExceeded: '退款金额不能超过订单金额',
-          cancel: '取消',
-          confirm: '确认退款',
-          processing: '处理中...',
         };
 
   useEffect(() => {

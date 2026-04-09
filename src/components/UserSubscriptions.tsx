@@ -28,7 +28,7 @@ interface UserSubscriptionsProps {
 function formatDate(iso: string): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  return d.toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 function daysUntil(iso: string): number {
@@ -38,29 +38,29 @@ function daysUntil(iso: string): number {
 }
 
 function getStatusBadge(status: string, isDark: boolean, locale: Locale): { text: string; className: string } {
-  const statusMap: Record<string, { zh: string; en: string; cls: string; clsDark: string }> = {
+  const statusMap: Record<string, { vi: string; en: string; cls: string; clsDark: string }> = {
     active: {
-      zh: '生效中',
+      vi: 'Đang hoạt động',
       en: 'Active',
       cls: 'bg-emerald-100 text-emerald-700',
       clsDark: 'bg-emerald-900/40 text-emerald-300',
     },
     expired: {
-      zh: '已过期',
+      vi: 'Đã hết hạn',
       en: 'Expired',
       cls: 'bg-slate-100 text-slate-600',
       clsDark: 'bg-slate-700 text-slate-400',
     },
-    cancelled: { zh: '已取消', en: 'Cancelled', cls: 'bg-red-100 text-red-700', clsDark: 'bg-red-900/40 text-red-300' },
+    cancelled: { vi: 'Đã hủy', en: 'Cancelled', cls: 'bg-red-100 text-red-700', clsDark: 'bg-red-900/40 text-red-300' },
   };
   const entry = statusMap[status] || {
-    zh: status,
+    vi: status,
     en: status,
     cls: 'bg-slate-100 text-slate-600',
     clsDark: 'bg-slate-700 text-slate-400',
   };
   return {
-    text: pickLocaleText(locale, entry.zh, entry.en),
+    text: pickLocaleText(locale, entry.vi, entry.en),
     className: isDark ? entry.clsDark : entry.cls,
   };
 }
@@ -87,7 +87,7 @@ export default function UserSubscriptions({ subscriptions, onRenew, isDark, loca
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <p className="text-sm">{pickLocaleText(locale, '暂无订阅', 'No Subscriptions')}</p>
+        <p className="text-sm">{pickLocaleText(locale, 'Không có đăng ký', 'No Subscriptions')}</p>
       </div>
     );
   }
@@ -129,7 +129,7 @@ export default function UserSubscriptions({ subscriptions, onRenew, isDark, loca
                       : 'bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700',
                   ].join(' ')}
                 >
-                  {pickLocaleText(locale, '续费', 'Renew')}
+                  {pickLocaleText(locale, 'Gia hạn', 'Renew')}
                 </button>
               )}
             </div>
@@ -146,7 +146,7 @@ export default function UserSubscriptions({ subscriptions, onRenew, isDark, loca
                     ' ',
                   )}
                 >
-                  {pickLocaleText(locale, '开始', 'Start')}
+                  {pickLocaleText(locale, 'Bắt đầu', 'Start')}
                 </span>
                 <p className={['font-medium', isDark ? 'text-slate-300' : 'text-slate-700'].join(' ')}>
                   {formatDate(sub.starts_at)}
@@ -158,7 +158,7 @@ export default function UserSubscriptions({ subscriptions, onRenew, isDark, loca
                     ' ',
                   )}
                 >
-                  {pickLocaleText(locale, '到期', 'Expires')}
+                  {pickLocaleText(locale, 'Hết hạn', 'Expires')}
                 </span>
                 <p className={['font-medium', isDark ? 'text-slate-300' : 'text-slate-700'].join(' ')}>
                   {formatDate(sub.expires_at)}
@@ -174,7 +174,7 @@ export default function UserSubscriptions({ subscriptions, onRenew, isDark, loca
                   isDark ? 'bg-amber-900/30 text-amber-300' : 'bg-amber-50 text-amber-700',
                 ].join(' ')}
               >
-                {pickLocaleText(locale, `即将到期，剩余 ${remaining} 天`, `Expiring soon, ${remaining} days remaining`)}
+                {pickLocaleText(locale, `Sắp hết hạn, còn ${remaining} ngày`, `Expiring soon, ${remaining} days remaining`)}
               </div>
             )}
 
@@ -187,7 +187,7 @@ export default function UserSubscriptions({ subscriptions, onRenew, isDark, loca
             >
               <div>
                 <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>
-                  {pickLocaleText(locale, '日用量', 'Daily')}
+                  {pickLocaleText(locale, 'Hàng ngày', 'Daily')}
                 </span>
                 <p className={['mt-0.5 font-semibold', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
                   ${sub.daily_usage_usd.toFixed(2)}
@@ -195,7 +195,7 @@ export default function UserSubscriptions({ subscriptions, onRenew, isDark, loca
               </div>
               <div>
                 <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>
-                  {pickLocaleText(locale, '周用量', 'Weekly')}
+                  {pickLocaleText(locale, 'Hàng tuần', 'Weekly')}
                 </span>
                 <p className={['mt-0.5 font-semibold', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
                   ${sub.weekly_usage_usd.toFixed(2)}
@@ -203,7 +203,7 @@ export default function UserSubscriptions({ subscriptions, onRenew, isDark, loca
               </div>
               <div>
                 <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>
-                  {pickLocaleText(locale, '月用量', 'Monthly')}
+                  {pickLocaleText(locale, 'Hàng tháng', 'Monthly')}
                 </span>
                 <p className={['mt-0.5 font-semibold', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
                   ${sub.monthly_usage_usd.toFixed(2)}

@@ -42,12 +42,31 @@ export default function OrderTable({
   onRefund,
   onViewDetail,
   dark,
-  locale = 'zh',
+  locale = 'en',
 }: OrderTableProps) {
-  const currency = locale === 'en' ? '$' : '¥';
+  const currency = locale === 'vi' ? 'VND' : '$';
   const text =
-    locale === 'en'
+    locale === 'vi'
       ? {
+          orderId: 'Mã đơn hàng',
+          userName: 'Tên người dùng',
+          email: 'Email',
+          notes: 'Ghi chú',
+          amount: 'Số tiền',
+          type: 'Loại',
+          status: 'Trạng thái',
+          paymentMethod: 'Thanh toán',
+          source: 'Nguồn',
+          createdAt: 'Tạo lúc',
+          actions: 'Hành động',
+          retry: 'Thử lại',
+          cancel: 'Hủy',
+          refund: 'Hoàn tiền',
+          retryRefund: 'Thử lại hoàn tiền',
+          approveRefund: 'Chấp phát hoàn tiền',
+          empty: 'Không có đơn hàng',
+        }
+      : {
           orderId: 'Order ID',
           userName: 'Username',
           email: 'Email',
@@ -65,25 +84,6 @@ export default function OrderTable({
           retryRefund: 'Retry Refund',
           approveRefund: 'Approve Refund',
           empty: 'No orders',
-        }
-      : {
-          orderId: '订单号',
-          userName: '用户名',
-          email: '邮箱',
-          notes: '备注',
-          amount: '金额',
-          type: '类型',
-          status: '状态',
-          paymentMethod: '支付方式',
-          source: '来源',
-          createdAt: '创建时间',
-          actions: '操作',
-          retry: '重试',
-          cancel: '取消',
-          refund: '退款',
-          retryRefund: '重试退款',
-          approveRefund: '批准退款',
-          empty: '暂无订单',
         };
 
   const thCls = `px-4 py-3 text-left text-xs font-medium uppercase ${dark ? 'text-slate-400' : 'text-gray-500'}`;
@@ -134,12 +134,12 @@ export default function OrderTable({
                   className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${order.orderType === 'subscription' ? (dark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-800') : dark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-800'}`}
                 >
                   {order.orderType === 'subscription'
-                    ? locale === 'en'
-                      ? 'Subscription'
-                      : '订阅'
-                    : locale === 'en'
-                      ? 'Recharge'
-                      : '充值'}
+                    ? locale === 'vi'
+                      ? 'Đăng ký'
+                      : 'Subscription'
+                    : locale === 'vi'
+                      ? 'Nạp tiền'
+                      : 'Recharge'}
                 </span>
               </td>
               <td className="whitespace-nowrap px-4 py-3 text-sm">

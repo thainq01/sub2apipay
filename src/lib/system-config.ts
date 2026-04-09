@@ -1,8 +1,8 @@
 import { prisma } from '@/lib/db';
 
-// 内存缓存：key → { value, expiresAt }
+// In-memory cache: key → { value, expiresAt }
 const cache = new Map<string, { value: string; expiresAt: number }>();
-const CACHE_TTL_MS = 30_000; // 30 秒
+const CACHE_TTL_MS = 30_000; // 30 seconds
 
 function getCached(key: string): string | undefined {
   const entry = cache.get(key);
@@ -36,7 +36,7 @@ export async function getSystemConfig(key: string): Promise<string | undefined> 
     return row.value;
   }
 
-  // 回退到环境变量
+  // Fallback to environment variable
   const envVal = process.env[key];
   if (envVal !== undefined) {
     setCache(key, envVal);

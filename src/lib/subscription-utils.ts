@@ -1,16 +1,16 @@
 export type ValidityUnit = 'day' | 'week' | 'month';
 
 /**
- * 根据数值和单位计算实际有效天数。
- * - day: 直接返回
+ * Calculate actual validity days based on value and unit.
+ * - day: return directly
  * - week: value * 7
- * - month: 从 fromDate 到 value 个月后同一天的天数差
+ * - month: calculate day difference from fromDate to same day after value months
  */
 export function computeValidityDays(value: number, unit: ValidityUnit, fromDate?: Date): number {
   if (unit === 'day') return value;
   if (unit === 'week') return value * 7;
 
-  // month: 计算到 value 个月后同一天的天数差
+  // month: calculate day difference to same day after value months
   const from = fromDate ?? new Date();
   const target = new Date(from);
   target.setMonth(target.getMonth() + value);
@@ -18,51 +18,51 @@ export function computeValidityDays(value: number, unit: ValidityUnit, fromDate?
 }
 
 /**
- * 格式化有效期显示文本（配置什么就显示什么，不做转换）。
- * - unit=month, value=1 → 1月 / 1 Month
- * - unit=week, value=2 → 2周 / 2 Weeks
- * - unit=day, value=30 → 30天 / 30 Days
+ * Format validity period display text (show what's configured, no conversion).
+ * - unit=month, value=1 → 1 tháng / 1 Month
+ * - unit=week, value=2 → 2 tuần / 2 Weeks
+ * - unit=day, value=30 → 30 ngày / 30 Days
  */
-export function formatValidityLabel(value: number, unit: ValidityUnit, locale: 'zh' | 'en'): string {
-  const unitLabels: Record<ValidityUnit, { zh: string; en: string; enPlural: string }> = {
-    day: { zh: '天', en: 'Day', enPlural: 'Days' },
-    week: { zh: '周', en: 'Week', enPlural: 'Weeks' },
-    month: { zh: '月', en: 'Month', enPlural: 'Months' },
+export function formatValidityLabel(value: number, unit: ValidityUnit, locale: 'vi' | 'en'): string {
+  const unitLabels: Record<ValidityUnit, { vi: string; en: string; enPlural: string }> = {
+    day: { vi: 'ngày', en: 'Day', enPlural: 'Days' },
+    week: { vi: 'tuần', en: 'Week', enPlural: 'Weeks' },
+    month: { vi: 'tháng', en: 'Month', enPlural: 'Months' },
   };
   const u = unitLabels[unit];
-  if (locale === 'zh') return `${value}${u.zh}`;
+  if (locale === 'vi') return `${value} ${u.vi}`;
   return `${value} ${value === 1 ? u.en : u.enPlural}`;
 }
 
 /**
- * 格式化有效期后缀（用于价格展示，配置什么就显示什么）。
- * - unit=month, value=1 → /1月 / /1mo
- * - unit=week, value=2 → /2周 / /2wk
- * - unit=day, value=30 → /30天 / /30d
+ * Format validity period suffix (for price display, show what's configured).
+ * - unit=month, value=1 → /1 tháng / /1mo
+ * - unit=week, value=2 → /2 tuần / /2wk
+ * - unit=day, value=30 → /30 ngày / /30d
  */
-export function formatValiditySuffix(value: number, unit: ValidityUnit, locale: 'zh' | 'en'): string {
-  const unitLabels: Record<ValidityUnit, { zh: string; en: string }> = {
-    day: { zh: '天', en: 'd' },
-    week: { zh: '周', en: 'wk' },
-    month: { zh: '月', en: 'mo' },
+export function formatValiditySuffix(value: number, unit: ValidityUnit, locale: 'vi' | 'en'): string {
+  const unitLabels: Record<ValidityUnit, { vi: string; en: string }> = {
+    day: { vi: 'ngày', en: 'd' },
+    week: { vi: 'tuần', en: 'wk' },
+    month: { vi: 'tháng', en: 'mo' },
   };
   const u = unitLabels[unit];
-  if (locale === 'zh') return `/${value}${u.zh}`;
+  if (locale === 'vi') return `/${value} ${u.vi}`;
   return `/${value}${u.en}`;
 }
 
 /**
- * 格式化有效期列表展示文本（管理后台表格用）。
- * - unit=day → "30 天"
- * - unit=week → "2 周"
- * - unit=month → "1 月"
+ * Format validity period list display text (for admin backend table).
+ * - unit=day → "30 ngày"
+ * - unit=week → "2 tuần"
+ * - unit=month → "1 tháng"
  */
-export function formatValidityDisplay(value: number, unit: ValidityUnit, locale: 'zh' | 'en'): string {
-  const unitLabels: Record<ValidityUnit, { zh: string; en: string }> = {
-    day: { zh: '天', en: 'day(s)' },
-    week: { zh: '周', en: 'week(s)' },
-    month: { zh: '月', en: 'month(s)' },
+export function formatValidityDisplay(value: number, unit: ValidityUnit, locale: 'vi' | 'en'): string {
+  const unitLabels: Record<ValidityUnit, { vi: string; en: string }> = {
+    day: { vi: 'ngày', en: 'day(s)' },
+    week: { vi: 'tuần', en: 'week(s)' },
+    month: { vi: 'tháng', en: 'month(s)' },
   };
-  const label = locale === 'zh' ? unitLabels[unit].zh : unitLabels[unit].en;
+  const label = locale === 'vi' ? unitLabels[unit].vi : unitLabels[unit].en;
   return `${value} ${label}`;
 }

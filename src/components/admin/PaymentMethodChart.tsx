@@ -16,10 +16,10 @@ interface PaymentMethodChartProps {
   locale?: Locale;
 }
 
-export default function PaymentMethodChart({ data, dark, locale = 'zh' }: PaymentMethodChartProps) {
-  const title = locale === 'en' ? 'Payment Method Distribution' : '支付方式分布';
-  const emptyText = locale === 'en' ? 'No data' : '暂无数据';
-  const currency = locale === 'en' ? '$' : '¥';
+export default function PaymentMethodChart({ data, dark, locale = 'en' }: PaymentMethodChartProps) {
+  const title = locale === 'vi' ? 'Phân bố phương thức thanh toán' : 'Payment Method Distribution';
+  const emptyText = locale === 'vi' ? 'Không có dữ liệu' : 'No data';
+  const currency = locale === 'vi' ? 'VND' : '$';
 
   if (data.length === 0) {
     return (

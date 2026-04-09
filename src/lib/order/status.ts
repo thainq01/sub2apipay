@@ -82,118 +82,118 @@ export function getOrderDisplayState(
 ): OrderDisplayState {
   if (order.status === ORDER_STATUS.REFUND_REQUESTED) {
     return {
-      label: '申请中',
+      label: 'Requested',
       color: 'text-violet-600',
       icon: '…',
-      message: '退款申请已提交，等待管理员确认。',
+      message: 'Refund request submitted, waiting for administrator confirmation.',
     };
   }
 
   if (order.status === ORDER_STATUS.REFUNDING) {
     return {
-      label: '退款中',
+      label: 'Refunding',
       color: 'text-orange-600',
       icon: '⟳',
-      message: '管理员已确认退款，正在处理退款，请稍候。',
+      message: 'Administrator confirmed refund, processing refund, please wait.',
     };
   }
 
   if (order.status === ORDER_STATUS.PARTIALLY_REFUNDED) {
     return {
-      label: '已部分退款',
+      label: 'Partially refunded',
       color: 'text-fuchsia-600',
       icon: '✓',
-      message: '订单已完成部分退款。',
+      message: 'Order completed partial refund.',
     };
   }
 
   if (order.status === ORDER_STATUS.REFUNDED) {
     return {
-      label: '已退款',
+      label: 'Refunded',
       color: 'text-purple-600',
       icon: '✓',
-      message: '订单已完成退款。',
+      message: 'Order completed refund.',
     };
   }
 
   if (order.status === ORDER_STATUS.REFUND_FAILED) {
     return {
-      label: '退款失败',
+      label: 'Refund failed',
       color: 'text-red-600',
       icon: '✗',
-      message: '退款处理失败，请联系管理员。',
+      message: 'Refund processing failed, please contact administrator.',
     };
   }
 
   if (order.rechargeSuccess || order.rechargeStatus === 'success') {
     return {
-      label: '充值成功',
+      label: 'Recharge success',
       color: 'text-green-600',
       icon: '✓',
-      message: '余额已到账，感谢您的充值！',
+      message: 'Balance received, thank you for your recharge!',
     };
   }
 
   if (order.paymentSuccess) {
     if (order.rechargeStatus === 'paid_pending' || order.rechargeStatus === 'recharging') {
       return {
-        label: '充值中',
+        label: 'Recharging',
         color: 'text-blue-600',
         icon: '⟳',
-        message: '支付成功，正在充值余额中，请稍候...',
+        message: 'Payment successful, recharging balance, please wait...',
       };
     }
 
     if (order.rechargeStatus === 'failed') {
       return {
-        label: '支付成功',
+        label: 'Payment successful',
         color: 'text-amber-600',
         icon: '!',
-        message: '支付已完成，但余额充值暂未完成。系统可能会自动重试，请稍后在订单列表查看；如长时间未到账请联系管理员。',
+        message: 'Payment completed, but balance recharge not yet completed. The system may auto-retry, check order list later; if not received for a long time, contact administrator.',
       };
     }
   }
 
   if (order.status === ORDER_STATUS.FAILED) {
     return {
-      label: '支付失败',
+      label: 'Payment failed',
       color: 'text-red-600',
       icon: '✗',
-      message: '支付未完成，请重新发起支付；如已扣款未到账，请联系管理员处理。',
+      message: 'Payment not completed, please initiate payment again; if deducted but not received, contact administrator to process.',
     };
   }
 
   if (order.status === ORDER_STATUS.PENDING) {
     return {
-      label: '等待支付',
+      label: 'Awaiting payment',
       color: 'text-yellow-600',
       icon: '⏳',
-      message: '订单尚未完成支付。',
+      message: 'Order payment not yet completed.',
     };
   }
 
   if (order.status === ORDER_STATUS.EXPIRED) {
     return {
-      label: '订单超时',
+      label: 'Order expired',
       color: 'text-gray-500',
       icon: '⏰',
-      message: '订单已超时，请重新创建订单。',
+      message: 'Order expired, please create a new order.',
     };
   }
 
   if (order.status === ORDER_STATUS.CANCELLED) {
     return {
-      label: '已取消',
+      label: 'Cancelled',
       color: 'text-gray-500',
       icon: '✗',
-      message: '订单已取消。',
+      message: 'Order cancelled.',
     };
   }
 
   return {
-    label: '支付异常',
+    label: 'Payment exception',
     color: 'text-red-600',
     icon: '✗',
-    message: '支付状态异常，请联系管理员处理。',
+    message: 'Payment status exception, please contact administrator to process.',
   };
 }

@@ -1,4 +1,4 @@
-/** 支付宝电脑网站支付 bizContent */
+/** Alipay web payment bizContent */
 export interface AlipayTradePagePayBizContent {
   out_trade_no: string;
   product_code: 'FAST_INSTANT_TRADE_PAY';
@@ -7,7 +7,7 @@ export interface AlipayTradePagePayBizContent {
   body?: string;
 }
 
-/** 支付宝统一响应结构 */
+/** Alipay unified response structure */
 export interface AlipayResponse {
   code: string;
   msg: string;
@@ -15,7 +15,7 @@ export interface AlipayResponse {
   sub_msg?: string;
 }
 
-/** alipay.trade.query 响应 */
+/** alipay.trade.query response */
 export interface AlipayTradeQueryResponse extends AlipayResponse {
   trade_no?: string;
   out_trade_no?: string;
@@ -24,7 +24,7 @@ export interface AlipayTradeQueryResponse extends AlipayResponse {
   send_pay_date?: string;
 }
 
-/** alipay.trade.refund 响应 */
+/** alipay.trade.refund response */
 export interface AlipayTradeRefundResponse extends AlipayResponse {
   trade_no?: string;
   out_trade_no?: string;
@@ -32,13 +32,13 @@ export interface AlipayTradeRefundResponse extends AlipayResponse {
   fund_change?: string; // Y/N
 }
 
-/** alipay.trade.close 响应 */
+/** alipay.trade.close response */
 export interface AlipayTradeCloseResponse extends AlipayResponse {
   trade_no?: string;
   out_trade_no?: string;
 }
 
-/** 异步通知参数 */
+/** Async notification parameters */
 export interface AlipayNotifyParams {
   notify_time: string;
   notify_type: string;

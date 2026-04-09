@@ -20,31 +20,33 @@ export default function PayPageLayout({
   subtitle,
   actions,
   children,
-  locale = 'zh',
+  locale = 'en',
 }: PayPageLayoutProps) {
-  const maxWidthClass = maxWidth === 'sm' ? 'max-w-lg' : maxWidth === 'lg' ? 'max-w-6xl' : '';
+  const maxWidthClass = maxWidth === 'sm' ? 'max-w-lg' : maxWidth === 'lg' ? 'max-w-4xl' : '';
 
   return (
     <div
       data-theme={isDark ? 'dark' : 'light'}
       className={[
-        'relative w-full overflow-hidden',
-        isEmbedded ? 'min-h-screen p-2' : 'min-h-screen p-3 sm:p-4',
-        isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900',
+        'relative w-full overflow-auto',
+        isEmbedded
+          ? 'flex min-h-full items-start justify-center p-2'
+          : 'flex min-h-screen items-center justify-center p-4 sm:p-6',
+        isDark ? 'bg-slate-950 text-slate-100' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900',
       ].join(' ')}
     >
       {!isEmbedded && (
         <>
           <div
             className={[
-              'pointer-events-none absolute -left-20 -top-20 h-56 w-56 rounded-full blur-3xl',
-              isDark ? 'bg-indigo-500/25' : 'bg-sky-300/35',
+              'pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full blur-[100px]',
+              isDark ? 'bg-indigo-500/15' : 'bg-blue-400/20',
             ].join(' ')}
           />
           <div
             className={[
-              'pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full blur-3xl',
-              isDark ? 'bg-cyan-400/20' : 'bg-indigo-200/45',
+              'pointer-events-none absolute -right-32 bottom-0 h-96 w-96 rounded-full blur-[100px]',
+              isDark ? 'bg-cyan-400/10' : 'bg-violet-300/20',
             ].join(' ')}
           />
         </>
@@ -52,37 +54,50 @@ export default function PayPageLayout({
 
       <div
         className={[
-          'relative mx-auto w-full rounded-3xl border p-4 sm:p-6',
+          'relative mx-auto w-full',
           maxWidthClass,
-          isDark
-            ? 'border-slate-700/70 bg-slate-900/85 shadow-2xl shadow-black/35'
-            : 'border-slate-200/90 bg-white/95 shadow-2xl shadow-slate-300/45',
-          isEmbedded ? '' : 'mt-6',
+          isEmbedded
+            ? isDark
+              ? 'bg-slate-900'
+              : 'bg-white'
+            : [
+                'my-auto rounded-2xl border backdrop-blur-sm',
+                isDark
+                  ? 'border-slate-800 bg-slate-900/90 shadow-2xl shadow-black/40'
+                  : 'border-white/80 bg-white/80 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200/50',
+              ].join(' '),
         ].join(' ')}
       >
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div
-              className={[
-                'mb-2 inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium',
-                isDark ? 'bg-indigo-500/20 text-indigo-200' : 'bg-indigo-50 text-indigo-700',
-              ].join(' ')}
-            >
-              {locale === 'en' ? 'Sub2API Secure Pay' : 'Sub2API 安全支付'}
+        {/* Header */}
+        <div className={[
+          'flex flex-col gap-3 p-5 pb-0 sm:flex-row sm:items-center sm:justify-between sm:p-6 sm:pb-0',
+        ].join(' ')}>
+          <div className="flex items-center gap-3">
+            <div className={[
+              'flex h-10 w-10 items-center justify-center rounded-xl',
+              isDark ? 'bg-indigo-500/20' : 'bg-gradient-to-br from-indigo-500 to-violet-500',
+            ].join(' ')}>
+              <svg className={['h-5 w-5', isDark ? 'text-indigo-300' : 'text-white'].join(' ')} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
             </div>
-            <h1
-              className={['text-2xl font-semibold tracking-tight', isDark ? 'text-slate-100' : 'text-slate-900'].join(
-                ' ',
-              )}
-            >
-              {title}
-            </h1>
-            <p className={['mt-1 text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>{subtitle}</p>
+            <div>
+              <h1 className={['text-lg font-semibold tracking-tight', isDark ? 'text-slate-100' : 'text-slate-900'].join(' ')}>
+                {title}
+              </h1>
+              <p className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>{subtitle}</p>
+            </div>
           </div>
           {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
         </div>
 
-        {children}
+        {/* Divider */}
+        <div className={['mx-5 mt-4 border-t sm:mx-6', isDark ? 'border-slate-800' : 'border-slate-100'].join(' ')} />
+
+        {/* Content */}
+        <div className="p-5 sm:p-6">
+          {children}
+        </div>
       </div>
     </div>
   );

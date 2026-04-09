@@ -1,20 +1,22 @@
-export type Locale = 'zh' | 'en';
+export type Locale = 'en' | 'vi';
 
 export function resolveLocale(lang: string | null | undefined): Locale {
-  return lang?.trim().toLowerCase() === 'en' ? 'en' : 'zh';
+  const l = lang?.trim().toLowerCase();
+  if (l === 'vi') return 'vi';
+  return 'en';
 }
 
 export function isEnglish(locale: Locale): boolean {
   return locale === 'en';
 }
 
-export function pickLocaleText<T>(locale: Locale, zh: T, en: T): T {
-  return locale === 'en' ? en : zh;
+export function pickLocaleText<T>(locale: Locale, vi: T, en: T): T {
+  return locale === 'vi' ? vi : en;
 }
 
 export function applyLocaleToSearchParams(params: URLSearchParams, locale: Locale): URLSearchParams {
-  if (locale === 'en') {
-    params.set('lang', 'en');
+  if (locale === 'vi') {
+    params.set('lang', 'vi');
   }
   return params;
 }

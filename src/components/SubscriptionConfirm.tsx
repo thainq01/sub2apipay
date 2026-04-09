@@ -49,12 +49,12 @@ export default function SubscriptionConfirm({
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
-        {pickLocaleText(locale, '返回套餐页面', 'Back to Plans')}
+        {pickLocaleText(locale, 'Quay lại các gói', 'Back to Plans')}
       </button>
 
       {/* Title */}
       <h2 className={['text-xl font-semibold', isDark ? 'text-slate-100' : 'text-slate-900'].join(' ')}>
-        {pickLocaleText(locale, '确认订单', 'Confirm Order')}
+        {pickLocaleText(locale, 'Xác nhận đơn hàng', 'Confirm Order')}
       </h2>
 
       {/* Plan detail card — reuse shared component */}
@@ -70,7 +70,7 @@ export default function SubscriptionConfirm({
       {/* Payment method selector */}
       <div>
         <label className={['mb-2 block text-sm font-medium', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
-          {pickLocaleText(locale, '支付方式', 'Payment Method')}
+          {pickLocaleText(locale, 'Phương thức thanh toán', 'Payment Method')}
         </label>
         <div className="space-y-2">
           {paymentTypes.map((type) => {
@@ -137,7 +137,7 @@ export default function SubscriptionConfirm({
         ].join(' ')}
       >
         <span className={['text-sm font-medium', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
-          {pickLocaleText(locale, '应付金额', 'Amount Due')}
+          {pickLocaleText(locale, 'Số tiền phải trả', 'Amount Due')}
         </span>
         <span className="text-xl font-bold text-emerald-500">¥{plan.price}</span>
       </div>
@@ -156,7 +156,7 @@ export default function SubscriptionConfirm({
               : 'cursor-not-allowed bg-slate-200 text-slate-400',
         ].join(' ')}
       >
-        {loading ? pickLocaleText(locale, '处理中...', 'Processing...') : pickLocaleText(locale, '立即购买', 'Buy Now')}
+        {loading ? pickLocaleText(locale, 'Đang xử lý...', 'Processing...') : pickLocaleText(locale, 'Mua ngay', 'Buy Now')}
       </button>
     </div>
   );

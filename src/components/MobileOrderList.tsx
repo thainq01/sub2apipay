@@ -31,7 +31,7 @@ export default function MobileOrderList({
   loadingMore,
   onRefresh,
   onLoadMore,
-  locale = 'zh',
+  locale = 'en',
 }: MobileOrderListProps) {
   const [activeFilter, setActiveFilter] = useState<OrderStatusFilter>('ALL');
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -62,7 +62,7 @@ export default function MobileOrderList({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className={['text-base font-semibold', isDark ? 'text-slate-100' : 'text-slate-900'].join(' ')}>
-          {locale === 'en' ? 'My Orders' : '我的订单'}
+          {locale === 'vi' ? 'Các đơn hàng của tôi' : 'My Orders'}
         </h3>
         <button
           type="button"
@@ -74,7 +74,7 @@ export default function MobileOrderList({
               : 'border-slate-300 text-slate-700 hover:bg-slate-100',
           ].join(' ')}
         >
-          {locale === 'en' ? 'Refresh' : '刷新'}
+          {locale === 'vi' ? 'Làm mới' : 'Refresh'}
         </button>
       </div>
 
@@ -87,9 +87,9 @@ export default function MobileOrderList({
             isDark ? 'border-amber-500/40 text-amber-200' : 'border-amber-300 text-amber-700',
           ].join(' ')}
         >
-          {locale === 'en'
-            ? 'The current link does not include a login token, so "My Orders" is unavailable.'
-            : '当前链接未携带登录 token，无法查询"我的订单"。'}
+          {locale === 'vi'
+            ? 'Liên kết hiện tại không bao gồm mã thông báo đăng nhập, vì vậy "Các đơn hàng của tôi" không khả dụng.'
+            : 'The current link does not include a login token, so "My Orders" is unavailable.'}
         </div>
       ) : filteredOrders.length === 0 ? (
         <div
@@ -98,7 +98,7 @@ export default function MobileOrderList({
             isDark ? 'border-slate-600 text-slate-400' : 'border-slate-300 text-slate-500',
           ].join(' ')}
         >
-          {locale === 'en' ? 'No matching orders found' : '暂无符合条件的订单记录'}
+          {locale === 'vi' ? 'Không tìm thấy các đơn hàng phù hợp' : 'No matching orders found'}
         </div>
       ) : (
         <div className="space-y-2">
@@ -131,11 +131,11 @@ export default function MobileOrderList({
             <div ref={sentinelRef} className="py-3 text-center">
               {loadingMore ? (
                 <span className={['text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                  {locale === 'en' ? 'Loading...' : '加载中...'}
+                  {locale === 'vi' ? 'Đang tải...' : 'Loading...'}
                 </span>
               ) : (
                 <span className={['text-xs', isDark ? 'text-slate-400' : 'text-slate-400'].join(' ')}>
-                  {locale === 'en' ? 'Scroll up to load more' : '上滑加载更多'}
+                  {locale === 'vi' ? 'Trượt lên để tải thêm' : 'Scroll up to load more'}
                 </span>
               )}
             </div>
@@ -143,7 +143,7 @@ export default function MobileOrderList({
 
           {!hasMore && orders.length > 0 && (
             <div className={['py-2 text-center text-xs', isDark ? 'text-slate-400' : 'text-slate-400'].join(' ')}>
-              {locale === 'en' ? 'All orders loaded' : '已显示全部订单'}
+              {locale === 'vi' ? 'Đã hiển thị tất cả đơn hàng' : 'All orders loaded'}
             </div>
           )}
         </div>

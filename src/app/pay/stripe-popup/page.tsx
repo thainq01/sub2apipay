@@ -17,25 +17,25 @@ function StripePopupContent() {
   const isAlipay = method === 'alipay';
 
   const text = {
-    init: pickLocaleText(locale, '正在初始化...', 'Initializing...'),
-    orderId: pickLocaleText(locale, '订单号', 'Order ID'),
+    init: pickLocaleText(locale, 'Initializing...', 'Initializing...'),
+    orderId: pickLocaleText(locale, 'Order ID', 'Order ID'),
     loadFailed: pickLocaleText(
       locale,
-      '支付组件加载失败，请关闭窗口重试',
+      'Failed to load payment component. Please close the window and try again.',
       'Failed to load payment component. Please close the window and try again.',
     ),
-    payFailed: pickLocaleText(locale, '支付失败，请重试', 'Payment failed. Please try again.'),
-    closeWindow: pickLocaleText(locale, '关闭窗口', 'Close window'),
-    redirecting: pickLocaleText(locale, '正在跳转到支付页面...', 'Redirecting to payment page...'),
-    loadingForm: pickLocaleText(locale, '正在加载支付表单...', 'Loading payment form...'),
+    payFailed: pickLocaleText(locale, 'Payment failed. Please try again.', 'Payment failed. Please try again.'),
+    closeWindow: pickLocaleText(locale, 'Close window', 'Close window'),
+    redirecting: pickLocaleText(locale, 'Redirecting to payment page...', 'Redirecting to payment page...'),
+    loadingForm: pickLocaleText(locale, 'Loading payment form...', 'Loading payment form...'),
     successClosing: pickLocaleText(
       locale,
-      '支付成功，窗口即将自动关闭...',
+      'Payment successful. This window will close automatically...',
       'Payment successful. This window will close automatically...',
     ),
-    closeWindowManually: pickLocaleText(locale, '手动关闭窗口', 'Close window manually'),
-    processing: pickLocaleText(locale, '处理中...', 'Processing...'),
-    payAmount: pickLocaleText(locale, `支付 ¥${amount.toFixed(2)}`, `Pay ¥${amount.toFixed(2)}`),
+    closeWindowManually: pickLocaleText(locale, 'Close window manually', 'Close window manually'),
+    processing: pickLocaleText(locale, 'Processing...', 'Processing...'),
+    payAmount: pickLocaleText(locale, `Pay ¥${amount.toFixed(2)}`, `Pay ¥${amount.toFixed(2)}`),
   };
 
   const [credentials, setCredentials] = useState<{
@@ -311,7 +311,7 @@ function StripePopupFallback() {
   return (
     <div className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
       <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>
-        {pickLocaleText(locale, '加载中...', 'Loading...')}
+        {pickLocaleText(locale, 'Loading...', 'Loading...')}
       </div>
     </div>
   );

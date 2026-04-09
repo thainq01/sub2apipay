@@ -35,18 +35,18 @@ export default function PaginationBar({
     ].join(' ');
 
   const text =
-    locale === 'en'
+    locale === 'vi'
       ? {
+          total: `Tổng cộng ${total}${totalPages > 1 ? `, Trang ${page} / ${totalPages}` : ''}`,
+          perPage: 'Trên mỗi trang',
+          previous: 'Trang trước',
+          next: 'Trang sau',
+        }
+      : {
           total: `Total ${total}${totalPages > 1 ? `, Page ${page} / ${totalPages}` : ''}`,
           perPage: 'Per page',
           previous: 'Previous',
           next: 'Next',
-        }
-      : {
-          total: `共 ${total} 条${totalPages > 1 ? `，第 ${page} / ${totalPages} 页` : ''}`,
-          perPage: '每页',
-          previous: '上一页',
-          next: '下一页',
         };
 
   return (

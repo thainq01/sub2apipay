@@ -50,7 +50,7 @@ export default function ChannelCard({ channel, onTopUp, isDark, locale }: Channe
         <div className="mb-3">
           <div className="flex items-baseline gap-2">
             <span className={['text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-              {pickLocaleText(locale, '当前倍率', 'Rate')}
+              {pickLocaleText(locale, 'Tỉ lệ hiện tại', 'Rate')}
             </span>
             <div className="flex items-baseline">
               <span className={['text-xl font-bold', accentCls].join(' ')}>1</span>
@@ -62,7 +62,7 @@ export default function ChannelCard({ channel, onTopUp, isDark, locale }: Channe
             {pickLocaleText(
               locale,
               <>
-                1元可用约<span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span>美元额度
+                1 CNY có thể sử dụng khoảng <span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span> USD hạn mức
               </>,
               <>
                 1 CNY ≈ <span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span> USD quota
@@ -83,7 +83,7 @@ export default function ChannelCard({ channel, onTopUp, isDark, locale }: Channe
       {channel.models.length > 0 && (
         <div className="mb-4">
           <p className={['mb-2 text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-            {pickLocaleText(locale, '支持模型', 'Supported Models')}
+            {pickLocaleText(locale, 'Các mô hình được hỗ trợ', 'Supported Models')}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {channel.models.map((model) => (
@@ -103,7 +103,7 @@ export default function ChannelCard({ channel, onTopUp, isDark, locale }: Channe
       {channel.features.length > 0 && (
         <div className="mb-5">
           <p className={['mb-2 text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-            {pickLocaleText(locale, '功能特性', 'Features')}
+            {pickLocaleText(locale, 'Tính năng', 'Features')}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {channel.features.map((feature) => (
@@ -136,7 +136,7 @@ export default function ChannelCard({ channel, onTopUp, isDark, locale }: Channe
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
         </svg>
-        {pickLocaleText(locale, '立即充值', 'Top Up Now')}
+        {pickLocaleText(locale, 'Nạp ngay', 'Top Up Now')}
       </button>
     </div>
   );

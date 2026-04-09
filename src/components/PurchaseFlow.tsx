@@ -11,7 +11,7 @@ interface PurchaseFlowProps {
 
 interface Step {
   icon: React.ReactNode;
-  zh: string;
+  vi: string;
   en: string;
 }
 
@@ -26,7 +26,7 @@ const STEPS: Step[] = [
         />
       </svg>
     ),
-    zh: '选择套餐',
+    vi: 'Chọn gói',
     en: 'Select Plan',
   },
   {
@@ -39,7 +39,7 @@ const STEPS: Step[] = [
         />
       </svg>
     ),
-    zh: '完成支付',
+    vi: 'Hoàn thành thanh toán',
     en: 'Complete Payment',
   },
   {
@@ -52,7 +52,7 @@ const STEPS: Step[] = [
         />
       </svg>
     ),
-    zh: '获取激活码',
+    vi: 'Nhận mã kích hoạt',
     en: 'Get Activation',
   },
   {
@@ -61,7 +61,7 @@ const STEPS: Step[] = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
     ),
-    zh: '激活使用',
+    vi: 'Kích hoạt và sử dụng',
     en: 'Start Using',
   },
 ];
@@ -75,7 +75,7 @@ export default function PurchaseFlow({ isDark, locale }: PurchaseFlowProps) {
       ].join(' ')}
     >
       <h3 className={['mb-5 text-center text-sm font-medium', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-        {pickLocaleText(locale, '购买流程', 'How It Works')}
+        {pickLocaleText(locale, 'Quy trình mua hàng', 'How It Works')}
       </h3>
 
       {/* Desktop: horizontal */}
@@ -93,7 +93,7 @@ export default function PurchaseFlow({ isDark, locale }: PurchaseFlowProps) {
                 {step.icon}
               </div>
               <span className={['text-xs font-medium', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
-                {pickLocaleText(locale, step.zh, step.en)}
+                {pickLocaleText(locale, step.vi, step.en)}
               </span>
             </div>
 
@@ -120,7 +120,7 @@ export default function PurchaseFlow({ isDark, locale }: PurchaseFlowProps) {
                 {step.icon}
               </div>
               <span className={['text-sm font-medium', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
-                {pickLocaleText(locale, step.zh, step.en)}
+                {pickLocaleText(locale, step.vi, step.en)}
               </span>
             </div>
 

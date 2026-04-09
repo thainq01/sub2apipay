@@ -101,7 +101,7 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
           {plan.rateMultiplier != null && (
             <div>
               <span className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-                {pickLocaleText(locale, '倍率', 'Rate')}
+                {pickLocaleText(locale, 'Tỉ lệ', 'Rate')}
               </span>
               <div className="flex items-baseline">
                 <span className={['text-lg font-bold', accentCls].join(' ')}>1</span>
@@ -113,7 +113,7 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
           {plan.limits?.daily_limit_usd !== null && plan.limits?.daily_limit_usd !== undefined && (
             <div>
               <span className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-                {pickLocaleText(locale, '日限额', 'Daily Limit')}
+                {pickLocaleText(locale, 'Hạn hàng ngày', 'Daily Limit')}
               </span>
               <div className={['text-lg font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
                 ${plan.limits.daily_limit_usd}
@@ -123,7 +123,7 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
           {plan.limits?.weekly_limit_usd !== null && plan.limits?.weekly_limit_usd !== undefined && (
             <div>
               <span className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-                {pickLocaleText(locale, '周限额', 'Weekly Limit')}
+                {pickLocaleText(locale, 'Hạn hàng tuần', 'Weekly Limit')}
               </span>
               <div className={['text-lg font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
                 ${plan.limits.weekly_limit_usd}
@@ -133,7 +133,7 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
           {plan.limits?.monthly_limit_usd !== null && plan.limits?.monthly_limit_usd !== undefined && (
             <div>
               <span className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-                {pickLocaleText(locale, '月限额', 'Monthly Limit')}
+                {pickLocaleText(locale, 'Hạn hàng tháng', 'Monthly Limit')}
               </span>
               <div className={['text-lg font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
                 ${plan.limits.monthly_limit_usd}
@@ -147,7 +147,7 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
       {plan.features.length > 0 && (
         <div className="mb-5">
           <p className={['mb-2 text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-            {pickLocaleText(locale, '功能特性', 'Features')}
+            {pickLocaleText(locale, 'Tính năng', 'Features')}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {plan.features.map((feature) => (
@@ -202,7 +202,7 @@ export default function SubscriptionPlanCard({ plan, onSubscribe, isDark, locale
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
         </svg>
-        {pickLocaleText(locale, '立即开通', 'Subscribe Now')}
+        {pickLocaleText(locale, 'Kích hoạt ngay', 'Subscribe Now')}
       </button>
     </div>
   );

@@ -2,13 +2,14 @@
 export type PaymentType = string;
 
 /**
- * 从复合 key 中提取基础支付方式（如 'alipay_direct' → 'alipay'）
- * 用于传给第三方 API 时映射回标准名称
+ * Extract base payment method from composite key (e.g., 'alipay_direct' → 'alipay')
+ * Used to map back to standard names when passing to third-party APIs
  */
 export function getBasePaymentType(type: string): string {
   if (type.startsWith('alipay')) return 'alipay';
   if (type.startsWith('wxpay')) return 'wxpay';
   if (type.startsWith('stripe')) return 'stripe';
+  if (type.startsWith('sepay')) return 'sepay';
   return type;
 }
 
@@ -21,7 +22,7 @@ export interface CreatePaymentRequest {
   notifyUrl?: string;
   returnUrl?: string;
   clientIp?: string;
-  /** 是否来自移动端（影响支付宝选择 PC 页面支付 / H5 手机网站支付） */
+  /** Whether from mobile (affects Alipay choosing PC page payment / H5 mobile website payment) */
   isMobile?: boolean;
 }
 
@@ -66,9 +67,9 @@ export interface RefundResponse {
 
 /** Per-method default limits declared by the provider */
 export interface MethodDefaultLimits {
-  /** 单笔最大金额，0 = 不限（使用全局 MAX_RECHARGE_AMOUNT） */
+  /** Max amount per transaction, 0 = unlimited (use global MAX_RECHARGE_AMOUNT) */
   singleMax?: number;
-  /** 每日全平台最大金额，0 = 不限 */
+  /** Global max amount per day, 0 = unlimited */
   dailyMax?: number;
 }
 
@@ -77,7 +78,7 @@ export interface PaymentProvider {
   readonly name: string;
   readonly providerKey: string;
   readonly supportedTypes: PaymentType[];
-  /** 各渠道默认限额，key 为 PaymentType（如 'alipay'），可被环境变量覆盖 */
+  /** Default limits per channel (key is PaymentType like 'alipay'), can be overridden by environment variables */
   readonly defaultLimits?: Record<string, MethodDefaultLimits>;
 
   createPayment(request: CreatePaymentRequest): Promise<CreatePaymentResponse>;

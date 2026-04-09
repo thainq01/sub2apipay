@@ -22,13 +22,13 @@ const RANK_STYLES: Record<number, { light: string; dark: string }> = {
   3: { light: 'bg-orange-100 text-orange-700', dark: 'bg-orange-500/20 text-orange-300' },
 };
 
-export default function Leaderboard({ data, dark, locale = 'zh' }: LeaderboardProps) {
-  const title = locale === 'en' ? 'Recharge Leaderboard (Top 10)' : '充值排行榜 (Top 10)';
-  const emptyText = locale === 'en' ? 'No data' : '暂无数据';
-  const userLabel = locale === 'en' ? 'User' : '用户';
-  const amountLabel = locale === 'en' ? 'Total Amount' : '累计金额';
-  const orderCountLabel = locale === 'en' ? 'Orders' : '订单数';
-  const currency = locale === 'en' ? '$' : '¥';
+export default function Leaderboard({ data, dark, locale = 'en' }: LeaderboardProps) {
+  const title = locale === 'vi' ? 'Bảng xếp hạng nạp tiền (Top 10)' : 'Recharge Leaderboard (Top 10)';
+  const emptyText = locale === 'vi' ? 'Không có dữ liệu' : 'No data';
+  const userLabel = locale === 'vi' ? 'Người dùng' : 'User';
+  const amountLabel = locale === 'vi' ? 'Tổng số tiền' : 'Total Amount';
+  const orderCountLabel = locale === 'vi' ? 'Đơn hàng' : 'Orders';
+  const currency = locale === 'vi' ? 'VND' : '$';
   const thCls = `px-4 py-3 text-left text-xs font-medium uppercase ${dark ? 'text-slate-400' : 'text-gray-500'}`;
   const tdCls = `whitespace-nowrap px-4 py-3 text-sm ${dark ? 'text-slate-300' : 'text-slate-700'}`;
   const tdMuted = `whitespace-nowrap px-4 py-3 text-sm ${dark ? 'text-slate-400' : 'text-gray-500'}`;

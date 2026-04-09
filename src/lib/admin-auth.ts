@@ -31,14 +31,14 @@ async function isSub2ApiAdmin(token: string): Promise<boolean> {
 }
 
 export async function verifyAdminToken(request: NextRequest): Promise<boolean> {
-  // 优先从 Authorization: Bearer <token> header 获取
+  // Prioritize Authorization: Bearer <token> header
   let token: string | null = null;
   const authHeader = request.headers.get('authorization');
   if (authHeader?.startsWith('Bearer ')) {
     token = authHeader.slice(7).trim();
   }
 
-  // Fallback: query parameter（向后兼容，已弃用）
+  // Fallback: query parameter (backward compatibility, deprecated)
   if (!token) {
     token = request.nextUrl.searchParams.get('token');
     if (token) {
@@ -50,14 +50,14 @@ export async function verifyAdminToken(request: NextRequest): Promise<boolean> {
 
   if (!token) return false;
 
-  // 1. 本地 admin token
+  // 1. Local admin token
   if (isLocalAdminToken(token)) return true;
 
-  // 2. Sub2API 管理员 token
+  // 2. Sub2API admin token
   return isSub2ApiAdmin(token);
 }
 
 export function unauthorizedResponse(request?: NextRequest) {
   const locale = resolveLocale(request?.nextUrl.searchParams.get('lang'));
-  return NextResponse.json({ error: locale === 'en' ? 'Unauthorized' : '未授权' }, { status: 401 });
+  return NextResponse.json({ error: locale === 'vi' ? 'Không có quyền' : 'Unauthorized' }, { status: 401 });
 }

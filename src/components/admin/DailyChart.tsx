@@ -67,12 +67,12 @@ function CustomTooltip({
   );
 }
 
-export default function DailyChart({ data, dark, locale = 'zh' }: DailyChartProps) {
-  const currency = locale === 'en' ? '$' : '¥';
-  const chartTitle = locale === 'en' ? 'Daily Recharge Trend' : '每日充值趋势';
-  const emptyText = locale === 'en' ? 'No data' : '暂无数据';
-  const amountLabel = locale === 'en' ? 'Amount' : '金额';
-  const countLabel = locale === 'en' ? 'Orders' : '笔数';
+export default function DailyChart({ data, dark, locale = 'en' }: DailyChartProps) {
+  const currency = locale === 'vi' ? 'VND' : '$';
+  const chartTitle = locale === 'vi' ? 'Xu hướng nạp tiền hàng ngày' : 'Daily Recharge Trend';
+  const emptyText = locale === 'vi' ? 'Không có dữ liệu' : 'No data';
+  const amountLabel = locale === 'vi' ? 'Số tiền' : 'Amount';
+  const countLabel = locale === 'vi' ? 'Đơn hàng' : 'Orders';
   const tickInterval = data.length > 30 ? Math.ceil(data.length / 12) - 1 : 0;
   if (data.length === 0) {
     return (

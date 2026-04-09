@@ -5,6 +5,7 @@ import QRCode from 'qrcode';
 import type { Locale } from '@/lib/locale';
 import type { PublicOrderStatusSnapshot } from '@/lib/order/status';
 import { isStripeType, getPaymentMeta, getPaymentIconSrc, getPaymentChannelLabel } from '@/lib/pay-utils';
+import { isSepayType } from '@/lib/pay-utils';
 import { buildOrderStatusUrl } from '@/lib/order/status-url';
 import { TERMINAL_STATUSES } from '@/lib/constants';
 
@@ -26,10 +27,147 @@ interface PaymentQRCodeProps {
   isEmbedded?: boolean;
   isMobile?: boolean;
   locale?: Locale;
+  sepayBankInfo?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    transferCode: string;
+  } | null;
 }
 
 function isVisibleOrderOutcome(data: PublicOrderStatusSnapshot): boolean {
   return data.paymentSuccess || TERMINAL_STATUSES.has(data.status);
+}
+
+function CopyButton({ text, dark }: { text: string; label?: string; dark: boolean }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      title={copied ? 'Copied!' : 'Copy'}
+      className={[
+        'ml-2 inline-flex shrink-0 items-center justify-center rounded p-1 transition-colors',
+        copied
+          ? dark
+            ? 'bg-green-800 text-green-200'
+            : 'bg-green-100 text-green-600'
+          : dark
+            ? 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+            : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600',
+      ].join(' ')}
+    >
+      {copied ? (
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+function BankTransferCard({
+  bankInfo,
+  displayAmount,
+  dark,
+  locale,
+  t,
+  qrCodeUrl,
+}: {
+  bankInfo: { bankName: string; accountNumber: string; accountName: string; transferCode: string };
+  displayAmount: number;
+  dark: boolean;
+  locale: string;
+  t: Record<string, string>;
+  qrCodeUrl?: string;
+}) {
+  const rows = [
+    { label: t.bankName, value: bankInfo.bankName, copyable: false },
+    { label: t.accountNumber, value: bankInfo.accountNumber, copyable: true },
+    { label: t.accountName, value: bankInfo.accountName, copyable: true },
+    { label: t.transferAmount, value: `${displayAmount.toFixed(0)} VND`, copyable: true, copyText: String(Math.round(displayAmount)) },
+    { label: t.transferCode, value: bankInfo.transferCode, copyable: true, highlight: true },
+  ];
+
+  return (
+    <div className="w-full max-w-md space-y-4">
+      {qrCodeUrl && (
+        <div className="flex justify-center">
+          <div
+            className={[
+              'rounded-lg border p-3',
+              dark ? 'border-slate-700 bg-white' : 'border-gray-200 bg-white',
+            ].join(' ')}
+          >
+            <img src={qrCodeUrl} alt="Bank Transfer QR" className="h-56 w-56 rounded" />
+          </div>
+        </div>
+      )}
+      <div
+        className={[
+          'rounded-lg border p-4 space-y-3',
+          dark ? 'border-blue-800 bg-blue-950/50' : 'border-blue-200 bg-blue-50',
+        ].join(' ')}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <div className="rounded-full bg-blue-600 p-1.5">
+            <img src="/icons/bank.svg" alt="bank" className="h-4 w-4 brightness-0 invert" />
+          </div>
+          <span className={['font-medium', dark ? 'text-blue-300' : 'text-blue-700'].join(' ')}>
+            {t.bankTransferTitle}
+          </span>
+        </div>
+        {rows.map((row) => (
+          <div key={row.label} className="flex items-center justify-between">
+            <span className={['text-sm shrink-0', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
+              {row.label}
+            </span>
+            <div className="flex items-center min-w-0 ml-3">
+              <span
+                className={[
+                  'text-sm font-mono truncate',
+                  row.highlight
+                    ? dark
+                      ? 'font-bold text-yellow-300'
+                      : 'font-bold text-blue-700'
+                    : dark
+                      ? 'text-slate-200'
+                      : 'text-gray-900',
+                ].join(' ')}
+              >
+                {row.value}
+              </span>
+              {row.copyable && (
+                <CopyButton text={row.copyText ?? row.value} label={t.copy} dark={dark} />
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className={['text-center text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
+        {t.transferHint}
+      </p>
+      <div className="flex items-center justify-center gap-2 py-2">
+        <div
+          className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"
+        />
+        <span className={['text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
+          {t.waitingTransfer}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export default function PaymentQRCode({
@@ -49,7 +187,8 @@ export default function PaymentQRCode({
   dark = false,
   isEmbedded = false,
   isMobile = false,
-  locale = 'zh',
+  locale = 'en',
+  sepayBankInfo,
 }: PaymentQRCodeProps) {
   const displayAmount = payAmountProp ?? amount;
   const hasFeeDiff = payAmountProp !== undefined && payAmountProp !== amount;
@@ -74,52 +213,66 @@ export default function PaymentQRCode({
   const paymentMethodListenerAdded = useRef(false);
 
   const t = {
-    expired: locale === 'en' ? 'Order Expired' : '订单已超时',
-    remaining: locale === 'en' ? 'Time Remaining' : '剩余支付时间',
-    scanPay: locale === 'en' ? 'Please scan with your payment app' : '请使用支付应用扫码支付',
-    back: locale === 'en' ? 'Back' : '返回',
-    cancelOrder: locale === 'en' ? 'Cancel Order' : '取消订单',
+    expired: locale === 'vi' ? 'Đơn hàng đã hết hạn' : 'Order Expired',
+    remaining: locale === 'vi' ? 'Thời gian còn lại' : 'Time Remaining',
+    scanPay: locale === 'vi' ? 'Vui lòng quét mã QR bằng ứng dụng thanh toán' : 'Please scan with your payment app',
+    back: locale === 'vi' ? 'Quay lại' : 'Back',
+    cancelOrder: locale === 'vi' ? 'Hủy đơn hàng' : 'Cancel Order',
     h5Hint:
-      locale === 'en'
-        ? 'After payment, please return to this page. The system will confirm automatically.'
-        : '支付完成后请返回此页面，系统将自动确认',
-    paid: locale === 'en' ? 'Order Paid' : '订单已支付',
+      locale === 'vi'
+        ? 'Sau khi thanh toán xong vui lòng quay lại trang này, hệ thống sẽ tự động xác nhận.'
+        : 'After payment, please return to this page. The system will confirm automatically.',
+    paid: locale === 'vi' ? 'Đơn hàng đã thanh toán' : 'Order Paid',
     paidCancelBlocked:
-      locale === 'en'
-        ? 'This order has already been paid and cannot be cancelled. The recharge will be credited automatically.'
-        : '该订单已支付完成，无法取消。充值将自动到账。',
-    backToRecharge: locale === 'en' ? 'Back to Recharge' : '返回充值',
-    credited: locale === 'en' ? 'Credited ¥' : '到账 ¥',
+      locale === 'vi'
+        ? 'Đơn hàng này đã thanh toán xong, không thể hủy. Tiền nạp sẽ được cập nhật tự động.'
+        : 'This order has already been paid and cannot be cancelled. The recharge will be credited automatically.',
+    backToRecharge: locale === 'vi' ? 'Quay lại nạp tiền' : 'Back to Recharge',
+    credited: locale === 'vi' ? 'Cập nhật ¥' : 'Credited ¥',
     stripeLoadFailed:
-      locale === 'en'
-        ? 'Failed to load payment component. Please refresh and try again.'
-        : '支付组件加载失败，请刷新页面重试',
+      locale === 'vi'
+        ? 'Không thể tải thành phần thanh toán. Vui lòng làm mới trang và thử lại.'
+        : 'Failed to load payment component. Please refresh and try again.',
     initFailed:
-      locale === 'en' ? 'Payment initialization failed. Please go back and try again.' : '支付初始化失败，请返回重试',
-    loadingForm: locale === 'en' ? 'Loading payment form...' : '正在加载支付表单...',
-    payFailed: locale === 'en' ? 'Payment failed. Please try again.' : '支付失败，请重试',
-    successProcessing: locale === 'en' ? 'Payment successful, processing your order...' : '支付成功，正在处理订单...',
-    processing: locale === 'en' ? 'Processing...' : '处理中...',
-    payNow: locale === 'en' ? 'Pay' : '支付',
+      locale === 'vi' ? 'Khởi tạo thanh toán không thành công. Vui lòng quay lại và thử lại.' : 'Payment initialization failed. Please go back and try again.',
+    loadingForm: locale === 'vi' ? 'Đang tải biểu mẫu thanh toán...' : 'Loading payment form...',
+    payFailed: locale === 'vi' ? 'Thanh toán không thành công. Vui lòng thử lại.' : 'Payment failed. Please try again.',
+    successProcessing: locale === 'vi' ? 'Thanh toán thành công, đang xử lý đơn hàng...' : 'Payment successful, processing your order...',
+    processing: locale === 'vi' ? 'Đang xử lý...' : 'Processing...',
+    payNow: locale === 'vi' ? 'Thanh toán' : 'Pay',
     popupBlocked:
-      locale === 'en'
-        ? 'Popup was blocked by your browser. Please allow popups for this site and try again.'
-        : '弹出窗口被浏览器拦截，请允许本站弹出窗口后重试',
-    redirectingPrefix: locale === 'en' ? 'Redirecting to ' : '正在跳转到',
-    redirectingSuffix: locale === 'en' ? '...' : '...',
+      locale === 'vi'
+        ? 'Cửa sổ bật lên đã bị trình duyệt chặn. Vui lòng cho phép cửa sổ bật lên cho trang này và thử lại.'
+        : 'Popup was blocked by your browser. Please allow popups for this site and try again.',
+    redirectingPrefix: locale === 'vi' ? 'Đang chuyển hướng đến ' : 'Redirecting to ',
+    redirectingSuffix: locale === 'vi' ? '...' : '...',
     redirectRetryHint:
-      locale === 'en'
-        ? 'If the payment app does not open automatically, go back and try again.'
-        : '如未自动拉起支付应用，请返回上一页后重新发起支付。',
-    notRedirectedPrefix: locale === 'en' ? 'Not redirected? Open ' : '未跳转？点击前往',
-    goPaySuffix: locale === 'en' ? '' : '',
-    gotoPrefix: locale === 'en' ? 'Open ' : '前往',
-    gotoSuffix: locale === 'en' ? ' to pay' : '支付',
-    openScanPrefix: locale === 'en' ? 'Open ' : '请打开',
-    openScanSuffix: locale === 'en' ? ' and scan to complete payment' : '扫一扫完成支付',
+      locale === 'vi'
+        ? 'Nếu ứng dụng thanh toán không mở tự động, hãy quay lại và thử lại.'
+        : 'If the payment app does not open automatically, go back and try again.',
+    notRedirectedPrefix: locale === 'vi' ? 'Chưa chuyển hướng? Nhấp để truy cập' : 'Not redirected? Open ',
+    goPaySuffix: locale === 'vi' ? '' : '',
+    gotoPrefix: locale === 'vi' ? 'Truy cập ' : 'Open ',
+    gotoSuffix: locale === 'vi' ? ' để thanh toán' : ' to pay',
+    openScanPrefix: locale === 'vi' ? 'Vui lòng mở' : 'Open ',
+    openScanSuffix: locale === 'vi' ? ' và quét mã để thanh toán' : ' and scan to complete payment',
+    // SePay bank transfer
+    bankTransferTitle: locale === 'vi' ? 'Thông tin chuyển khoản' : 'Bank Transfer Info',
+    bankName: locale === 'vi' ? 'Ngân hàng' : 'Bank',
+    accountNumber: locale === 'vi' ? 'Số tài khoản' : 'Account',
+    accountName: locale === 'vi' ? 'Chủ tài khoản' : 'Name',
+    transferAmount: locale === 'vi' ? 'Số tiền' : 'Amount',
+    transferCode: locale === 'vi' ? 'Nội dung chuyển khoản' : 'Memo / Note',
+    copied: locale === 'vi' ? 'Đã sao chép' : 'Copied!',
+    copy: locale === 'vi' ? 'Sao chép' : 'Copy',
+    waitingTransfer: locale === 'vi' ? 'Đang chờ chuyển khoản ngân hàng...' : 'Waiting for bank transfer...',
+    transferHint:
+      locale === 'vi'
+        ? 'Vui lòng chuyển khoản với số tiền chính xác và nội dung ghi chú bên dưới. Hệ thống sẽ tự động xác nhận sau khi nhận được chuyển khoản.'
+        : 'Please transfer the exact amount with the memo code below. The system will confirm automatically after receiving the transfer.',
   };
 
-  const shouldAutoRedirect = !expired && !isStripeType(paymentType) && !!payUrl && (isMobile || !qrCode);
+  const shouldAutoRedirect = !expired && !isStripeType(paymentType) && !isSepayType(paymentType) && !!payUrl && (isMobile || !qrCode);
 
   useEffect(() => {
     if (!shouldAutoRedirect || redirected) return;
@@ -170,6 +323,8 @@ export default function PaymentQRCode({
   }, [qrPayload]);
 
   const isStripe = isStripeType(paymentType);
+  const isSepay = isSepayType(paymentType);
+  const formatCurrency = (n: number) => isSepay ? `${n.toLocaleString('en-US')} VND` : `¥${n.toFixed(2)}`;
 
   useEffect(() => {
     if (!isStripe || !clientSecret || !stripePublishableKey) return;
@@ -244,8 +399,8 @@ export default function PaymentQRCode({
     if (statusAccessToken) {
       returnUrl.searchParams.set('access_token', statusAccessToken);
     }
-    if (locale === 'en') {
-      returnUrl.searchParams.set('lang', 'en');
+    if (locale === 'vi') {
+      returnUrl.searchParams.set('lang', 'vi');
     }
 
     const { error } = await stripe.confirmPayment({
@@ -278,8 +433,8 @@ export default function PaymentQRCode({
     if (statusAccessToken) {
       popupUrl.searchParams.set('access_token', statusAccessToken);
     }
-    if (locale === 'en') {
-      popupUrl.searchParams.set('lang', 'en');
+    if (locale === 'vi') {
+      popupUrl.searchParams.set('lang', 'vi');
     }
 
     const popup = window.open(popupUrl.toString(), 'stripe_payment', 'width=500,height=700,scrollbars=yes');
@@ -413,13 +568,12 @@ export default function PaymentQRCode({
     <div className="flex flex-col items-center space-y-4">
       <div className="text-center">
         <div className={['text-4xl font-bold', dark ? 'text-blue-400' : 'text-blue-600'].join(' ')}>
-          {'¥'}
-          {displayAmount.toFixed(2)}
+          {formatCurrency(displayAmount)}
         </div>
         {hasFeeDiff && (
           <div className={['mt-1 text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
             {t.credited}
-            {amount.toFixed(2)}
+            {formatCurrency(amount)}
           </div>
         )}
         <div
@@ -500,7 +654,7 @@ export default function PaymentQRCode({
                           {t.processing}
                         </span>
                       ) : (
-                        `${t.payNow} ¥${amount.toFixed(2)}`
+                        `${t.payNow} ${formatCurrency(amount)}`
                       )}
                     </button>
                   )}
@@ -519,6 +673,15 @@ export default function PaymentQRCode({
                 </>
               )}
             </div>
+          ) : isSepay && sepayBankInfo ? (
+            <BankTransferCard
+              bankInfo={sepayBankInfo}
+              displayAmount={displayAmount}
+              dark={dark}
+              locale={locale}
+              t={t}
+              qrCodeUrl={qrCode || undefined}
+            />
           ) : shouldAutoRedirect ? (
             <>
               <div className="flex items-center justify-center py-6">

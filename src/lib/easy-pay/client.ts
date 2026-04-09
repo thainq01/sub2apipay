@@ -134,7 +134,7 @@ export async function queryOrder(
     apiBase = env.EASY_PAY_API_BASE;
   }
 
-  // 使用 POST 避免密钥暴露在 URL 中（URL 会被记录到服务器/CDN 日志）
+  // Use POST to avoid key exposure in URL (URLs are logged to server/CDN logs)
   const params = new URLSearchParams({
     act: 'order',
     pid,

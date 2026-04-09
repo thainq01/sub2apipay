@@ -2,16 +2,13 @@
 
 import { useState } from 'react';
 import type { Locale } from '@/lib/locale';
-import { PAYMENT_TYPE_META, getPaymentIconType, getPaymentMeta, getPaymentDisplayInfo } from '@/lib/pay-utils';
+import { PAYMENT_TYPE_META, getPaymentIconType, getPaymentMeta, getPaymentDisplayInfo, isSepayType } from '@/lib/pay-utils';
 
 export interface MethodLimitInfo {
   available: boolean;
   remaining: number | null;
-  /** 单笔最小限额，0 = 使用全局 minAmount */
   singleMin?: number;
-  /** 单笔最大限额，0 = 使用全局 maxAmount */
   singleMax?: number;
-  /** 手续费率百分比，0 = 无手续费 */
   feeRate?: number;
 }
 
@@ -26,15 +23,14 @@ interface PaymentFormProps {
   onSubmit: (amount: number, paymentType: string) => Promise<void>;
   loading?: boolean;
   dark?: boolean;
-  pendingBlocked?: boolean;
-  pendingCount?: number;
   locale?: Locale;
-  /** 固定金额模式：隐藏金额选择，只显示支付方式和提交按钮 */
   fixedAmount?: number;
 }
 
 const QUICK_AMOUNTS = [10, 20, 50, 100, 200, 500, 1000, 2000];
+const QUICK_AMOUNTS_VND = [50000, 100000, 200000, 500000, 1000000, 2000000];
 const AMOUNT_TEXT_PATTERN = /^\d*(\.\d{0,2})?$/;
+const AMOUNT_TEXT_PATTERN_VND = /^\d*$/;
 
 function hasValidCentPrecision(num: number): boolean {
   return Math.abs(Math.round(num * 100) - num * 100) < 1e-8;
@@ -51,9 +47,7 @@ export default function PaymentForm({
   onSubmit,
   loading,
   dark = false,
-  pendingBlocked = false,
-  pendingCount = 0,
-  locale = 'zh',
+  locale = 'en',
   fixedAmount,
 }: PaymentFormProps) {
   const [amount, setAmount] = useState<number | ''>(fixedAmount ?? '');
@@ -64,25 +58,24 @@ export default function PaymentForm({
     ? paymentType
     : enabledPaymentTypes[0] || 'stripe';
 
+  const isVND = isSepayType(effectivePaymentType);
+  const currencySymbol = isVND ? '' : '¥';
+  const currencySuffix = isVND ? ' VND' : '';
+  const formatAmount = (n: number) => isVND ? `${n.toLocaleString('en-US')}${currencySuffix}` : `¥${n.toFixed(2)}`;
+  const activeQuickAmounts = isVND ? QUICK_AMOUNTS_VND : QUICK_AMOUNTS;
+  const activeAmountPattern = isVND ? AMOUNT_TEXT_PATTERN_VND : AMOUNT_TEXT_PATTERN;
+
   const handleQuickAmount = (val: number) => {
     setAmount(val);
     setCustomAmount(String(val));
   };
 
   const handleCustomAmountChange = (val: string) => {
-    if (!AMOUNT_TEXT_PATTERN.test(val)) {
-      return;
-    }
-
+    if (!activeAmountPattern.test(val)) return;
     setCustomAmount(val);
-
-    if (val === '') {
-      setAmount('');
-      return;
-    }
-
+    if (val === '') { setAmount(''); return; }
     const num = parseFloat(val);
-    if (!isNaN(num) && num > 0 && hasValidCentPrecision(num)) {
+    if (!isNaN(num) && num > 0 && (isVND ? Number.isInteger(num) : hasValidCentPrecision(num))) {
       setAmount(num);
     } else {
       setAmount('');
@@ -103,7 +96,7 @@ export default function PaymentForm({
   const isValid =
     selectedAmount >= effectiveMin &&
     selectedAmount <= effectiveMax &&
-    hasValidCentPrecision(selectedAmount) &&
+    (isVND ? Number.isInteger(selectedAmount) : hasValidCentPrecision(selectedAmount)) &&
     isMethodAvailable;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -112,12 +105,14 @@ export default function PaymentForm({
     await onSubmit(selectedAmount, effectivePaymentType);
   };
 
+  const coffeeCount = isVND && selectedAmount >= 2000 ? Math.floor(selectedAmount / 2000) : 0;
+
   const renderPaymentIcon = (type: string) => {
     const iconType = getPaymentIconType(type);
     if (iconType === 'alipay') {
       return (
         <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#00AEEF] text-xl font-bold leading-none text-white">
-          {locale === 'en' ? 'A' : '支'}
+          A
         </span>
       );
     }
@@ -134,17 +129,20 @@ export default function PaymentForm({
     if (iconType === 'stripe') {
       return (
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#635bff] text-white">
-          <svg
-            viewBox="0 0 24 24"
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <rect x="2" y="5" width="20" height="14" rx="2" />
             <path d="M2 10h20" />
+          </svg>
+        </span>
+      );
+    }
+    if (iconType === 'sepay') {
+      return (
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="1" y="6" width="22" height="15" rx="2" />
+            <path d="M1 10h22" />
+            <path d="M12 2L2 6h20L12 2z" />
           </svg>
         </span>
       );
@@ -153,124 +151,159 @@ export default function PaymentForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div
-        className={[
-          'rounded-xl border p-4',
-          dark ? 'border-slate-700 bg-slate-800/80' : 'border-slate-200 bg-slate-50',
-        ].join(' ')}
-      >
-        <div className={['text-xs uppercase tracking-wide', dark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-          {locale === 'en' ? 'Recharge Account' : '充值账户'}
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Account info */}
+      <div className={[
+        'flex items-center gap-3 rounded-xl p-4',
+        dark ? 'bg-slate-800/60' : 'bg-slate-50',
+      ].join(' ')}>
+        <div className={[
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold',
+          dark ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-100 text-indigo-600',
+        ].join(' ')}>
+          {(userName || 'U')[0].toUpperCase()}
         </div>
-        <div className={['mt-1 text-base font-medium', dark ? 'text-slate-100' : 'text-slate-900'].join(' ')}>
-          {userName || (locale === 'en' ? `User #${userId}` : `用户 #${userId}`)}
-        </div>
-        {userBalance !== undefined && (
-          <div className={['mt-1 text-sm', dark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-            {locale === 'en' ? 'Current Balance:' : '当前余额:'}{' '}
-            <span className="font-medium text-green-600">{userBalance.toFixed(2)}</span>
+        <div className="min-w-0 flex-1">
+          <div className={['truncate text-sm font-medium', dark ? 'text-slate-100' : 'text-slate-900'].join(' ')}>
+            {userName || (locale === 'vi' ? `Ng\u01b0\u1eddi d\u00f9ng #${userId}` : `User #${userId}`)}
           </div>
-        )}
+          {userBalance !== undefined && (
+            <div className={['text-xs', dark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+              {locale === 'vi' ? 'S\u1ed1 d\u01b0:' : 'Balance:'}{' '}
+              <span className={['font-semibold', dark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
+                {userBalance.toFixed(2)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* Amount section */}
       {fixedAmount ? (
-        <div
-          className={[
-            'rounded-xl border p-4 text-center',
-            dark ? 'border-slate-700 bg-slate-800/60' : 'border-slate-200 bg-slate-50',
-          ].join(' ')}
-        >
-          <div className={['text-xs uppercase tracking-wide', dark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-            {locale === 'en' ? 'Recharge Amount' : '充值金额'}
+        <div className={[
+          'rounded-xl p-6 text-center',
+          dark ? 'bg-slate-800/60' : 'bg-slate-50',
+        ].join(' ')}>
+          <div className={['text-xs font-medium uppercase tracking-wider', dark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+            {locale === 'vi' ? 'S\u1ed1 ti\u1ec1n n\u1ea1p' : 'Recharge Amount'}
           </div>
-          <div className={['mt-1 text-3xl font-bold', dark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
-            ¥{fixedAmount.toFixed(2)}
+          <div className={['mt-2 text-3xl font-bold', dark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
+            {formatAmount(fixedAmount)}
           </div>
         </div>
       ) : (
-        <>
-          <div>
-            <label className={['mb-2 block text-sm font-medium', dark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
-              {locale === 'en' ? 'Recharge Amount' : '充值金额'}
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {QUICK_AMOUNTS.filter((val) => val >= effectiveMin && val <= effectiveMax).map((val) => (
-                <button
-                  key={val}
-                  type="button"
-                  onClick={() => handleQuickAmount(val)}
-                  className={`rounded-lg border-2 px-4 py-3 text-center font-medium transition-colors ${
-                    amount === val
-                      ? dark
-                        ? 'border-blue-500 bg-blue-900/40 text-blue-300'
-                        : 'border-blue-500 bg-blue-50 text-blue-700'
-                      : dark
-                        ? 'border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-500'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  ¥{val}
-                </button>
-              ))}
+        <div className="space-y-3">
+          {/* Input */}
+          <div className="relative">
+            <div className={[
+              'pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium',
+              dark ? 'text-slate-500' : 'text-slate-400',
+            ].join(' ')}>
+              {isVND ? 'VND' : '\u00a5'}
             </div>
+            <input
+              type="text"
+              inputMode="decimal"
+              step={isVND ? '1' : '0.01'}
+              min={effectiveMin}
+              max={effectiveMax}
+              value={customAmount}
+              onChange={(e) => handleCustomAmountChange(e.target.value)}
+              placeholder={isVND ? `${effectiveMax}` : `${effectiveMin} - ${effectiveMax}`}
+              className={[
+                'w-full rounded-xl border-2 py-3.5 pl-14 pr-4 text-lg font-semibold transition-all focus:outline-none',
+                dark
+                  ? 'border-slate-700 bg-slate-800/60 text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20'
+                  : 'border-slate-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+              ].join(' ')}
+            />
           </div>
 
-          <div>
-            <label className={['mb-2 block text-sm font-medium', dark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
-              {locale === 'en' ? 'Custom Amount' : '自定义金额'}
-            </label>
-            <div className="relative">
-              <span
-                className={['absolute left-3 top-1/2 -translate-y-1/2', dark ? 'text-slate-500' : 'text-gray-400'].join(
-                  ' ',
-                )}
-              >
-                ¥
-              </span>
-              <input
-                type="text"
-                inputMode="decimal"
-                step="0.01"
-                min={effectiveMin}
-                max={effectiveMax}
-                value={customAmount}
-                onChange={(e) => handleCustomAmountChange(e.target.value)}
-                placeholder={`${effectiveMin} - ${effectiveMax}`}
+          {/* Quick amount chips */}
+          <div className="flex flex-wrap gap-2">
+            {activeQuickAmounts.map((val) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => handleQuickAmount(val)}
                 className={[
-                  'w-full rounded-lg border py-3 pl-8 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
-                  dark ? 'border-slate-700 bg-slate-900 text-slate-100' : 'border-gray-300 bg-white text-gray-900',
+                  'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                  amount === val
+                    ? dark
+                      ? 'bg-indigo-500/25 text-indigo-300 ring-1 ring-indigo-500/50'
+                      : 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-500/30'
+                    : dark
+                      ? 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-300'
+                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700',
                 ].join(' ')}
-              />
-            </div>
+              >
+                {formatAmount(val)}
+              </button>
+            ))}
           </div>
-        </>
+
+          {/* Coffee meter */}
+          {isVND && (
+            <div className={[
+              'flex items-center gap-2.5 rounded-xl px-4 py-3',
+              dark ? 'bg-amber-500/10' : 'bg-amber-50',
+            ].join(' ')}>
+              <span className="text-xl">{'\u2615'}</span>
+              <div className="flex-1">
+                {coffeeCount > 0 ? (
+                  <div>
+                    <span className={['text-sm font-semibold', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>
+                      {coffeeCount} coffee{coffeeCount > 1 ? 's' : ''}
+                    </span>
+                    <span className={['ml-1.5 text-xs', dark ? 'text-amber-400/60' : 'text-amber-600/60'].join(' ')}>
+                      {Array.from({ length: Math.min(coffeeCount, 10) }, () => '\u2615').join('')}
+                    </span>
+                  </div>
+                ) : (
+                  <span className={['text-xs', dark ? 'text-amber-400/80' : 'text-amber-600/80'].join(' ')}>
+                    2,000 VND = 1 cup of coffee
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Validation message */}
+          {customAmount !== '' && !isValid && (() => {
+            const num = parseFloat(customAmount);
+            let msg = locale === 'vi'
+              ? 'S\u1ed1 ti\u1ec1n ph\u1ea3i n\u1eb1m trong ph\u1ea1m vi v\u00e0 h\u1ed7 tr\u1ee3 t\u1ed1i \u0111a 2 ch\u1eef s\u1ed1 th\u1eadp ph\u00e2n'
+              : 'Amount must be within range and support up to 2 decimal places';
+            if (!isNaN(num)) {
+              if (num < minAmount)
+                msg = locale === 'vi' ? `N\u1ea1p t\u1ed1i thi\u1ec3u: ${formatAmount(minAmount)}` : `Minimum: ${formatAmount(minAmount)}`;
+              else if (num > effectiveMax)
+                msg = locale === 'vi' ? `N\u1ea1p t\u1ed1i \u0111a: ${formatAmount(effectiveMax)}` : `Maximum: ${formatAmount(effectiveMax)}`;
+            }
+            return (
+              <div className={[
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-xs',
+                dark ? 'bg-amber-500/10 text-amber-300' : 'bg-amber-50 text-amber-700',
+              ].join(' ')}>
+                <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                {msg}
+              </div>
+            );
+          })()}
+        </div>
       )}
 
-      {!fixedAmount &&
-        customAmount !== '' &&
-        !isValid &&
-        (() => {
-          const num = parseFloat(customAmount);
-          let msg =
-            locale === 'en'
-              ? 'Amount must be within range and support up to 2 decimal places'
-              : '金额需在范围内，且最多支持 2 位小数（精确到分）';
-          if (!isNaN(num)) {
-            if (num < minAmount)
-              msg = locale === 'en' ? `Minimum per transaction: ¥${minAmount}` : `单笔最低充值 ¥${minAmount}`;
-            else if (num > effectiveMax)
-              msg = locale === 'en' ? `Maximum per transaction: ¥${effectiveMax}` : `单笔最高充值 ¥${effectiveMax}`;
-          }
-          return <div className={['text-xs', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>{msg}</div>;
-        })()}
-
+      {/* Payment method */}
       {enabledPaymentTypes.length > 1 && (
-        <div>
-          <label className={['mb-2 block text-sm font-medium', dark ? 'text-slate-200' : 'text-gray-700'].join(' ')}>
-            {locale === 'en' ? 'Payment Method' : '支付方式'}
+        <div className="space-y-2">
+          <label className={['text-xs font-medium uppercase tracking-wider', dark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+            {locale === 'vi' ? 'Ph\u01b0\u01a1ng th\u1ee9c thanh to\u00e1n' : 'Payment Method'}
           </label>
-          <div className="grid grid-cols-2 gap-3 sm:flex">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
             {enabledPaymentTypes.map((type) => {
               const meta = PAYMENT_TYPE_META[type];
               const displayInfo = getPaymentDisplayInfo(type, locale);
@@ -286,41 +319,39 @@ export default function PaymentForm({
                   onClick={() => !isUnavailable && setPaymentType(type)}
                   title={
                     isUnavailable
-                      ? locale === 'en'
-                        ? 'Daily limit reached, please use another payment method'
-                        : '今日充值额度已满，请使用其他支付方式'
+                      ? locale === 'vi'
+                        ? 'H\u1ea1n ng\u00e0y h\u00f4m nay \u0111\u00e3 \u0111\u1ea1t'
+                        : 'Daily limit reached'
                       : undefined
                   }
                   className={[
-                    'relative flex h-[58px] flex-col items-center justify-center rounded-lg border px-3 transition-all sm:flex-1',
+                    'relative flex items-center gap-2 rounded-xl border-2 px-3 py-3 transition-all sm:flex-1 sm:justify-center',
                     isUnavailable
                       ? dark
-                        ? 'cursor-not-allowed border-slate-700 bg-slate-800/50 opacity-50'
-                        : 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-50'
+                        ? 'cursor-not-allowed border-slate-800 bg-slate-800/30 opacity-40'
+                        : 'cursor-not-allowed border-slate-100 bg-slate-50 opacity-40'
                       : isSelected
-                        ? `${meta?.selectedBorder || 'border-blue-500'} ${dark ? meta?.selectedBgDark || 'bg-blue-950' : meta?.selectedBg || 'bg-blue-50'} ${dark ? 'text-slate-100' : 'text-slate-900'} shadow-sm`
+                        ? dark
+                          ? `border-indigo-500/60 bg-indigo-500/10 text-slate-100 ring-1 ring-indigo-500/20`
+                          : `border-indigo-500/40 bg-indigo-50/50 text-slate-900 ring-1 ring-indigo-500/10`
                         : dark
-                          ? 'border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-500'
-                          : 'border-gray-300 bg-white text-slate-700 hover:border-gray-400',
+                          ? 'border-slate-800 bg-slate-800/30 text-slate-300 hover:border-slate-600'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
                   ].join(' ')}
                 >
-                  <span className="flex items-center gap-2">
-                    {renderPaymentIcon(type)}
-                    <span className="flex flex-col items-start leading-none">
-                      <span className="text-xl font-semibold tracking-tight">{displayInfo.channel || type}</span>
-                      {isUnavailable ? (
-                        <span className="text-[10px] tracking-wide text-red-400">
-                          {locale === 'en' ? 'Daily limit reached' : '今日额度已满'}
-                        </span>
-                      ) : displayInfo.sublabel ? (
-                        <span
-                          className={`text-[10px] tracking-wide ${dark ? (isSelected ? 'text-slate-300' : 'text-slate-400') : 'text-slate-600'}`}
-                        >
-                          {displayInfo.sublabel}
-                        </span>
-                      ) : null}
-                    </span>
-                  </span>
+                  {renderPaymentIcon(type)}
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-sm font-semibold">{displayInfo.channel || type}</span>
+                    {isUnavailable ? (
+                      <span className="text-[10px] text-red-400">
+                        {locale === 'vi' ? 'H\u1ea1n ng\u00e0y \u0111\u00e3 \u0111\u1ea1t' : 'Limit reached'}
+                      </span>
+                    ) : displayInfo.sublabel ? (
+                      <span className={['text-[10px]', dark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+                        {displayInfo.sublabel}
+                      </span>
+                    ) : null}
+                  </div>
                 </button>
               );
             })}
@@ -330,78 +361,76 @@ export default function PaymentForm({
             const limitInfo = methodLimits?.[effectivePaymentType];
             if (!limitInfo || limitInfo.available) return null;
             return (
-              <p className={['mt-2 text-xs', dark ? 'text-amber-300' : 'text-amber-600'].join(' ')}>
-                {locale === 'en'
-                  ? "The selected payment method has reached today's limit. Please switch to another method."
-                  : '所选支付方式今日额度已满，请切换到其他支付方式'}
+              <p className={['text-xs', dark ? 'text-amber-300' : 'text-amber-600'].join(' ')}>
+                {locale === 'vi'
+                  ? 'Ph\u01b0\u01a1ng th\u1ee9c n\u00e0y \u0111\u00e3 \u0111\u1ea1t h\u1ea1n. Vui l\u00f2ng ch\u1ecdn ph\u01b0\u01a1ng th\u1ee9c kh\u00e1c.'
+                  : "This method has reached today's limit. Please choose another."}
               </p>
             );
           })()}
         </div>
       )}
 
+      {/* Fee breakdown */}
       {feeRate > 0 && selectedAmount > 0 && (
-        <div
-          className={[
-            'rounded-xl border px-4 py-3 text-sm',
-            dark ? 'border-slate-700 bg-slate-800/60 text-slate-300' : 'border-slate-200 bg-slate-50 text-slate-600',
-          ].join(' ')}
-        >
+        <div className={[
+          'space-y-2 rounded-xl p-4 text-sm',
+          dark ? 'bg-slate-800/60 text-slate-300' : 'bg-slate-50 text-slate-600',
+        ].join(' ')}>
           <div className="flex items-center justify-between">
-            <span>{locale === 'en' ? 'Recharge Amount' : '充值金额'}</span>
-            <span>¥{selectedAmount.toFixed(2)}</span>
+            <span>{locale === 'vi' ? 'S\u1ed1 ti\u1ec1n n\u1ea1p' : 'Amount'}</span>
+            <span>{formatAmount(selectedAmount)}</span>
           </div>
-          <div className="mt-1 flex items-center justify-between">
-            <span>{locale === 'en' ? `Fee (${feeRate}%)` : `手续费（${feeRate}%）`}</span>
-            <span>¥{feeAmount.toFixed(2)}</span>
+          <div className="flex items-center justify-between">
+            <span>{locale === 'vi' ? `Ph\u00ed (${feeRate}%)` : `Fee (${feeRate}%)`}</span>
+            <span>{formatAmount(feeAmount)}</span>
           </div>
-          <div
-            className={[
-              'mt-1.5 flex items-center justify-between border-t pt-1.5 font-medium',
-              dark ? 'border-slate-700 text-slate-100' : 'border-slate-200 text-slate-900',
-            ].join(' ')}
-          >
-            <span>{locale === 'en' ? 'Amount to Pay' : '实付金额'}</span>
-            <span>¥{payAmount.toFixed(2)}</span>
+          <div className={[
+            'flex items-center justify-between border-t pt-2 font-semibold',
+            dark ? 'border-slate-700 text-slate-100' : 'border-slate-200 text-slate-900',
+          ].join(' ')}>
+            <span>{locale === 'vi' ? 'T\u1ed5ng c\u1ed9ng' : 'Total'}</span>
+            <span>{formatAmount(payAmount)}</span>
           </div>
         </div>
       )}
 
-      {pendingBlocked && (
-        <div
-          className={[
-            'rounded-lg border p-3 text-sm',
-            dark ? 'border-amber-700 bg-amber-900/30 text-amber-300' : 'border-amber-200 bg-amber-50 text-amber-700',
-          ].join(' ')}
-        >
-          {locale === 'en'
-            ? `You have ${pendingCount} pending orders. Please complete or cancel them before recharging.`
-            : `您有 ${pendingCount} 个待支付订单，请先完成或取消后再充值`}
-        </div>
-      )}
-
+      {/* Submit */}
       <button
         type="submit"
-        disabled={!isValid || loading || pendingBlocked}
-        className={`w-full rounded-lg py-3 text-center font-medium transition-colors ${
-          isValid && !loading && !pendingBlocked
-            ? `text-white ${getPaymentMeta(effectivePaymentType).buttonClass}`
+        disabled={!isValid || loading}
+        className={[
+          'flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold tracking-wide transition-all',
+          isValid && !loading
+            ? [
+                'text-white shadow-lg active:scale-[0.98]',
+                getPaymentMeta(effectivePaymentType).buttonClass,
+                dark ? 'shadow-indigo-500/20' : 'shadow-indigo-500/25',
+              ].join(' ')
             : dark
-              ? 'cursor-not-allowed bg-slate-700 text-slate-400'
-              : 'cursor-not-allowed bg-gray-300 text-gray-500'
-        }`}
+              ? 'cursor-not-allowed bg-slate-800 text-slate-600'
+              : 'cursor-not-allowed bg-slate-100 text-slate-400',
+        ].join(' ')}
       >
-        {loading
-          ? locale === 'en'
-            ? 'Processing...'
-            : '处理中...'
-          : pendingBlocked
-            ? locale === 'en'
-              ? 'Too many pending orders'
-              : '待支付订单过多'
-            : locale === 'en'
-              ? `Recharge Now ¥${(feeRate > 0 && selectedAmount > 0 ? payAmount : selectedAmount || 0).toFixed(2)}`
-              : `立即充值 ¥${(feeRate > 0 && selectedAmount > 0 ? payAmount : selectedAmount || 0).toFixed(2)}`}
+        {loading ? (
+          <>
+            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            {locale === 'vi' ? '\u0110ang x\u1eed l\u00fd...' : 'Processing...'}
+          </>
+        ) : (
+          <>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+              <line x1="1" y1="10" x2="23" y2="10" />
+            </svg>
+            {locale === 'vi'
+              ? `N\u1ea1p ${formatAmount(feeRate > 0 && selectedAmount > 0 ? payAmount : selectedAmount || 0)}`
+              : `Pay ${formatAmount(feeRate > 0 && selectedAmount > 0 ? payAmount : selectedAmount || 0)}`}
+          </>
+        )}
       </button>
     </form>
   );

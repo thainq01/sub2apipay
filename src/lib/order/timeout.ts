@@ -7,8 +7,8 @@ const BATCH_SIZE = 50;
 let timer: ReturnType<typeof setInterval> | null = null;
 
 export async function expireOrders(): Promise<number> {
-  // 查询到期订单（限制批次大小防止内存爆炸）
-  // cancelOrderCore 内部 WHERE status='PENDING' 的 CAS 保证多实例不会重复处理同一订单
+  // Query expired orders (limit batch size to prevent memory explosion)
+  // CAS in WHERE status='PENDING' within cancelOrderCore guarantees multi-instance won't process same order twice
   const orders = await prisma.order.findMany({
     where: {
       status: ORDER_STATUS.PENDING,

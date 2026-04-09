@@ -71,10 +71,10 @@ function getStatusConfig(
             : 'Missing order access token. Please go back to the recharge page.',
         }
       : {
-          label: '支付异常',
+          label: 'Payment Error',
           color: isDark ? 'text-red-400' : 'text-red-600',
           icon: '✗',
-          message: hasAccessToken ? '未查询到订单状态，请稍后重试。' : '订单访问凭证缺失，请返回原充值页查看订单结果。',
+          message: hasAccessToken ? 'Unable to load the order status. Please try again later.' : 'Missing order access token. Please go back to the recharge page.',
         };
   }
 
@@ -87,10 +87,10 @@ function getStatusConfig(
           message: 'Your balance has been credited successfully.',
         }
       : {
-          label: '充值成功',
+          label: 'Recharge Successful',
           color: isDark ? 'text-green-400' : 'text-green-600',
           icon: '✓',
-          message: '余额已成功到账！',
+          message: 'Your balance has been credited successfully.',
         };
   }
 
@@ -104,10 +104,10 @@ function getStatusConfig(
             message: 'Payment succeeded, and the balance top-up is being processed.',
           }
         : {
-            label: '充值处理中',
+            label: 'Top-up Processing',
             color: isDark ? 'text-blue-400' : 'text-blue-600',
             icon: '⟳',
-            message: '支付成功，余额正在充值中...',
+            message: 'Payment succeeded, and the balance top-up is being processed.',
           };
     }
 
@@ -121,10 +121,11 @@ function getStatusConfig(
               'Payment succeeded, but the balance top-up has not completed yet. Please check again later or contact the administrator.',
           }
         : {
-            label: '支付成功',
+            label: 'Payment Successful',
             color: isDark ? 'text-amber-400' : 'text-amber-600',
             icon: '!',
-            message: '支付成功，但余额充值暂未完成，请稍后查看订单结果或联系管理员。',
+            message:
+              'Payment succeeded, but the balance top-up has not completed yet. Please check again later or contact the administrator.',
           };
     }
   }
@@ -138,10 +139,10 @@ function getStatusConfig(
           message: 'The order has not been paid yet.',
         }
       : {
-          label: '等待支付',
+          label: 'Awaiting Payment',
           color: isDark ? 'text-yellow-400' : 'text-yellow-600',
           icon: '⏳',
-          message: '订单尚未完成支付。',
+          message: 'The order has not been paid yet.',
         };
   }
 
@@ -154,10 +155,10 @@ function getStatusConfig(
           message: 'This order has expired. Please create a new order.',
         }
       : {
-          label: '订单已超时',
+          label: 'Order Expired',
           color: isDark ? 'text-slate-400' : 'text-gray-500',
           icon: '⏰',
-          message: '订单已超时，请重新充值。',
+          message: 'This order has expired. Please create a new order.',
         };
   }
 
@@ -170,10 +171,10 @@ function getStatusConfig(
           message: 'This order has been cancelled.',
         }
       : {
-          label: '订单已取消',
+          label: 'Order Cancelled',
           color: isDark ? 'text-slate-400' : 'text-gray-500',
           icon: '✗',
-          message: '订单已被取消。',
+          message: 'This order has been cancelled.',
         };
   }
 
@@ -184,7 +185,12 @@ function getStatusConfig(
         icon: '✗',
         message: 'Please contact the administrator.',
       }
-    : { label: '支付异常', color: isDark ? 'text-red-400' : 'text-red-600', icon: '✗', message: '请联系管理员处理。' };
+    : {
+        label: 'Payment Error',
+        color: isDark ? 'text-red-400' : 'text-red-600',
+        icon: '✗',
+        message: 'Please contact the administrator.',
+      };
 }
 
 function ResultContent() {
@@ -197,12 +203,12 @@ function ResultContent() {
   const isDark = theme === 'dark';
 
   const text = {
-    checking: pickLocaleText(locale, '查询支付结果中...', 'Checking payment result...'),
-    back: pickLocaleText(locale, '返回', 'Back'),
-    closeSoon: pickLocaleText(locale, '此窗口将在 3 秒后自动关闭', 'This window will close automatically in 3 seconds'),
-    closeNow: pickLocaleText(locale, '立即关闭窗口', 'Close now'),
-    orderId: pickLocaleText(locale, '订单号', 'Order ID'),
-    unknown: pickLocaleText(locale, '未知', 'Unknown'),
+    checking: pickLocaleText(locale, 'Checking payment result...', 'Checking payment result...'),
+    back: pickLocaleText(locale, 'Back', 'Back'),
+    closeSoon: pickLocaleText(locale, 'This window will close automatically in 3 seconds', 'This window will close automatically in 3 seconds'),
+    closeNow: pickLocaleText(locale, 'Close now', 'Close now'),
+    orderId: pickLocaleText(locale, 'Order ID', 'Order ID'),
+    unknown: pickLocaleText(locale, 'Unknown', 'Unknown'),
   };
 
   const [orderState, setOrderState] = useState<PublicOrderStatusSnapshot | null>(null);
@@ -331,7 +337,7 @@ function ResultPageFallback() {
   return (
     <div className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
       <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>
-        {pickLocaleText(locale, '加载中...', 'Loading...')}
+        {pickLocaleText(locale, 'Loading...', 'Loading...')}
       </div>
     </div>
   );

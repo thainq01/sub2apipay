@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
+import { PRODUCT_NAME } from '@/lib/constants';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Sub2API Recharge',
-  description: 'Sub2API balance recharge platform',
+  title: `${PRODUCT_NAME} Recharge`,
+  description: `${PRODUCT_NAME} balance recharge platform`,
 };
 
 export default async function RootLayout({

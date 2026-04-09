@@ -25,9 +25,9 @@ export default function MainTabs({
 
   const tabs: { key: 'topup' | 'subscribe'; label: string }[] = [];
   if (showTopUpTab) {
-    tabs.push({ key: 'topup', label: pickLocaleText(locale, '余额充值', 'Top Up') });
+    tabs.push({ key: 'topup', label: pickLocaleText(locale, 'Nạp tiền', 'Top Up') });
   }
-  tabs.push({ key: 'subscribe', label: pickLocaleText(locale, '套餐订阅', 'Subscription') });
+  tabs.push({ key: 'subscribe', label: pickLocaleText(locale, 'Đăng ký gói', 'Subscription') });
 
   // 只有一个 tab 时不显示切换器
   if (tabs.length <= 1) return null;

@@ -17,129 +17,130 @@ interface OrderStatusProps {
 
 function getStatusConfig(order: PublicOrderStatusSnapshot, locale: Locale, isDark = false) {
   if (order.rechargeSuccess) {
-    return locale === 'en'
+    return locale === 'vi'
       ? {
+          label: 'Nạp tiền thành công',
+          color: isDark ? 'text-green-400' : 'text-green-600',
+          icon: '✓',
+          message: 'Số dư đã được cập nhật. Cảm ơn bạn đã nạp tiền!',
+        }
+      : {
           label: 'Recharge Successful',
           color: isDark ? 'text-green-400' : 'text-green-600',
           icon: '✓',
           message: 'Your balance has been credited. Thank you for your payment.',
-        }
-      : {
-          label: '充值成功',
-          color: isDark ? 'text-green-400' : 'text-green-600',
-          icon: '✓',
-          message: '余额已到账，感谢您的充值！',
         };
   }
 
   if (order.paymentSuccess) {
     if (order.rechargeStatus === 'paid_pending' || order.rechargeStatus === 'recharging') {
-      return locale === 'en'
+      return locale === 'vi'
         ? {
+            label: 'Đang nạp tiền',
+            color: isDark ? 'text-blue-400' : 'text-blue-600',
+            icon: '⟳',
+            message: 'Đã nhận thanh toán. Đang cập nhật số dư, vui lòng chờ...',
+          }
+        : {
             label: 'Recharging',
             color: isDark ? 'text-blue-400' : 'text-blue-600',
             icon: '⟳',
             message: 'Payment received. Recharging your balance...',
-          }
-        : {
-            label: '充值中',
-            color: isDark ? 'text-blue-400' : 'text-blue-600',
-            icon: '⟳',
-            message: '支付成功，正在充值余额中，请稍候...',
           };
     }
 
     if (order.rechargeStatus === 'failed') {
-      return locale === 'en'
+      return locale === 'vi'
         ? {
+            label: 'Thanh toán thành công',
+            color: isDark ? 'text-amber-400' : 'text-amber-600',
+            icon: '!',
+            message:
+              'Thanh toán đã hoàn tất, nhưng nạp tiền vào số dư chưa hoàn thành. Hệ thống có thể thử lại tự động. Vui lòng kiểm tra danh sách đơn hàng sau này hoặc liên hệ quản trị viên nếu vẫn chưa được giải quyết.',
+          }
+        : {
             label: 'Payment Successful',
             color: isDark ? 'text-amber-400' : 'text-amber-600',
             icon: '!',
             message:
               'Payment completed, but the balance top-up has not finished yet. The system may retry automatically. Please check the order list later or contact the administrator if it remains unresolved.',
-          }
-        : {
-            label: '支付成功',
-            color: isDark ? 'text-amber-400' : 'text-amber-600',
-            icon: '!',
-            message:
-              '支付已完成，但余额充值暂未完成。系统可能会自动重试，请稍后在订单列表查看；如长时间未到账请联系管理员。',
           };
     }
   }
 
   if (order.status === 'FAILED') {
-    return locale === 'en'
+    return locale === 'vi'
       ? {
+          label: 'Thanh toán không thành công',
+          color: isDark ? 'text-red-400' : 'text-red-600',
+          icon: '✗',
+          message:
+            'Thanh toán không hoàn tất. Vui lòng thử lại. Nếu tiền đã bị trừ nhưng chưa được cập nhật, hãy liên hệ quản trị viên.',
+        }
+      : {
           label: 'Payment Failed',
           color: isDark ? 'text-red-400' : 'text-red-600',
           icon: '✗',
           message:
             'Payment was not completed. Please try again. If funds were deducted but not credited, contact the administrator.',
-        }
-      : {
-          label: '支付失败',
-          color: isDark ? 'text-red-400' : 'text-red-600',
-          icon: '✗',
-          message: '支付未完成，请重新发起支付；如已扣款未到账，请联系管理员处理。',
         };
   }
 
   if (order.status === 'PENDING') {
-    return locale === 'en'
+    return locale === 'vi'
       ? {
+          label: 'Chờ thanh toán',
+          color: isDark ? 'text-yellow-400' : 'text-yellow-600',
+          icon: '⏳',
+          message: 'Đơn hàng chưa được thanh toán.',
+        }
+      : {
           label: 'Awaiting Payment',
           color: isDark ? 'text-yellow-400' : 'text-yellow-600',
           icon: '⏳',
           message: 'The order has not been paid yet.',
-        }
-      : {
-          label: '等待支付',
-          color: isDark ? 'text-yellow-400' : 'text-yellow-600',
-          icon: '⏳',
-          message: '订单尚未完成支付。',
         };
   }
 
   if (order.status === 'EXPIRED') {
-    return locale === 'en'
+    return locale === 'vi'
       ? {
+          label: 'Đơn hàng hết hạn',
+          color: isDark ? 'text-slate-400' : 'text-gray-500',
+          icon: '⏰',
+          message: 'Đơn hàng này đã hết hạn. Vui lòng tạo một đơn hàng mới.',
+        }
+      : {
           label: 'Order Expired',
           color: isDark ? 'text-slate-400' : 'text-gray-500',
           icon: '⏰',
           message: 'This order has expired. Please create a new one.',
-        }
-      : {
-          label: '订单超时',
-          color: isDark ? 'text-slate-400' : 'text-gray-500',
-          icon: '⏰',
-          message: '订单已超时，请重新创建订单。',
         };
   }
 
   if (order.status === 'CANCELLED') {
-    return locale === 'en'
+    return locale === 'vi'
       ? {
-          label: 'Cancelled',
+          label: 'Đã hủy',
           color: isDark ? 'text-slate-400' : 'text-gray-500',
           icon: '✗',
-          message: 'The order has been cancelled.',
+          message: 'Đơn hàng đã bị hủy.',
         }
-      : { label: '已取消', color: isDark ? 'text-slate-400' : 'text-gray-500', icon: '✗', message: '订单已取消。' };
+      : { label: 'Cancelled', color: isDark ? 'text-slate-400' : 'text-gray-500', icon: '✗', message: 'The order has been cancelled.' };
   }
 
-  return locale === 'en'
+  return locale === 'vi'
     ? {
+        label: 'Lỗi thanh toán',
+        color: isDark ? 'text-red-400' : 'text-red-600',
+        icon: '✗',
+        message: 'Trạng thái thanh toán bất thường. Vui lòng liên hệ quản trị viên.',
+      }
+    : {
         label: 'Payment Error',
         color: isDark ? 'text-red-400' : 'text-red-600',
         icon: '✗',
         message: 'Payment status is abnormal. Please contact the administrator.',
-      }
-    : {
-        label: '支付异常',
-        color: isDark ? 'text-red-400' : 'text-red-600',
-        icon: '✗',
-        message: '支付状态异常，请联系管理员处理。',
       };
 }
 
@@ -150,7 +151,7 @@ export default function OrderStatus({
   onBack,
   onStateChange,
   dark = false,
-  locale = 'zh',
+  locale = 'en',
 }: OrderStatusProps) {
   const [currentOrder, setCurrentOrder] = useState(order);
   const onStateChangeRef = useRef(onStateChange);
@@ -192,8 +193,8 @@ export default function OrderStatus({
   }, [orderId, currentOrder.paymentSuccess, currentOrder.rechargeSuccess, statusAccessToken]);
 
   const config = getStatusConfig(currentOrder, locale, dark);
-  const doneLabel = locale === 'en' ? 'Done' : '完成';
-  const backLabel = locale === 'en' ? 'Back to Recharge' : '返回充值';
+  const doneLabel = locale === 'vi' ? 'Hoàn thành' : 'Done';
+  const backLabel = locale === 'vi' ? 'Quay lại nạp tiền' : 'Back to Recharge';
 
   return (
     <div className="flex flex-col items-center space-y-4 py-8">

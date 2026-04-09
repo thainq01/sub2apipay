@@ -28,7 +28,7 @@ function assertAlipayEnv(env: ReturnType<typeof getEnv>) {
 }
 
 /**
- * 生成支付宝网站/H5支付的跳转 URL（GET 方式）
+ * Generate Alipay website/H5 payment redirect URL (GET method)
  * PC: alipay.trade.page.pay  H5: alipay.trade.wap.pay
  */
 export function pageExecute(
@@ -57,8 +57,8 @@ export function pageExecute(
 }
 
 /**
- * 调用支付宝服务端 API（POST 方式）
- * 用于 alipay.trade.query、alipay.trade.refund、alipay.trade.close
+ * Call Alipay server API (POST method)
+ * Used for alipay.trade.query, alipay.trade.refund, alipay.trade.close
  */
 export async function execute<T extends AlipayResponse>(
   method: string,
@@ -91,10 +91,10 @@ export async function execute<T extends AlipayResponse>(
 
   const { data, rawText } = await parseAlipayJsonResponseWithRaw(response);
 
-  // 支付宝响应格式：{ "alipay_trade_query_response": { ... }, "sign": "..." }
+  // Alipay response format: { "alipay_trade_query_response": { ... }, "sign": "..." }
   const responseKey = method.replace(/\./g, '_') + '_response';
 
-  // 响应验签：从原始文本中提取 responseKey 对应的 JSON 子串进行 RSA2 验签
+  // Response signature verification: extract JSON substring for responseKey from raw text for RSA2 verification
   const responseSign = data.sign as string | undefined;
   if (responseSign) {
     const valid = verifyResponseSign(rawText, responseKey, env.ALIPAY_PUBLIC_KEY, responseSign);

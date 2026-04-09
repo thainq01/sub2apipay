@@ -37,7 +37,7 @@ export default function TopUpModal({ open, onClose, onConfirm, amounts, isDark, 
       >
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{pickLocaleText(locale, '选择充值金额', 'Select Amount')}</h2>
+          <h2 className="text-lg font-semibold">{pickLocaleText(locale, 'Chọn số tiền nạp', 'Select Amount')}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -80,7 +80,7 @@ export default function TopUpModal({ open, onClose, onConfirm, amounts, isDark, 
                 ].join(' ')}
               >
                 <span className={['text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                  {pickLocaleText(locale, `余额充值${amount}$`, `Balance +${amount}$`)}
+                  {pickLocaleText(locale, `Nạp tiền +${amount}$`, `Balance +${amount}$`)}
                 </span>
                 <span className="mt-1 text-2xl font-bold text-emerald-500">¥{amount}</span>
               </button>
@@ -102,7 +102,7 @@ export default function TopUpModal({ open, onClose, onConfirm, amounts, isDark, 
                 : 'cursor-not-allowed bg-slate-200 text-slate-400',
           ].join(' ')}
         >
-          {pickLocaleText(locale, '确认充值', 'Confirm')}
+          {pickLocaleText(locale, 'Xác nhận nạp tiền', 'Confirm')}
         </button>
       </div>
     </div>

@@ -54,11 +54,53 @@ interface OrderDetailProps {
   locale?: Locale;
 }
 
-export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: OrderDetailProps) {
-  const currency = locale === 'en' ? '$' : '¥';
+export default function OrderDetail({ order, onClose, dark, locale = 'en' }: OrderDetailProps) {
+  const currency = locale === 'vi' ? 'VND' : '$';
   const text =
-    locale === 'en'
+    locale === 'vi'
       ? {
+          title: 'Chi tiết đơn hàng',
+          auditLogs: 'Nhật ký kiểm tra',
+          operator: 'Nhà điều hành',
+          emptyLogs: 'Không có nhật ký',
+          close: 'Đóng',
+          yes: 'Có',
+          no: 'Không',
+          orderId: 'Mã đơn hàng',
+          userId: 'ID người dùng',
+          userName: 'Tên người dùng',
+          email: 'Email',
+          amount: 'Số tiền',
+          status: 'Trạng thái',
+          paymentSuccess: 'Thanh toán thành công',
+          rechargeSuccess: 'Nạp tiền thành công',
+          rechargeStatus: 'Trạng thái nạp tiền',
+          paymentChannel: 'Kênh thanh toán',
+          provider: 'Nhà cung cấp',
+          rechargeCode: 'Mã nạp tiền',
+          paymentTradeNo: 'Số giao dịch thanh toán',
+          clientIp: 'IP máy khách',
+          sourceHost: 'Tên miền nguồn',
+          sourcePage: 'Trang nguồn',
+          createdAt: 'Tạo lúc',
+          expiresAt: 'Hết hạn lúc',
+          paidAt: 'Thanh toán lúc',
+          completedAt: 'Hoàn thành lúc',
+          failedAt: 'Thất bại lúc',
+          failedReason: 'Lý do thất bại',
+          refundRequestedAt: 'Yêu cầu hoàn tiền lúc',
+          refundRequestReason: 'Lý do yêu cầu hoàn tiền',
+          refundRequestedBy: 'Yêu cầu hoàn tiền bởi',
+          refundAmount: 'Số tiền hoàn',
+          refundReason: 'Lý do hoàn tiền',
+          refundAt: 'Hoàn tiền lúc',
+          forceRefund: 'Hoàn tiền bắt buộc',
+          orderType: 'Loại đơn hàng',
+          planId: 'ID gói',
+          subscriptionGroupId: 'ID nhóm đăng ký',
+          subscriptionDays: 'Ngày đăng ký',
+        }
+      : {
           title: 'Order Details',
           auditLogs: 'Audit Logs',
           operator: 'Operator',
@@ -99,48 +141,6 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
           planId: 'Plan ID',
           subscriptionGroupId: 'Subscription Group ID',
           subscriptionDays: 'Subscription Days',
-        }
-      : {
-          title: '订单详情',
-          auditLogs: '审计日志',
-          operator: '操作者',
-          emptyLogs: '暂无日志',
-          close: '关闭',
-          yes: '是',
-          no: '否',
-          orderId: '订单号',
-          userId: '用户ID',
-          userName: '用户名',
-          email: '邮箱',
-          amount: '金额',
-          status: '状态',
-          paymentSuccess: '支付成功',
-          rechargeSuccess: '充值成功',
-          rechargeStatus: '充值状态',
-          paymentChannel: '支付渠道',
-          provider: '提供商',
-          rechargeCode: '充值码',
-          paymentTradeNo: '支付单号',
-          clientIp: '客户端IP',
-          sourceHost: '来源域名',
-          sourcePage: '来源页面',
-          createdAt: '创建时间',
-          expiresAt: '过期时间',
-          paidAt: '支付时间',
-          completedAt: '完成时间',
-          failedAt: '失败时间',
-          failedReason: '失败原因',
-          refundRequestedAt: '申请退款时间',
-          refundRequestReason: '申请退款原因',
-          refundRequestedBy: '申请退款用户',
-          refundAmount: '退款金额',
-          refundReason: '退款原因',
-          refundAt: '退款时间',
-          forceRefund: '强制退款',
-          orderType: '订单类型',
-          planId: '套餐ID',
-          subscriptionGroupId: '订阅分组ID',
-          subscriptionDays: '订阅天数',
         };
 
   useEffect(() => {
@@ -164,12 +164,12 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
       label: text.orderType,
       value:
         order.orderType === 'subscription'
-          ? locale === 'en'
-            ? 'Subscription'
-            : '订阅'
-          : locale === 'en'
-            ? 'Balance Recharge'
-            : '余额充值',
+          ? locale === 'vi'
+            ? 'Đăng ký'
+            : 'Subscription'
+          : locale === 'vi'
+            ? 'Nạp tiền số dư'
+            : 'Balance Recharge',
     },
     { label: text.paymentSuccess, value: order.paymentSuccess ? text.yes : text.no },
     { label: text.rechargeSuccess, value: order.rechargeSuccess ? text.yes : text.no },

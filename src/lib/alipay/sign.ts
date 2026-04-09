@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-/** 将裸 base64 按 64 字符/行折行，符合 PEM 标准（OpenSSL 3.x 严格模式要求） */
+/** Wrap bare base64 at 64 characters/line, conforms to PEM standard (OpenSSL 3.x strict mode requirement) */
 function wrapBase64(b64: string): string {
   return b64.replace(/(.{64})/g, '$1\n').trim();
 }
@@ -17,7 +17,7 @@ function shouldLogVerifyDebug(): boolean {
   return process.env.NODE_ENV !== 'production' || process.env.DEBUG_ALIPAY_SIGN === '1';
 }
 
-/** 自动补全 PEM 格式（PKCS8） */
+/** Auto-complete PEM format (PKCS8) */
 function formatPrivateKey(key: string): string {
   const normalized = normalizePemLikeValue(key);
   if (normalized.includes('-----BEGIN')) return normalized;
@@ -30,7 +30,7 @@ function formatPublicKey(key: string): string {
   return `-----BEGIN PUBLIC KEY-----\n${wrapBase64(normalized)}\n-----END PUBLIC KEY-----`;
 }
 
-/** 生成 RSA2 签名（请求签名：仅排除 sign） */
+/** Generate RSA2 signature (request signature: exclude only sign) */
 export function generateSign(params: Record<string, string>, privateKey: string): string {
   const filtered = Object.entries(params)
     .filter(([key, value]) => key !== 'sign' && value !== '' && value !== undefined && value !== null)
@@ -44,8 +44,8 @@ export function generateSign(params: Record<string, string>, privateKey: string)
 }
 
 /**
- * 验证支付宝服务端 API 响应签名。
- * 从原始 JSON 文本中提取 responseKey 对应的子串作为验签内容。
+ * Verify Alipay server API response signature.
+ * Extract substring corresponding to responseKey from raw JSON text for verification.
  */
 export function verifyResponseSign(
   rawText: string,
@@ -53,8 +53,8 @@ export function verifyResponseSign(
   alipayPublicKey: string,
   sign: string,
 ): boolean {
-  // 从原始文本中精确提取 responseKey 对应的 JSON 子串
-  // 格式: {"responseKey":{ ... },"sign":"..."}
+  // Extract the JSON substring corresponding to responseKey from raw text
+  // Format: {"responseKey":{ ... },"sign":"..."}
   const keyPattern = `"${responseKey}"`;
   const keyIdx = rawText.indexOf(keyPattern);
   if (keyIdx < 0) return false;
@@ -62,11 +62,11 @@ export function verifyResponseSign(
   const colonIdx = rawText.indexOf(':', keyIdx + keyPattern.length);
   if (colonIdx < 0) return false;
 
-  // 找到 value 的起始位置（跳过冒号后的空白）
+  // Find the start position of value (skip whitespace after colon)
   let start = colonIdx + 1;
   while (start < rawText.length && rawText[start] === ' ') start++;
 
-  // 使用括号匹配找到完整的 JSON 值
+  // Use bracket matching to find complete JSON value
   let depth = 0;
   let end = start;
   let inString = false;
@@ -110,7 +110,7 @@ export function verifyResponseSign(
   }
 }
 
-/** 用支付宝公钥验证签名（回调验签：排除 sign 和 sign_type） */
+/** Verify signature with Alipay public key (callback verification: exclude sign and sign_type) */
 export function verifySign(params: Record<string, string>, alipayPublicKey: string, sign: string): boolean {
   const filtered = Object.entries(params)
     .filter(

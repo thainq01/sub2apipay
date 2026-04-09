@@ -5,11 +5,11 @@ import { Suspense } from 'react';
 import { resolveLocale } from '@/lib/locale';
 
 const NAV_ITEMS = [
-  { path: '/admin', label: { zh: '数据概览', en: 'Dashboard' } },
-  { path: '/admin/orders', label: { zh: '订单管理', en: 'Orders' } },
-  { path: '/admin/payment-config', label: { zh: '支付配置', en: 'Payment Config' } },
-  { path: '/admin/channels', label: { zh: '渠道管理', en: 'Channels' } },
-  { path: '/admin/subscriptions', label: { zh: '订阅管理', en: 'Subscriptions' } },
+  { path: '/admin', label: { vi: 'Tổng quan', en: 'Dashboard' } },
+  { path: '/admin/orders', label: { vi: 'Đơn hàng', en: 'Orders' } },
+  { path: '/admin/payment-config', label: { vi: 'Cấu hình thanh toán', en: 'Payment Config' } },
+  { path: '/admin/channels', label: { vi: 'Kênh', en: 'Channels' } },
+  { path: '/admin/subscriptions', label: { vi: 'Đăng ký', en: 'Subscriptions' } },
 ];
 
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     if (token) params.set('token', token);
     params.set('theme', theme);
     params.set('ui_mode', uiMode);
-    if (locale !== 'zh') params.set('lang', locale);
+    if (locale !== 'en') params.set('lang', locale);
     return `${path}?${params.toString()}`;
   };
 

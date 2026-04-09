@@ -93,12 +93,12 @@ export class EasyPayProvider implements PaymentProvider {
       throw new Error('EasyPay notification signature verification failed');
     }
 
-    // 校验 pid 与配置一致，防止跨商户回调注入
+    // Verify pid matches configuration to prevent cross-merchant callback injection
     if (params.pid && pid && params.pid !== pid) {
       throw new Error(`EasyPay notification pid mismatch: expected ${pid}, got ${params.pid}`);
     }
 
-    // 校验金额为有限正数
+    // Verify amount is a finite positive number
     const amount = parseFloat(params.money || '0');
     if (!Number.isFinite(amount) || amount <= 0) {
       throw new Error(`EasyPay notification invalid amount: ${params.money}`);

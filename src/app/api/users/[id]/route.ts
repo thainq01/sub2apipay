@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getUser, getCurrentUserByToken } from '@/lib/sub2api/client';
 
-// 仅返回用户是否存在，不暴露私隐信息（用户名/邮箱/余额需 token 验证）
+// Only return if user exists, don't expose private info (username/email/balance require token verification)
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get('token')?.trim();
@@ -23,7 +23,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Invalid user id' }, { status: 400 });
   }
 
-  // 只允许查询自身用户信息，防止 IDOR 用户枚举
+  // Only allow querying own user info to prevent IDOR user enumeration
   if (userId !== currentUser.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }

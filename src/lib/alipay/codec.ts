@@ -104,8 +104,8 @@ export async function parseAlipayJsonResponse<T>(response: Response): Promise<T>
 }
 
 /**
- * 解析支付宝 JSON 响应并返回原始文本，用于响应验签。
- * 验签要求使用原始 JSON 子串（不能 parse 后再 stringify）。
+ * Parse Alipay JSON response and return raw text for response verification.
+ * Verification requires using the original JSON substring (cannot parse and re-stringify).
  */
 export async function parseAlipayJsonResponseWithRaw(
   response: Response,

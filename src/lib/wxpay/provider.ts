@@ -48,7 +48,7 @@ export class WxpayProvider implements PaymentProvider {
       } catch (err) {
         const msg = err instanceof Error ? err.message : '';
         if (!msg.includes('NO_AUTH')) throw err;
-        // H5 未开通，fallback 到 Native 扫码
+        // H5 not enabled, fallback to Native QR code
       }
     }
 
@@ -111,7 +111,7 @@ export class WxpayProvider implements PaymentProvider {
       throw new Error('Missing required Wechatpay signature headers');
     }
 
-    // 验证 serial 匹配我们配置的公钥 ID
+    // Verify serial matches our configured public key ID
     if (serial !== env.WXPAY_PUBLIC_KEY_ID) {
       throw new Error(`Wxpay serial mismatch: expected ${env.WXPAY_PUBLIC_KEY_ID}, got ${serial}`);
     }

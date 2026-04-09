@@ -38,12 +38,12 @@ export class StripeProvider implements PaymentProvider {
     return this.client;
   }
 
-  /** 获取 publishable key（实例配置优先，回退到环境变量） */
+  /** Get publishable key (instance config takes priority, fallback to environment variable) */
   getPublishableKey(): string | undefined {
     return this.instanceConfig?.publishableKey || getEnv().STRIPE_PUBLISHABLE_KEY || undefined;
   }
 
-  /** 获取 webhook secret（实例配置优先，回退到环境变量） */
+  /** Get webhook secret (instance config takes priority, fallback to environment variable) */
   private getWebhookSecret(): string | undefined {
     return this.instanceConfig?.webhookSecret || getEnv().STRIPE_WEBHOOK_SECRET || undefined;
   }

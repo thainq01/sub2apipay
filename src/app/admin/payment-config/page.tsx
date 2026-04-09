@@ -73,67 +73,67 @@ function getTexts(locale: Locale) {
         defaultDeductBalanceHint: 'When enabled, refund approval defaults to deducting balance/subscription',
       }
     : {
-        missingToken: '缺少管理员凭证',
-        missingTokenHint: '请从 Sub2API 平台正确访问管理页面',
-        title: '支付配置',
-        subtitle: '管理支付服务商与相关设置',
-        basicConfig: '基础配置',
-        basicConfigHint: '充值、订单与环境变量覆盖配置',
-        productNamePrefix: '商品名前缀',
-        productNameSuffix: '商品名后缀',
-        preview: '预览',
-        enableBalanceRecharge: '启用余额充值',
-        saveConfig: '保存设置',
-        savingConfig: '保存中...',
-        configSaveFailed: '保存配置失败',
-        cancelRateLimit: '限制取消频率',
-        cancelRateLimitWindow: '窗口',
-        cancelRateLimitUnit: '周期',
-        cancelRateLimitMax: '次数',
-        cancelRateLimitUnitMinute: '分钟',
-        cancelRateLimitUnitHour: '小时',
-        cancelRateLimitUnitDay: '天',
-        maxPendingOrders: '最多支付中订单',
-        cancelRateLimitWindowMode: '窗口模式',
-        cancelRateLimitWindowModeRolling: '滚动',
-        cancelRateLimitWindowModeFixed: '固定',
+        missingToken: 'Missing admin token',
+        missingTokenHint: 'Please access the admin page from the Sub2API platform.',
+        title: 'Payment Config',
+        subtitle: 'Configure payment providers and settings',
+        basicConfig: 'Basic Settings',
+        basicConfigHint: 'Recharge, order and environment configuration',
+        productNamePrefix: 'Product Name Prefix',
+        productNameSuffix: 'Product Name Suffix',
+        preview: 'Preview',
+        enableBalanceRecharge: 'Enable Balance Recharge',
+        saveConfig: 'Save Settings',
+        savingConfig: 'Saving...',
+        configSaveFailed: 'Failed to save configuration',
+        cancelRateLimit: 'Limit Cancel Rate',
+        cancelRateLimitWindow: 'Window',
+        cancelRateLimitUnit: 'Unit',
+        cancelRateLimitMax: 'Max',
+        cancelRateLimitUnitMinute: 'Minutes',
+        cancelRateLimitUnitHour: 'Hours',
+        cancelRateLimitUnitDay: 'Days',
+        maxPendingOrders: 'Max Pending Orders',
+        cancelRateLimitWindowMode: 'Window Mode',
+        cancelRateLimitWindowModeRolling: 'Rolling',
+        cancelRateLimitWindowModeFixed: 'Fixed',
         cancelRateLimitHint: (w: string, u: string, m: string, mode: string) =>
-          `${w} ${u === 'minute' ? '分钟' : u === 'day' ? '天' : '小时'}内最多可取消 ${m} 次（${mode === 'fixed' ? '固定窗口' : '滚动窗口'}）`,
-        overrideEnvConfig: '覆盖环境变量配置',
-        overrideEnvHint: '开启后，数据库配置将覆盖环境变量',
-        enabledProviders: '启用的服务商类型',
-        minRechargeAmount: '最小充值金额',
-        maxRechargeAmount: '最大充值金额',
-        dailyRechargeLimit: '每日限额（0=不限）',
-        orderTimeoutMinutes: '订单超时（分钟）',
-        loadingEnvDefaults: '加载默认值...',
-        providerManagement: '服务商管理',
-        addInstance: '添加实例',
-        editInstance: '编辑实例',
-        instanceName: '实例名称',
-        instanceProvider: '服务商类型',
-        instanceEnabled: '启用',
-        instanceRefundEnabled: '允许退款',
-        instanceConfig: '凭证配置',
-        supportedChannels: '支持渠道',
-        supportedChannelsHint: '选择此实例支持的支付渠道',
-        loadBalanceStrategy: '负载策略',
-        strategyRoundRobin: '轮询',
-        strategyLeastAmount: '基于已支付金额',
-        noInstances: '暂无实例，点击上方「添加实例」配置服务商。',
-        deleteInstanceConfirm: '确定删除该实例？',
-        todayAmount: '今日',
-        instanceSortOrder: '排序',
-        cancel: '取消',
-        save: '保存',
-        saving: '保存中...',
-        instanceSaveFailed: '保存实例失败',
-        instanceDeleteFailed: '删除实例失败',
-        allChannels: '全部渠道',
+          `Within ${w} ${u === 'minute' ? 'min' : u === 'day' ? 'day' : 'hr'}, max ${m} cancel(s) (${mode === 'fixed' ? 'fixed' : 'rolling'})`,
+        overrideEnvConfig: 'Override Env Config',
+        overrideEnvHint: 'When enabled, database settings override environment variables',
+        enabledProviders: 'Enabled Provider Types',
+        minRechargeAmount: 'Min Recharge Amount',
+        maxRechargeAmount: 'Max Recharge Amount',
+        dailyRechargeLimit: 'Daily Limit (0=unlimited)',
+        orderTimeoutMinutes: 'Order Timeout (min)',
+        loadingEnvDefaults: 'Loading defaults...',
+        providerManagement: 'Provider Management',
+        addInstance: 'Add Instance',
+        editInstance: 'Edit Instance',
+        instanceName: 'Instance Name',
+        instanceProvider: 'Provider Type',
+        instanceEnabled: 'Enabled',
+        instanceRefundEnabled: 'Allow Refund',
+        instanceConfig: 'Credentials',
+        supportedChannels: 'Supported Channels',
+        supportedChannelsHint: 'Select which payment channels this instance supports',
+        loadBalanceStrategy: 'Load Balance',
+        strategyRoundRobin: 'Round Robin',
+        strategyLeastAmount: 'Least Daily Amount',
+        noInstances: 'No instances configured yet.',
+        deleteInstanceConfirm: 'Are you sure you want to delete this instance?',
+        todayAmount: 'Today',
+        instanceSortOrder: 'Sort Order',
+        cancel: 'Cancel',
+        save: 'Save',
+        saving: 'Saving...',
+        instanceSaveFailed: 'Failed to save instance',
+        instanceDeleteFailed: 'Failed to delete instance',
+        allChannels: 'All Channels',
         sub2apiAdminApiKey: 'Sub2API Admin API Key',
-        sub2apiAdminApiKeyHint: '留空则使用环境变量',
-        defaultDeductBalance: '默认扣除余额/订阅',
-        defaultDeductBalanceHint: '开启后，退款通过时默认扣除余额/订阅；关闭时默认不扣除',
+        sub2apiAdminApiKeyHint: 'Leave empty to use environment variable',
+        defaultDeductBalance: 'Default Deduct Balance',
+        defaultDeductBalanceHint: 'When enabled, refund approval defaults to deducting balance/subscription',
       };
 }
 
@@ -141,17 +141,18 @@ function getTexts(locale: Locale) {
 
 const ALL_PROVIDER_KEYS = ['easypay', 'alipay', 'wxpay', 'stripe'] as const;
 
-const PAYMENT_TYPE_LABELS: Record<string, { zh: string; en: string }> = {
-  alipay: { zh: '支付宝', en: 'Alipay' },
-  wxpay: { zh: '微信支付', en: 'WeChat Pay' },
-  stripe: { zh: 'Stripe', en: 'Stripe' },
+const PAYMENT_TYPE_LABELS: Record<string, { vi: string; en: string }> = {
+  alipay: { vi: 'Alipay', en: 'Alipay' },
+  wxpay: { vi: 'WeChat Pay', en: 'WeChat Pay' },
+  stripe: { vi: 'Stripe', en: 'Stripe' },
 };
 
-const PROVIDER_LABELS: Record<string, { zh: string; en: string }> = {
-  easypay: { zh: '易支付', en: 'EasyPay' },
-  alipay: { zh: '支付宝官方', en: 'Alipay Official' },
-  wxpay: { zh: '微信官方', en: 'WeChat Official' },
-  stripe: { zh: 'Stripe', en: 'Stripe' },
+const PROVIDER_LABELS: Record<string, { vi: string; en: string }> = {
+  easypay: { vi: 'EasyPay', en: 'EasyPay' },
+  alipay: { vi: 'Alipay Official', en: 'Alipay Official' },
+  wxpay: { vi: 'WeChat Official', en: 'WeChat Official' },
+  stripe: { vi: 'Stripe', en: 'Stripe' },
+  sepay: { vi: 'SePay', en: 'SePay' },
 };
 
 const PROVIDER_SUPPORTED_TYPES: Record<string, string[]> = {
@@ -163,40 +164,40 @@ const PROVIDER_SUPPORTED_TYPES: Record<string, string[]> = {
 
 interface ConfigFieldDef {
   key: string;
-  label: { en: string; zh: string };
+  label: { en: string; vi: string };
   sensitive: boolean;
   optional?: boolean;
 }
 
 const PROVIDER_CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
   easypay: [
-    { key: 'pid', label: { en: 'PID', zh: 'PID' }, sensitive: false },
-    { key: 'pkey', label: { en: 'PKey (Secret)', zh: 'PKey（密钥）' }, sensitive: true },
-    { key: 'apiBase', label: { en: 'API Base URL', zh: 'API 基础地址' }, sensitive: false, optional: true },
-    { key: 'notifyUrl', label: { en: 'Notify URL', zh: '异步通知地址' }, sensitive: false, optional: true },
-    { key: 'returnUrl', label: { en: 'Return URL', zh: '同步跳转地址' }, sensitive: false, optional: true },
+    { key: 'pid', label: { en: 'PID', vi:'PID' }, sensitive: false },
+    { key: 'pkey', label: { en: 'PKey (Secret)', vi:'PKey (Secret)' }, sensitive: true },
+    { key: 'apiBase', label: { en: 'API Base URL', vi:'API Base URL' }, sensitive: false, optional: true },
+    { key: 'notifyUrl', label: { en: 'Notify URL', vi:'Notify URL' }, sensitive: false, optional: true },
+    { key: 'returnUrl', label: { en: 'Return URL', vi:'Return URL' }, sensitive: false, optional: true },
   ],
   alipay: [
-    { key: 'appId', label: { en: 'App ID', zh: 'App ID' }, sensitive: false },
-    { key: 'privateKey', label: { en: 'Private Key', zh: '私钥' }, sensitive: true },
-    { key: 'publicKey', label: { en: 'Alipay Public Key', zh: '支付宝公钥' }, sensitive: true },
-    { key: 'notifyUrl', label: { en: 'Notify URL', zh: '异步通知地址' }, sensitive: false, optional: true },
-    { key: 'returnUrl', label: { en: 'Return URL', zh: '同步跳转地址' }, sensitive: false, optional: true },
+    { key: 'appId', label: { en: 'App ID', vi:'App ID' }, sensitive: false },
+    { key: 'privateKey', label: { en: 'Private Key', vi:'Private Key' }, sensitive: true },
+    { key: 'publicKey', label: { en: 'Alipay Public Key', vi:'Alipay Public Key' }, sensitive: true },
+    { key: 'notifyUrl', label: { en: 'Notify URL', vi:'Notify URL' }, sensitive: false, optional: true },
+    { key: 'returnUrl', label: { en: 'Return URL', vi:'Return URL' }, sensitive: false, optional: true },
   ],
   wxpay: [
-    { key: 'appId', label: { en: 'App ID', zh: 'App ID' }, sensitive: false },
-    { key: 'mchId', label: { en: 'Merchant ID', zh: '商户号' }, sensitive: false },
-    { key: 'privateKey', label: { en: 'Private Key', zh: '私钥' }, sensitive: true },
-    { key: 'apiV3Key', label: { en: 'API v3 Key', zh: 'API v3 密钥' }, sensitive: true },
-    { key: 'publicKey', label: { en: 'Public Key', zh: '公钥' }, sensitive: true },
-    { key: 'publicKeyId', label: { en: 'Public Key ID', zh: '公钥 ID' }, sensitive: false },
-    { key: 'certSerial', label: { en: 'Certificate Serial', zh: '证书序列号' }, sensitive: false },
-    { key: 'notifyUrl', label: { en: 'Notify URL', zh: '异步通知地址' }, sensitive: false, optional: true },
+    { key: 'appId', label: { en: 'App ID', vi:'App ID' }, sensitive: false },
+    { key: 'mchId', label: { en: 'Merchant ID', vi:'Merchant ID' }, sensitive: false },
+    { key: 'privateKey', label: { en: 'Private Key', vi:'Private Key' }, sensitive: true },
+    { key: 'apiV3Key', label: { en: 'API v3 Key', vi:'API v3 Key' }, sensitive: true },
+    { key: 'publicKey', label: { en: 'Public Key', vi:'Public Key' }, sensitive: true },
+    { key: 'publicKeyId', label: { en: 'Public Key ID', vi:'Public Key ID' }, sensitive: false },
+    { key: 'certSerial', label: { en: 'Certificate Serial', vi:'Certificate Serial' }, sensitive: false },
+    { key: 'notifyUrl', label: { en: 'Notify URL', vi:'Notify URL' }, sensitive: false, optional: true },
   ],
   stripe: [
-    { key: 'secretKey', label: { en: 'Secret Key', zh: '密钥' }, sensitive: true },
-    { key: 'publishableKey', label: { en: 'Publishable Key', zh: '公开密钥' }, sensitive: false },
-    { key: 'webhookSecret', label: { en: 'Webhook Secret', zh: 'Webhook 密钥' }, sensitive: true },
+    { key: 'secretKey', label: { en: 'Secret Key', vi:'Secret Key' }, sensitive: true },
+    { key: 'publishableKey', label: { en: 'Publishable Key', vi:'Publishable Key' }, sensitive: false },
+    { key: 'webhookSecret', label: { en: 'Webhook Secret', vi:'Webhook Secret' }, sensitive: true },
   ],
 };
 
@@ -376,7 +377,7 @@ function PaymentConfigContent() {
         setRcOrderTimeout(d.ORDER_TIMEOUT_MINUTES || '5');
         if (d.MAX_PENDING_ORDERS) setRcMaxPendingOrders(d.MAX_PENDING_ORDERS);
 
-        // 自动创建服务商实例（仅当当前无实例时）
+        // Auto-create provider instances (only when no instances exist)
         const instDefaults = data.instanceDefaults || {};
         if (instances.length === 0) {
           for (const [providerKey, instData] of Object.entries(instDefaults)) {
@@ -418,7 +419,7 @@ function PaymentConfigContent() {
       setError(
         locale === 'en'
           ? `Cannot disable "${PROVIDER_LABELS[key]?.en || key}": instances exist. Delete all instances first.`
-          : `无法关闭「${PROVIDER_LABELS[key]?.zh || key}」：存在关联实例，请先删除所有实例。`,
+          : `Cannot disable "${PROVIDER_LABELS[key]?.en || key}": instances exist. Delete all instances first.`,
       );
       return;
     }
@@ -530,12 +531,12 @@ function PaymentConfigContent() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data.error || (locale === 'en' ? 'Failed to update instance' : '更新实例失败'));
+        setError(data.error || (locale === 'en' ? 'Failed to update instance' : 'Failed to update instance'));
         return;
       }
       setInstances((prev) => prev.map((i) => (i.id === inst.id ? { ...i, enabled: !inst.enabled } : i)));
     } catch {
-      setError(locale === 'en' ? 'Failed to update instance' : '更新实例失败');
+      setError(locale === 'en' ? 'Failed to update instance' : 'Failed to update instance');
     }
   };
 
@@ -548,12 +549,12 @@ function PaymentConfigContent() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data.error || (locale === 'en' ? 'Failed to update instance' : '更新实例失败'));
+        setError(data.error || (locale === 'en' ? 'Failed to update instance' : 'Failed to update instance'));
         return;
       }
       setInstances((prev) => prev.map((i) => (i.id === inst.id ? { ...i, refundEnabled: !inst.refundEnabled } : i)));
     } catch {
-      setError(locale === 'en' ? 'Failed to update instance' : '更新实例失败');
+      setError(locale === 'en' ? 'Failed to update instance' : 'Failed to update instance');
     }
   };
 
@@ -568,50 +569,50 @@ function PaymentConfigContent() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           configs: [
-            { key: 'PRODUCT_NAME_PREFIX', value: rcPrefix.trim(), group: 'payment', label: '商品名前缀' },
-            { key: 'PRODUCT_NAME_SUFFIX', value: rcSuffix.trim(), group: 'payment', label: '商品名后缀' },
+            { key: 'PRODUCT_NAME_PREFIX', value: rcPrefix.trim(), group: 'payment', label: 'Product Name Prefix' },
+            { key: 'PRODUCT_NAME_SUFFIX', value: rcSuffix.trim(), group: 'payment', label: 'Product Name Suffix' },
             {
               key: 'BALANCE_PAYMENT_DISABLED',
               value: rcBalanceEnabled ? 'false' : 'true',
               group: 'payment',
-              label: '余额充值禁用',
+              label: 'Balance Recharge Disabled',
             },
             {
               key: 'DEFAULT_DEDUCT_BALANCE',
               value: rcAutoRefundEnabled ? 'true' : 'false',
               group: 'payment',
-              label: '自动退款开关',
+              label: 'Auto Refund Switch',
             },
             {
               key: 'CANCEL_RATE_LIMIT_ENABLED',
               value: rcCancelRateLimitEnabled ? 'true' : 'false',
               group: 'payment',
-              label: '订单取消频率限制',
+              label: 'Order Cancel Rate Limit',
             },
             {
               key: 'CANCEL_RATE_LIMIT_WINDOW',
               value: rcCancelRateLimitWindow,
               group: 'payment',
-              label: '频率限制窗口',
+              label: 'Rate Limit Window',
             },
             {
               key: 'CANCEL_RATE_LIMIT_UNIT',
               value: rcCancelRateLimitUnit,
               group: 'payment',
-              label: '频率限制周期单位',
+              label: 'Rate Limit Unit',
             },
-            { key: 'CANCEL_RATE_LIMIT_MAX', value: rcCancelRateLimitMax, group: 'payment', label: '频率限制最大次数' },
+            { key: 'CANCEL_RATE_LIMIT_MAX', value: rcCancelRateLimitMax, group: 'payment', label: 'Rate Limit Max' },
             {
               key: 'CANCEL_RATE_LIMIT_WINDOW_MODE',
               value: rcCancelRateLimitWindowMode,
               group: 'payment',
-              label: '频率限制窗口模式',
+              label: 'Rate Limit Window Mode',
             },
             {
               key: 'OVERRIDE_ENV_ENABLED',
               value: rcOverrideEnv ? 'true' : 'false',
               group: 'system',
-              label: '覆盖环境变量开关',
+              label: 'Override Env Switch',
             },
             ...(rcOverrideEnv
               ? [
@@ -619,7 +620,7 @@ function PaymentConfigContent() {
                     key: 'MAX_PENDING_ORDERS',
                     value: rcMaxPendingOrders,
                     group: 'payment',
-                    label: '最多可存在支付中订单',
+                    label: 'Max Pending Orders',
                   },
                   {
                     key: 'SUB2API_ADMIN_API_KEY',
@@ -627,16 +628,16 @@ function PaymentConfigContent() {
                     group: 'connection',
                     label: 'Sub2API Admin API Key',
                   },
-                  { key: 'RECHARGE_MIN_AMOUNT', value: rcMinAmount, group: 'payment', label: '最小充值金额' },
-                  { key: 'RECHARGE_MAX_AMOUNT', value: rcMaxAmount, group: 'payment', label: '最大充值金额' },
-                  { key: 'DAILY_RECHARGE_LIMIT', value: rcDailyLimit, group: 'payment', label: '每日充值限额' },
-                  { key: 'ORDER_TIMEOUT_MINUTES', value: rcOrderTimeout, group: 'payment', label: '订单超时时间' },
-                  { key: 'ENABLED_PROVIDERS', value: rcEnabledProviders, group: 'payment', label: '启用的服务商' },
+                  { key: 'RECHARGE_MIN_AMOUNT', value: rcMinAmount, group: 'payment', label: 'Min Recharge Amount' },
+                  { key: 'RECHARGE_MAX_AMOUNT', value: rcMaxAmount, group: 'payment', label: 'Max Recharge Amount' },
+                  { key: 'DAILY_RECHARGE_LIMIT', value: rcDailyLimit, group: 'payment', label: 'Daily Recharge Limit' },
+                  { key: 'ORDER_TIMEOUT_MINUTES', value: rcOrderTimeout, group: 'payment', label: 'Order Timeout' },
+                  { key: 'ENABLED_PROVIDERS', value: rcEnabledProviders, group: 'payment', label: 'Enabled Providers' },
                   {
                     key: 'ENABLED_PAYMENT_TYPES',
                     value: rcEnabledPaymentTypes,
                     group: 'payment',
-                    label: '启用的支付方式',
+                    label: 'Enabled Payment Types',
                   },
                 ]
               : []),
@@ -1081,14 +1082,14 @@ function PaymentConfigContent() {
                                         onClick={() => openEditInstance(inst)}
                                         className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${isDark ? 'text-indigo-400 hover:bg-indigo-500/15' : 'text-indigo-600 hover:bg-indigo-50'}`}
                                       >
-                                        {locale === 'en' ? 'Edit' : '编辑'}
+                                        {locale === 'en' ? 'Edit' : 'Edit'}
                                       </button>
                                       <button
                                         type="button"
                                         onClick={() => handleDeleteInstance(inst.id)}
                                         className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${isDark ? 'text-red-400 hover:bg-red-500/15' : 'text-red-600 hover:bg-red-50'}`}
                                       >
-                                        {locale === 'en' ? 'Delete' : '删除'}
+                                        {locale === 'en' ? 'Delete' : 'Delete'}
                                       </button>
                                     </div>
                                   </div>
@@ -1236,10 +1237,10 @@ function PaymentConfigContent() {
                         type === 'alipay'
                           ? locale === 'en'
                             ? 'Alipay Channel ID'
-                            : '支付宝渠道 ID'
+                            : 'Alipay Channel ID'
                           : locale === 'en'
                             ? 'WeChat Channel ID'
-                            : '微信渠道 ID';
+                            : 'WeChat Channel ID';
                       return (
                         <div key={type} className="flex items-center gap-3">
                           <button
@@ -1298,7 +1299,7 @@ function PaymentConfigContent() {
                       >
                         {field.label[locale]}
                         {field.optional ? (
-                          <span className="ml-1 opacity-50">({locale === 'en' ? 'optional' : '可选'})</span>
+                          <span className="ml-1 opacity-50">({locale === 'en' ? 'optional' : 'optional'})</span>
                         ) : (
                           <span className="text-red-500 ml-0.5">*</span>
                         )}
@@ -1333,12 +1334,12 @@ function PaymentConfigContent() {
                   >
                     ▶
                   </span>
-                  {locale === 'en' ? 'Limits' : '限额配置'}
+                  {locale === 'en' ? 'Limits' : 'Limits'}
                   {Object.values(instanceForm.limits).some((l) => l.dailyLimit || l.singleMin || l.singleMax) && (
                     <span
                       className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-amber-500/15 text-amber-300' : 'bg-amber-50 text-amber-700'}`}
                     >
-                      {locale === 'en' ? 'configured' : '已配置'}
+                      {locale === 'en' ? 'configured' : 'configured'}
                     </span>
                   )}
                 </button>
@@ -1347,7 +1348,7 @@ function PaymentConfigContent() {
                     <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                       {locale === 'en'
                         ? 'Set per-channel transaction limits. Leave empty for unlimited.'
-                        : '设置每个渠道的单笔和日限额，留空为不限。'}
+                        : 'Set per-channel transaction limits. Leave empty for unlimited.'}
                     </p>
                     {(PROVIDER_SUPPORTED_TYPES[instanceForm.providerKey] || []).map((type) => (
                       <div
@@ -1360,7 +1361,7 @@ function PaymentConfigContent() {
                         <div className="grid grid-cols-3 gap-3">
                           <div>
                             <label className={`block text-xs mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                              {locale === 'en' ? 'Single Min' : '单笔最小'}
+                              {locale === 'en' ? 'Single Min' : 'Single Min'}
                             </label>
                             <input
                               type="number"
@@ -1377,12 +1378,12 @@ function PaymentConfigContent() {
                                 }));
                               }}
                               className={inputCls}
-                              placeholder={locale === 'en' ? 'Unlimited' : '不限'}
+                              placeholder={locale === 'en' ? 'Unlimited' : 'Unlimited'}
                             />
                           </div>
                           <div>
                             <label className={`block text-xs mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                              {locale === 'en' ? 'Single Max' : '单笔最大'}
+                              {locale === 'en' ? 'Single Max' : 'Single Max'}
                             </label>
                             <input
                               type="number"
@@ -1399,12 +1400,12 @@ function PaymentConfigContent() {
                                 }));
                               }}
                               className={inputCls}
-                              placeholder={locale === 'en' ? 'Unlimited' : '不限'}
+                              placeholder={locale === 'en' ? 'Unlimited' : 'Unlimited'}
                             />
                           </div>
                           <div>
                             <label className={`block text-xs mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                              {locale === 'en' ? 'Daily Limit' : '每日总限额'}
+                              {locale === 'en' ? 'Daily Limit' : 'Daily Limit'}
                             </label>
                             <input
                               type="number"
@@ -1421,7 +1422,7 @@ function PaymentConfigContent() {
                                 }));
                               }}
                               className={inputCls}
-                              placeholder={locale === 'en' ? 'Unlimited' : '不限'}
+                              placeholder={locale === 'en' ? 'Unlimited' : 'Unlimited'}
                             />
                           </div>
                         </div>
@@ -1465,7 +1466,7 @@ function PaymentConfigPageFallback() {
   const locale = resolveLocale(searchParams.get('lang'));
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="text-slate-500">{locale === 'en' ? 'Loading...' : '加载中...'}</div>
+      <div className="text-slate-500">{locale === 'en' ? 'Loading...' : 'Loading...'}</div>
     </div>
   );
 }

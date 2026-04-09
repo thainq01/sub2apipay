@@ -17,26 +17,26 @@ interface DashboardStatsProps {
   locale?: Locale;
 }
 
-export default function DashboardStats({ summary, dark, locale = 'zh' }: DashboardStatsProps) {
-  const currency = locale === 'en' ? '$' : '¥';
+export default function DashboardStats({ summary, dark, locale = 'en' }: DashboardStatsProps) {
+  const currency = locale === 'vi' ? 'VND' : '$';
   const cards = [
     {
-      label: locale === 'en' ? 'Today Recharge' : '今日充值',
+      label: locale === 'vi' ? 'Nạp tiền hôm nay' : 'Today Recharge',
       value: `${currency}${summary.today.amount.toLocaleString()}`,
       accent: true,
     },
     {
-      label: locale === 'en' ? 'Today Orders' : '今日订单',
+      label: locale === 'vi' ? 'Đơn hàng hôm nay' : 'Today Orders',
       value: `${summary.today.paidCount}/${summary.today.orderCount}`,
     },
     {
-      label: locale === 'en' ? 'Total Recharge' : '累计充值',
+      label: locale === 'vi' ? 'Tổng nạp tiền' : 'Total Recharge',
       value: `${currency}${summary.total.amount.toLocaleString()}`,
       accent: true,
     },
-    { label: locale === 'en' ? 'Paid Orders' : '累计订单', value: String(summary.total.paidCount) },
-    { label: locale === 'en' ? 'Success Rate' : '成功率', value: `${summary.successRate}%` },
-    { label: locale === 'en' ? 'Average Amount' : '平均充值', value: `${currency}${summary.avgAmount.toFixed(2)}` },
+    { label: locale === 'vi' ? 'Đơn hàng đã thanh toán' : 'Paid Orders', value: String(summary.total.paidCount) },
+    { label: locale === 'vi' ? 'Tỷ lệ thành công' : 'Success Rate', value: `${summary.successRate}%` },
+    { label: locale === 'vi' ? 'Nạp tiền trung bình' : 'Average Amount', value: `${currency}${summary.avgAmount.toFixed(2)}` },
   ];
 
   // Conditionally add subscription cards if subscription data exists
@@ -51,12 +51,12 @@ export default function DashboardStats({ summary, dark, locale = 'zh' }: Dashboa
   if (hasSub) {
     cards.push(
       {
-        label: locale === 'en' ? 'Subscription Revenue Today' : '今日订阅收入',
+        label: locale === 'vi' ? 'Doanh thu đăng ký hôm nay' : 'Subscription Revenue Today',
         value: `${currency}${summary.subscriptionToday!.amount.toLocaleString()}`,
         accent: true,
       },
       {
-        label: locale === 'en' ? 'Total Subscription Revenue' : '订阅总收入',
+        label: locale === 'vi' ? 'Tổng doanh thu đăng ký' : 'Total Subscription Revenue',
         value: `${currency}${summary.subscriptionTotal!.amount.toLocaleString()}`,
         accent: true,
       },

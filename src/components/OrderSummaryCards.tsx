@@ -20,18 +20,18 @@ export default function OrderSummaryCards({ isDark, locale, summary }: OrderSumm
   ].join(' ');
   const labelClass = ['text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ');
   const labels =
-    locale === 'en'
+    locale === 'vi'
       ? {
+          total: 'Tất cả đơn hàng',
+          pending: 'Chờ thanh toán',
+          completed: 'Hoàn thành',
+          failed: 'Đã đóng/Thất bại',
+        }
+      : {
           total: 'Total Orders',
           pending: 'Pending',
           completed: 'Completed',
           failed: 'Closed/Failed',
-        }
-      : {
-          total: '总订单',
-          pending: '待支付',
-          completed: '已完成',
-          failed: '异常/关闭',
         };
 
   return (

@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { getEnv } from '@/lib/config';
 import type { WxpayPcOrderParams, WxpayH5OrderParams, WxpayRefundParams } from './types';
 
-/** 自动补全 PEM 格式（公钥） */
+/** Auto-complete PEM format (public key) */
 function formatPublicKey(key: string): string {
   if (key.includes('-----BEGIN')) return key;
   return `-----BEGIN PUBLIC KEY-----\n${key}\n-----END PUBLIC KEY-----`;
@@ -89,7 +89,7 @@ async function request<T>(method: string, url: string, body?: Record<string, unk
   return data as T;
 }
 
-/** PC 扫码支付（微信官方 API: /v3/pay/transactions/native） */
+/** PC QR code payment (WeChat official API: /v3/pay/transactions/native) */
 export async function createPcOrder(params: WxpayPcOrderParams): Promise<string> {
   const env = assertWxpayEnv(getEnv());
   const result = await request<{ code_url: string }>('POST', '/v3/pay/transactions/native', {
@@ -149,7 +149,7 @@ export function decipherNotify<T>(ciphertext: string, associatedData: string, no
   const env = assertWxpayEnv(getEnv());
   const key = env.WXPAY_API_V3_KEY;
   const ciphertextBuf = Buffer.from(ciphertext, 'base64');
-  // AES-GCM 最后 16 字节是 AuthTag
+  // AES-GCM last 16 bytes is AuthTag
   const authTag = ciphertextBuf.subarray(ciphertextBuf.length - 16);
   const data = ciphertextBuf.subarray(0, ciphertextBuf.length - 16);
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, nonce);
@@ -171,7 +171,7 @@ export async function verifyNotifySign(params: {
     throw new Error('WXPAY_PUBLIC_KEY is required for signature verification');
   }
 
-  // 微信支付公钥模式：直接用公钥验签，不拉取平台证书
+  // WeChat Pay public key mode: verify signature directly with public key, no platform cert retrieval
   const message = `${params.timestamp}\n${params.nonce}\n${params.body}\n`;
   const verify = crypto.createVerify('RSA-SHA256');
   verify.update(message);

@@ -6,9 +6,9 @@ import { getBizDayStartUTC } from '@/lib/time/biz-day';
 import { getSystemConfig } from '@/lib/system-config';
 
 /**
- * 获取指定支付渠道的每日全平台限额（0 = 不限制）。
- * 覆盖模式同 /api/user：getSystemConfig（DB → process.env） → provider 默认值。
- * 当 OVERRIDE_ENV_ENABLED=true 且无显式渠道配置时，跳过 provider 默认值。
+ * Get daily global limit for specified payment channel (0 = unlimited).
+ * Override mode same as /api/user: getSystemConfig (DB → process.env) → provider default.
+ * When OVERRIDE_ENV_ENABLED=true and no explicit channel config, skip provider default.
  */
 export async function getMethodDailyLimit(paymentType: string): Promise<number> {
   const configVal = await getSystemConfig(`MAX_DAILY_AMOUNT_${paymentType.toUpperCase()}`);
@@ -17,11 +17,11 @@ export async function getMethodDailyLimit(paymentType: string): Promise<number> 
     if (Number.isFinite(num) && num >= 0) return num;
   }
 
-  // 开启了在线配置覆盖 → 跳过 provider 硬编码默认值，使用全局限额
+  // Override mode enabled → skip provider hardcoded defaults, use global limit
   const overrideEnabled = await getSystemConfig('OVERRIDE_ENV_ENABLED');
   if (overrideEnabled === 'true') return 0;
 
-  // Provider 默认值（未开启在线配置时兜底）
+  // Provider default (fallback when override mode not enabled)
   await ensureDBProviders();
   const providerDefault = paymentRegistry.getDefaultLimit(paymentType);
   if (providerDefault?.dailyMax !== undefined) return providerDefault.dailyMax;
@@ -30,9 +30,9 @@ export async function getMethodDailyLimit(paymentType: string): Promise<number> 
 }
 
 /**
- * 获取指定支付渠道的单笔限额（0 = 使用全局 MAX_RECHARGE_AMOUNT）。
- * 覆盖模式同 /api/user：getSystemConfig（DB → process.env） → provider 默认值。
- * 当 OVERRIDE_ENV_ENABLED=true 且无显式渠道配置时，跳过 provider 默认值。
+ * Get per-transaction limit for specified payment channel (0 = use global MAX_RECHARGE_AMOUNT).
+ * Override mode same as /api/user: getSystemConfig (DB → process.env) → provider default.
+ * When OVERRIDE_ENV_ENABLED=true and no explicit channel config, skip provider default.
  */
 export async function getMethodSingleLimit(paymentType: string): Promise<number> {
   const configVal = await getSystemConfig(`MAX_SINGLE_AMOUNT_${paymentType.toUpperCase()}`);
@@ -41,11 +41,11 @@ export async function getMethodSingleLimit(paymentType: string): Promise<number>
     if (Number.isFinite(num) && num >= 0) return num;
   }
 
-  // 开启了在线配置覆盖 → 跳过 provider 硬编码默认值，使用全局限额
+  // Override mode enabled → skip provider hardcoded defaults, use global limit
   const overrideEnabled = await getSystemConfig('OVERRIDE_ENV_ENABLED');
   if (overrideEnabled === 'true') return 0;
 
-  // Provider 默认值（未开启在线配置时兜底）
+  // Provider default (fallback when override mode not enabled)
   await ensureDBProviders();
   const providerDefault = paymentRegistry.getDefaultLimit(paymentType);
   if (providerDefault?.singleMax !== undefined) return providerDefault.singleMax;
@@ -70,8 +70,8 @@ interface InstanceChannelLimits {
 }
 
 /**
- * 聚合实例级限额：对每个支付类型，取所有实例中最宽松的单笔范围 + 检查日限额可用性。
- * 当剩余日额度 < 该实例的 singleMin 时，视为该实例不可用。
+ * Aggregate instance-level limits: for each payment type, get the most lenient single amount range from all instances + check daily limit availability.
+ * When remaining daily quota < instance's singleMin, that instance is considered unavailable.
  */
 async function aggregateInstanceLimits(paymentTypes: string[]): Promise<
   Record<
@@ -151,7 +151,7 @@ async function aggregateInstanceLimits(paymentTypes: string[]): Promise<
     let aggSingleMin = Infinity;
     let aggSingleMax = 0;
     let allBlocked = true;
-    let maxRemaining: number | null = null; // 所有可用实例中最大的剩余日额度
+    let maxRemaining: number | null = null; // Maximum remaining daily quota among all available instances
 
     for (const inst of supporting) {
       let channelLimits: InstanceChannelLimits | undefined;
@@ -164,7 +164,7 @@ async function aggregateInstanceLimits(paymentTypes: string[]): Promise<
         }
       }
 
-      // 单笔范围：取所有实例中最宽松的范围
+      // Per-transaction range: get most lenient range from all instances
       const instMin = channelLimits?.singleMin ?? 0;
       const instMax = channelLimits?.singleMax ?? 0;
       if (instMin > 0 && instMin < aggSingleMin) aggSingleMin = instMin;
@@ -172,26 +172,26 @@ async function aggregateInstanceLimits(paymentTypes: string[]): Promise<
       if (instMax > aggSingleMax) aggSingleMax = instMax;
       if (instMax === 0) aggSingleMax = 0;
 
-      // 日限额：计算剩余容量，判断是否可用
+      // Daily limit: calculate remaining capacity, check if available
       const instDailyLimit = channelLimits?.dailyLimit;
       if (!instDailyLimit || instDailyLimit <= 0) {
-        // 无日限额限制
+        // No daily limit restriction
         allBlocked = false;
-        maxRemaining = null; // null 表示至少有一个实例无限额
+        maxRemaining = null; // null means at least one instance has no limit
       } else {
         const used = usageMap.get(inst.id) ?? 0;
         const remaining = Math.max(0, instDailyLimit - used);
         const effectiveMin = instMin > 0 ? instMin : 0;
 
         if (remaining > effectiveMin) {
-          // 剩余额度足够下一单（大于最小单笔）
+          // Remaining quota sufficient for next order (greater than minimum per transaction)
           allBlocked = false;
           if (maxRemaining !== null) {
             maxRemaining = Math.max(maxRemaining, remaining);
           }
-          // maxRemaining === null 时说明已有无限额实例，保持 null
+          // When maxRemaining === null, an unlimited instance exists, keep null
         }
-        // remaining <= effectiveMin: 该实例实质不可用，不影响 allBlocked
+        // remaining <= effectiveMin: this instance is effectively unavailable, doesn't affect allBlocked
       }
     }
 
@@ -210,8 +210,8 @@ async function aggregateInstanceLimits(paymentTypes: string[]): Promise<
 }
 
 /**
- * 批量查询多个支付渠道的今日使用情况。
- * 聚合全局限额 + 实例级限额，一次性返回前端所需的可用性信息。
+ * Query today's usage for multiple payment channels in batch.
+ * Aggregate global limits + instance-level limits, return in one call with availability info needed by frontend.
  */
 export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<string, MethodLimitStatus>> {
   const todayStart = getBizDayStartUTC();
@@ -240,29 +240,29 @@ export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<
     const remaining = globalDailyLimit > 0 ? Math.max(0, globalDailyLimit - used) : null;
 
     const inst = instanceAgg[type];
-    // 全局可用：全局日限额未超
+    // Global available: global daily limit not exceeded
     const globalAvailable = globalDailyLimit === 0 || used < globalDailyLimit;
-    // 实例可用：无实例(走环境变量provider) 或 不是所有实例都被日限额阻塞
+    // Instance available: no instances (use env var provider) or not all instances blocked by daily limit
     const instanceAvailable = !inst?.hasInstances || !inst.allInstancesDailyBlocked;
 
-    // 聚合单笔范围：实例级限额与全局取交集
+    // Aggregate per-transaction range: intersection of instance-level and global limits
     const singleMin = inst?.singleMin ?? 0;
     let singleMax = globalSingleMax;
     if (inst?.hasInstances && inst.singleMax > 0) {
       singleMax = singleMax > 0 ? Math.min(singleMax, inst.singleMax) : inst.singleMax;
     }
 
-    // 实例剩余日容量约束：singleMax 不能超过最大剩余容量
+    // Instance remaining daily capacity constraint: singleMax cannot exceed max remaining capacity
     if (inst?.hasInstances && inst.maxRemainingCapacity !== null && inst.maxRemainingCapacity >= 0) {
       singleMax = singleMax > 0 ? Math.min(singleMax, inst.maxRemainingCapacity) : inst.maxRemainingCapacity;
     }
 
-    // 全局剩余日容量约束
+    // Global remaining daily capacity constraint
     if (remaining !== null && remaining >= 0) {
       singleMax = singleMax > 0 ? Math.min(singleMax, remaining) : remaining;
     }
 
-    // 最终可用性：如果 singleMax < singleMin，该渠道实质不可用
+    // Final availability: if singleMax < singleMin, channel is effectively unavailable
     const effectivelyAvailable = globalAvailable && instanceAvailable && (singleMin === 0 || singleMax >= singleMin);
 
     result[type] = {

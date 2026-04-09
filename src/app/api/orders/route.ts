@@ -37,23 +37,23 @@ export async function POST(request: NextRequest) {
     const parsed = createOrderSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json({ error: '参数错误', details: parsed.error.flatten().fieldErrors }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid parameters', details: parsed.error.flatten().fieldErrors }, { status: 400 });
     }
 
     const { token, amount, payment_type, src_host, src_url, is_mobile, order_type, plan_id } = parsed.data;
 
-    // 通过 token 解析用户身份
+    // Resolve user identity from token
     let userId: number;
     try {
       const user = await getCurrentUserByToken(token);
       userId = user.id;
     } catch {
-      return NextResponse.json({ error: '无效的 token，请重新登录', code: 'INVALID_TOKEN' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid token, please login again', code: 'INVALID_TOKEN' }, { status: 401 });
     }
 
-    // 订阅订单跳过金额范围校验（价格由服务端套餐决定）
+    // Subscription orders skip amount range validation (price determined by server plan)
     if (order_type !== 'subscription') {
-      // 优先读 DB 配置（管理后台在线配置），回退到环境变量
+      // Prioritize DB config (online configuration in admin), fallback to environment variables
       const amountConfigs = await getSystemConfigs(['RECHARGE_MIN_AMOUNT', 'RECHARGE_MAX_AMOUNT']);
       const effectiveMin = amountConfigs['RECHARGE_MIN_AMOUNT']
         ? parseFloat(amountConfigs['RECHARGE_MIN_AMOUNT']) || env.MIN_RECHARGE_AMOUNT
@@ -62,14 +62,14 @@ export async function POST(request: NextRequest) {
         ? parseFloat(amountConfigs['RECHARGE_MAX_AMOUNT']) || env.MAX_RECHARGE_AMOUNT
         : env.MAX_RECHARGE_AMOUNT;
       if (amount < effectiveMin || amount > effectiveMax) {
-        return NextResponse.json({ error: `充值金额需在 ${effectiveMin} - ${effectiveMax} 之间` }, { status: 400 });
+        return NextResponse.json({ error: `Recharge amount must be between ${effectiveMin} and ${effectiveMax}` }, { status: 400 });
       }
     }
 
     // Validate payment type is enabled (registry + ENABLED_PAYMENT_TYPES config)
     const enabledTypes = await getEnabledPaymentTypes();
     if (!enabledTypes.includes(payment_type)) {
-      return NextResponse.json({ error: `不支持的支付方式: ${payment_type}` }, { status: 400 });
+      return NextResponse.json({ error: `Unsupported payment method: ${payment_type}` }, { status: 400 });
     }
 
     const clientIp =
@@ -87,10 +87,10 @@ export async function POST(request: NextRequest) {
       planId: plan_id,
     });
 
-    // 不向客户端暴露 userName / userBalance 等隐私字段
+    // Don't expose private fields like userName / userBalance to client
     const { userName: _u, userBalance: _b, ...safeResult } = result;
     return NextResponse.json(safeResult);
   } catch (error) {
-    return handleApiError(error, '创建订单失败，请稍后重试');
+    return handleApiError(error, 'Failed to create order');
   }
 }

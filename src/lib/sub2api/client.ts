@@ -108,7 +108,7 @@ export async function createAndRedeem(
   throw lastError instanceof Error ? lastError : new Error('Recharge failed');
 }
 
-// ── 分组 API ──
+// ── Group API ──
 
 export async function getAllGroups(): Promise<Sub2ApiGroup[]> {
   const env = getEnv();
@@ -141,7 +141,7 @@ export async function getGroup(groupId: number): Promise<Sub2ApiGroup | null> {
   return data.data as Sub2ApiGroup;
 }
 
-// ── 订阅 API ──
+// ── Subscription API ──
 
 export async function assignSubscription(
   userId: number,
@@ -203,7 +203,7 @@ export async function extendSubscription(subscriptionId: number, days: number, i
   }
 }
 
-// ── 余额 API ──
+// ── Balance API ──
 
 export async function subtractBalance(
   userId: number,
@@ -229,7 +229,7 @@ export async function subtractBalance(
   }
 }
 
-// ── 用户搜索 API ──
+// ── User Search API ──
 
 export async function searchUsers(
   keyword: string,

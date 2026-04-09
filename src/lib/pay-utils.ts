@@ -35,19 +35,19 @@ export type OrderStatusFilter =
   | 'FAILED';
 
 const STATUS_TEXT_MAP: Record<Locale, Record<string, string>> = {
-  zh: {
-    [ORDER_STATUS.PENDING]: '待支付',
-    [ORDER_STATUS.PAID]: '已支付',
-    [ORDER_STATUS.RECHARGING]: '充值中',
-    [ORDER_STATUS.COMPLETED]: '已完成',
-    [ORDER_STATUS.REFUND_REQUESTED]: '申请中',
-    [ORDER_STATUS.REFUNDING]: '退款中',
-    [ORDER_STATUS.PARTIALLY_REFUNDED]: '已部分退款',
-    [ORDER_STATUS.REFUNDED]: '已退款',
-    [ORDER_STATUS.REFUND_FAILED]: '退款失败',
-    [ORDER_STATUS.EXPIRED]: '已超时',
-    [ORDER_STATUS.CANCELLED]: '已取消',
-    [ORDER_STATUS.FAILED]: '失败',
+  vi: {
+    [ORDER_STATUS.PENDING]: 'Chờ thanh toán',
+    [ORDER_STATUS.PAID]: 'Đã thanh toán',
+    [ORDER_STATUS.RECHARGING]: 'Đang nạp',
+    [ORDER_STATUS.COMPLETED]: 'Hoàn thành',
+    [ORDER_STATUS.REFUND_REQUESTED]: 'Đang yêu cầu',
+    [ORDER_STATUS.REFUNDING]: 'Đang hoàn tiền',
+    [ORDER_STATUS.PARTIALLY_REFUNDED]: 'Hoàn tiền một phần',
+    [ORDER_STATUS.REFUNDED]: 'Đã hoàn tiền',
+    [ORDER_STATUS.REFUND_FAILED]: 'Hoàn tiền thất bại',
+    [ORDER_STATUS.EXPIRED]: 'Hết hạn',
+    [ORDER_STATUS.CANCELLED]: 'Đã hủy',
+    [ORDER_STATUS.FAILED]: 'Thất bại',
   },
   en: {
     [ORDER_STATUS.PENDING]: 'Pending',
@@ -66,17 +66,17 @@ const STATUS_TEXT_MAP: Record<Locale, Record<string, string>> = {
 };
 
 const FILTER_OPTIONS_MAP: Record<Locale, { key: OrderStatusFilter; label: string }[]> = {
-  zh: [
-    { key: 'ALL', label: '全部' },
-    { key: 'PENDING', label: '待支付' },
-    { key: 'COMPLETED', label: '已完成' },
-    { key: 'REFUND_REQUESTED', label: '申请中' },
-    { key: 'REFUNDING', label: '退款中' },
-    { key: 'PARTIALLY_REFUNDED', label: '已部分退款' },
-    { key: 'REFUNDED', label: '已退款' },
-    { key: 'REFUND_FAILED', label: '退款失败' },
-    { key: 'CANCELLED', label: '已取消' },
-    { key: 'EXPIRED', label: '已超时' },
+  vi: [
+    { key: 'ALL', label: 'Tất cả' },
+    { key: 'PENDING', label: 'Chờ thanh toán' },
+    { key: 'COMPLETED', label: 'Hoàn thành' },
+    { key: 'REFUND_REQUESTED', label: 'Đang yêu cầu' },
+    { key: 'REFUNDING', label: 'Đang hoàn tiền' },
+    { key: 'PARTIALLY_REFUNDED', label: 'Hoàn tiền một phần' },
+    { key: 'REFUNDED', label: 'Đã hoàn tiền' },
+    { key: 'REFUND_FAILED', label: 'Hoàn tiền thất bại' },
+    { key: 'CANCELLED', label: 'Đã hủy' },
+    { key: 'EXPIRED', label: 'Hết hạn' },
   ],
   en: [
     { key: 'ALL', label: 'All' },
@@ -92,7 +92,7 @@ const FILTER_OPTIONS_MAP: Record<Locale, { key: OrderStatusFilter; label: string
   ],
 };
 
-export function getFilterOptions(locale: Locale = 'zh'): { key: OrderStatusFilter; label: string }[] {
+export function getFilterOptions(locale: Locale = 'en'): { key: OrderStatusFilter; label: string }[] {
   return FILTER_OPTIONS_MAP[locale];
 }
 
@@ -111,14 +111,14 @@ export function detectDeviceIsMobile(): boolean {
   return touchCapable && smallPhysicalScreen;
 }
 
-export function formatStatus(status: string, locale: Locale = 'zh'): string {
+export function formatStatus(status: string, locale: Locale = 'en'): string {
   return STATUS_TEXT_MAP[locale][status] || status;
 }
 
-export function formatCreatedAt(value: string, locale: Locale = 'zh'): string {
+export function formatCreatedAt(value: string, locale: Locale = 'en'): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString(locale === 'en' ? 'en-US' : 'zh-CN');
+  return date.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN');
 }
 
 export interface PaymentTypeMeta {
@@ -137,8 +137,8 @@ export interface PaymentTypeMeta {
 
 export const PAYMENT_TYPE_META: Record<string, PaymentTypeMeta> = {
   [PAYMENT_TYPE.ALIPAY]: {
-    label: '支付宝',
-    provider: '易支付',
+    label: 'Alipay',
+    provider: 'EasyPay',
     color: '#00AEEF',
     selectedBorder: 'border-cyan-400',
     selectedBg: 'bg-cyan-50',
@@ -149,8 +149,8 @@ export const PAYMENT_TYPE_META: Record<string, PaymentTypeMeta> = {
     buttonClass: 'bg-[#00AEEF] hover:bg-[#009dd6] active:bg-[#008cbe]',
   },
   [PAYMENT_TYPE.ALIPAY_DIRECT]: {
-    label: '支付宝',
-    provider: '支付宝',
+    label: 'Alipay',
+    provider: 'Alipay',
     color: '#1677FF',
     selectedBorder: 'border-blue-500',
     selectedBg: 'bg-blue-50',
@@ -161,8 +161,8 @@ export const PAYMENT_TYPE_META: Record<string, PaymentTypeMeta> = {
     buttonClass: 'bg-[#1677FF] hover:bg-[#0958d9] active:bg-[#003eb3]',
   },
   [PAYMENT_TYPE.WXPAY]: {
-    label: '微信支付',
-    provider: '易支付',
+    label: 'WeChat Pay',
+    provider: 'EasyPay',
     color: '#2BB741',
     selectedBorder: 'border-green-500',
     selectedBg: 'bg-green-50',
@@ -173,8 +173,8 @@ export const PAYMENT_TYPE_META: Record<string, PaymentTypeMeta> = {
     buttonClass: 'bg-[#2BB741] hover:bg-[#24a038] active:bg-[#1d8a2f]',
   },
   [PAYMENT_TYPE.WXPAY_DIRECT]: {
-    label: '微信支付',
-    provider: '微信支付',
+    label: 'WeChat Pay',
+    provider: 'WeChat Pay',
     color: '#07C160',
     selectedBorder: 'border-green-600',
     selectedBg: 'bg-green-50',
@@ -195,15 +195,28 @@ export const PAYMENT_TYPE_META: Record<string, PaymentTypeMeta> = {
     chartBar: { light: 'bg-purple-500', dark: 'bg-purple-400' },
     buttonClass: 'bg-[#635bff] hover:bg-[#5249d9] active:bg-[#4840c4]',
   },
+  [PAYMENT_TYPE.SEPAY]: {
+    label: 'Bank Transfer',
+    provider: 'SePay',
+    color: '#2563eb',
+    selectedBorder: 'border-blue-600',
+    selectedBg: 'bg-blue-50',
+    selectedBgDark: 'bg-blue-950',
+    iconBg: 'bg-blue-600',
+    iconSrc: '/icons/bank.svg',
+    chartBar: { light: 'bg-blue-500', dark: 'bg-blue-400' },
+    buttonClass: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800',
+  },
 };
 
 const PAYMENT_TEXT_MAP: Record<Locale, Record<string, { label: string; provider: string; sublabel?: string }>> = {
-  zh: {
-    [PAYMENT_TYPE.ALIPAY]: { label: '支付宝', provider: '易支付' },
-    [PAYMENT_TYPE.ALIPAY_DIRECT]: { label: '支付宝', provider: '支付宝' },
-    [PAYMENT_TYPE.WXPAY]: { label: '微信支付', provider: '易支付' },
-    [PAYMENT_TYPE.WXPAY_DIRECT]: { label: '微信支付', provider: '微信支付' },
+  vi: {
+    [PAYMENT_TYPE.ALIPAY]: { label: 'Alipay', provider: 'EasyPay' },
+    [PAYMENT_TYPE.ALIPAY_DIRECT]: { label: 'Alipay', provider: 'Alipay' },
+    [PAYMENT_TYPE.WXPAY]: { label: 'WeChat Pay', provider: 'EasyPay' },
+    [PAYMENT_TYPE.WXPAY_DIRECT]: { label: 'WeChat Pay', provider: 'WeChat Pay' },
     [PAYMENT_TYPE.STRIPE]: { label: 'Stripe', provider: 'Stripe' },
+    [PAYMENT_TYPE.SEPAY]: { label: 'Bank Transfer', provider: 'SePay' },
   },
   en: {
     [PAYMENT_TYPE.ALIPAY]: { label: 'Alipay', provider: 'EasyPay' },
@@ -211,10 +224,11 @@ const PAYMENT_TEXT_MAP: Record<Locale, Record<string, { label: string; provider:
     [PAYMENT_TYPE.WXPAY]: { label: 'WeChat Pay', provider: 'EasyPay' },
     [PAYMENT_TYPE.WXPAY_DIRECT]: { label: 'WeChat Pay', provider: 'WeChat Pay' },
     [PAYMENT_TYPE.STRIPE]: { label: 'Stripe', provider: 'Stripe' },
+    [PAYMENT_TYPE.SEPAY]: { label: 'Bank Transfer', provider: 'SePay' },
   },
 };
 
-function getPaymentText(type: string, locale: Locale = 'zh'): { label: string; provider: string; sublabel?: string } {
+function getPaymentText(type: string, locale: Locale = 'en'): { label: string; provider: string; sublabel?: string } {
   const meta = PAYMENT_TYPE_META[type];
   if (!meta) return { label: type, provider: '' };
   const baseText = PAYMENT_TEXT_MAP[locale][type] || { label: meta.label, provider: meta.provider };
@@ -224,7 +238,7 @@ function getPaymentText(type: string, locale: Locale = 'zh'): { label: string; p
   };
 }
 
-export function getPaymentTypeLabel(type: string, locale: Locale = 'zh'): string {
+export function getPaymentTypeLabel(type: string, locale: Locale = 'en'): string {
   const meta = getPaymentText(type, locale);
   if (!meta) return type;
   if (meta.sublabel) {
@@ -239,7 +253,7 @@ export function getPaymentTypeLabel(type: string, locale: Locale = 'zh'): string
 
 export function getPaymentDisplayInfo(
   type: string,
-  locale: Locale = 'zh',
+  locale: Locale = 'en',
 ): { channel: string; provider: string; sublabel?: string } {
   const meta = getPaymentText(type, locale);
   return { channel: meta.label, provider: meta.provider, sublabel: meta.sublabel };
@@ -249,6 +263,7 @@ export function getPaymentIconType(type: string): string {
   if (type.startsWith(PAYMENT_PREFIX.ALIPAY)) return PAYMENT_PREFIX.ALIPAY;
   if (type.startsWith(PAYMENT_PREFIX.WXPAY)) return PAYMENT_PREFIX.WXPAY;
   if (type.startsWith(PAYMENT_PREFIX.STRIPE)) return PAYMENT_PREFIX.STRIPE;
+  if (type.startsWith(PAYMENT_PREFIX.SEPAY)) return PAYMENT_PREFIX.SEPAY;
   return type;
 }
 
@@ -261,7 +276,7 @@ export function getPaymentIconSrc(type: string): string {
   return getPaymentMeta(type).iconSrc || '';
 }
 
-export function getPaymentChannelLabel(type: string, locale: Locale = 'zh'): string {
+export function getPaymentChannelLabel(type: string, locale: Locale = 'en'): string {
   return getPaymentDisplayInfo(type, locale).channel;
 }
 
@@ -275,6 +290,10 @@ export function isWxpayType(type: string | undefined | null): boolean {
 
 export function isAlipayType(type: string | undefined | null): boolean {
   return !!type?.startsWith(PAYMENT_PREFIX.ALIPAY);
+}
+
+export function isSepayType(type: string | undefined | null): boolean {
+  return !!type?.startsWith(PAYMENT_PREFIX.SEPAY);
 }
 
 export function isRedirectPayment(type: string | undefined | null): boolean {

@@ -1,0 +1,29 @@
+# docker-compose.infra.yml
+# Infrastructure only (PostgreSQL) for local development
+# Use with: pnpm dev
+#
+# Start:  docker compose -f docker-compose.infra.yml up -d
+# Stop:   docker compose -f docker-compose.infra.yml down
+# Reset:  docker compose -f docker-compose.infra.yml down -v
+
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: sub2apipay-postgres
+    ports:
+      - '${DB_PORT:-5433}:5432'
+    environment:
+      POSTGRES_USER: sub2apipay
+      POSTGRES_PASSWORD: sub2apipay
+      POSTGRES_DB: sub2apipay
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sub2apipay']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:

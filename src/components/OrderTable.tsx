@@ -22,8 +22,32 @@ interface OrderTableProps {
 
 export default function OrderTable({ isDark, locale, loading, error, orders, userBalance, onRefundRequest }: OrderTableProps) {
   const text =
-    locale === 'en'
+    locale === 'vi'
       ? {
+          empty: 'Không tìm thấy các đơn hàng phù hợp',
+          orderId: 'Mã đơn hàng',
+          amount: 'Số tiền',
+          payment: 'Phương thức thanh toán',
+          status: 'Trạng thái',
+          createdAt: 'Tạo lúc',
+          actions: 'Hành động',
+          refundRequest: 'Yêu cầu hoàn tiền',
+          requested: 'Đã yêu cầu',
+          partialRefunded: 'Hoàn tiền một phần',
+          dialogTitle: 'Yêu cầu hoàn tiền',
+          refundAmount: 'Số tiền hoàn',
+          refundReason: 'Lý do hoàn tiền',
+          refundReasonPlaceholder: 'Nhập lý do hoàn tiền (tùy chọn)',
+          currentBalance: 'Số dư hiện tại',
+          orderAmount: 'Số tiền đơn hàng',
+          cancel: 'Hủy',
+          submit: 'Gửi yêu cầu',
+          submitting: 'Đang gửi...',
+          refundAmountInvalid: 'Số tiền hoàn phải lớn hơn 0',
+          refundAmountExceedOrder: 'Số tiền hoàn không thể vượt quá số tiền đơn hàng',
+          refundAmountExceedBalance: 'Số tiền hoàn không thể vượt quá số dư hiện tại',
+        }
+      : {
           empty: 'No matching orders found',
           orderId: 'Order ID',
           amount: 'Amount',
@@ -47,30 +71,6 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
           refundAmountExceedOrder: 'Refund amount cannot exceed order amount',
           refundAmountExceedBalance: 'Refund amount cannot exceed current balance',
         }
-      : {
-          empty: '暂无符合条件的订单记录',
-          orderId: '订单号',
-          amount: '金额',
-          payment: '支付方式',
-          status: '状态',
-          createdAt: '创建时间',
-          actions: '操作',
-          refundRequest: '申请退款',
-          requested: '已申请',
-          partialRefunded: '已部分退款',
-          dialogTitle: '申请退款',
-          refundAmount: '退款金额',
-          refundReason: '退款原因',
-          refundReasonPlaceholder: '请输入退款原因（可选）',
-          currentBalance: '当前余额',
-          orderAmount: '订单金额',
-          cancel: '取消',
-          submit: '提交申请',
-          submitting: '提交中...',
-          refundAmountInvalid: '退款金额必须大于 0',
-          refundAmountExceedOrder: '退款金额不能超过订单金额',
-          refundAmountExceedBalance: '退款金额不能超过当前余额',
-        };
 
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [refundOrder, setRefundOrder] = useState<MyOrder | null>(null);
