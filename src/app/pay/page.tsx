@@ -8,21 +8,12 @@ import PaymentQRCode from '@/components/PaymentQRCode';
 import OrderStatus from '@/components/OrderStatus';
 import PayPageLayout from '@/components/PayPageLayout';
 import MobileOrderList from '@/components/MobileOrderList';
-import MainTabs from '@/components/MainTabs';
-import ChannelGrid from '@/components/ChannelGrid';
-import SubscriptionPlanCard from '@/components/SubscriptionPlanCard';
-import SubscriptionConfirm from '@/components/SubscriptionConfirm';
-import UserSubscriptions from '@/components/UserSubscriptions';
 import PurchaseFlow from '@/components/PurchaseFlow';
 import PendingOrderBanner from '@/components/PendingOrderBanner';
 import { resolveLocale, pickLocaleText, applyLocaleToSearchParams } from '@/lib/locale';
-import { PRODUCT_NAME } from '@/lib/constants';
 import { detectDeviceIsMobile, applySublabelOverrides, type UserInfo, type MyOrder } from '@/lib/pay-utils';
 import type { PublicOrderStatusSnapshot } from '@/lib/order/status';
 import type { MethodLimitInfo } from '@/components/PaymentForm';
-import type { ChannelInfo } from '@/components/ChannelGrid';
-import type { PlanInfo } from '@/components/SubscriptionPlanCard';
-import type { UserSub } from '@/components/UserSubscriptions';
 
 interface OrderResult {
   orderId: string;
@@ -92,14 +83,6 @@ function PayContent() {
   const [pendingCount, setPendingCount] = useState(0);
 
   // New state
-  const [mainTab, setMainTab] = useState<'topup' | 'subscribe'>('topup');
-  const [channels, setChannels] = useState<ChannelInfo[]>([]);
-  const [plans, setPlans] = useState<PlanInfo[]>([]);
-  const [userSubscriptions, setUserSubscriptions] = useState<UserSub[]>([]);
-  const [showTopUpForm, setShowTopUpForm] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<PlanInfo | null>(null);
-  const [renewGroupId, setRenewGroupId] = useState<number | null>(null);
-  const [channelsLoaded, setChannelsLoaded] = useState(false);
   const [userLoaded, setUserLoaded] = useState(false);
 
   const [config, setConfig] = useState<AppConfig>({
@@ -150,15 +133,6 @@ function PayContent() {
     );
   };
 
-
-  // R6: Is balance recharge disabled
-  const balanceDisabled = config.balanceDisabled === true;
-  // Whether there is channel configuration (determines whether to directly show recharge form or channel card + modal)
-  const hasChannels = channels.length > 0;
-  // Whether there are plans available for sale
-  const hasPlans = plans.length > 0;
-  // Whether recharge is available (not disabled and has payment methods)
-  const canTopUp = !balanceDisabled && config.enabledPaymentTypes.length > 0;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -242,34 +216,6 @@ function PayContent() {
     }
   }, [token, locale]);
 
-  // Load channels and subscription plans
-  const loadChannelsAndPlans = useCallback(async () => {
-    if (!token) return;
-    try {
-      const [chRes, plRes, subRes] = await Promise.all([
-        fetch(`/api/channels?token=${encodeURIComponent(token)}`),
-        fetch(`/api/subscription-plans?token=${encodeURIComponent(token)}`),
-        fetch(`/api/subscriptions/my?token=${encodeURIComponent(token)}`),
-      ]);
-
-      if (chRes.ok) {
-        const chData = await chRes.json();
-        setChannels(chData.channels ?? []);
-      }
-      if (plRes.ok) {
-        const plData = await plRes.json();
-        setPlans(plData.plans ?? []);
-      }
-      if (subRes.ok) {
-        const subData = await subRes.json();
-        setUserSubscriptions(subData.subscriptions ?? []);
-      }
-    } catch {
-    } finally {
-      setChannelsLoaded(true);
-    }
-  }, [token]);
-
   const loadMoreOrders = async () => {
     if (!token || ordersLoadingMore || !ordersHasMore) return;
     const nextPage = ordersPage + 1;
@@ -293,8 +239,7 @@ function PayContent() {
 
   useEffect(() => {
     loadUserAndOrders();
-    loadChannelsAndPlans();
-  }, [loadUserAndOrders, loadChannelsAndPlans]);
+  }, [loadUserAndOrders]);
 
   // Auto-submit when amount param is provided and config is loaded
   useEffect(() => {
@@ -350,18 +295,15 @@ function PayContent() {
   useEffect(() => {
     if (step !== 'result' || finalOrderState?.status !== 'COMPLETED') return;
     loadUserAndOrders();
-    loadChannelsAndPlans();
     const timer = setTimeout(() => {
       setStep('form');
       setOrderResult(null);
       setFinalOrderState(null);
       setError('');
       setSubscriptionError('');
-      setSelectedPlan(null);
-      setRenewGroupId(null);
     }, 2200);
     return () => clearTimeout(timer);
-  }, [step, finalOrderState, loadUserAndOrders, loadChannelsAndPlans]);
+  }, [step, finalOrderState, loadUserAndOrders]);
 
   // Check after order completion if subscription group has been removed
   useEffect(() => {
@@ -515,55 +457,6 @@ function PayContent() {
     }
   };
 
-  // ── Subscription order ──
-  const handleSubscriptionSubmit = async (paymentType: string) => {
-    if (!selectedPlan) return;
-    setLoading(true);
-    setError('');
-
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          amount: selectedPlan.price,
-          payment_type: paymentType,
-          is_mobile: isMobile,
-          src_host: srcHost,
-          src_url: srcUrl,
-          order_type: 'subscription',
-          plan_id: selectedPlan.id,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || pickLocaleText(locale, 'Lỗi tạo đơn hàng đăng ký', 'Failed to create subscription order'));
-        return;
-      }
-
-      setOrderResult({
-        orderId: data.orderId,
-        amount: data.amount,
-        payAmount: data.payAmount,
-        status: data.status,
-        paymentType: data.paymentType || paymentType,
-        payUrl: data.payUrl,
-        qrCode: data.qrCode,
-        clientSecret: data.clientSecret,
-        expiresAt: data.expiresAt,
-        statusAccessToken: data.statusAccessToken,
-        sepayBankInfo: data.sepayBankInfo,
-      });
-      setStep('paying');
-    } catch {
-      setError(pickLocaleText(locale, 'Lỗi mạng', 'Network error'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleStatusChange = (order: PublicOrderStatusSnapshot) => {
     setFinalOrderState(order);
     setStep('result');
@@ -576,22 +469,11 @@ function PayContent() {
     setFinalOrderState(null);
     setError('');
     setSubscriptionError('');
-    setSelectedPlan(null);
-    setRenewGroupId(null);
-    setShowTopUpForm(false);
   };
 
   // ── Render ──
-  // R7: Check if all entries are closed (no available recharge methods AND no subscription plans)
-  const allEntriesClosed = channelsLoaded && userLoaded && !canTopUp && !hasPlans;
-  const showMainTabs = channelsLoaded && userLoaded && !allEntriesClosed && (hasChannels || hasPlans);
-  const effectiveTab = !canTopUp ? 'subscribe' : !hasPlans ? 'topup' : mainTab;
-  const pageTitle = showMainTabs
-    ? pickLocaleText(locale, 'Chọn dịch vụ nạp tiền / đăng ký phù hợp với bạn', 'Choose Your Recharge / Subscription')
-    : pickLocaleText(locale, `N\u1ea1p ti\u1ec1n ${PRODUCT_NAME}`, `${PRODUCT_NAME} Balance Recharge`);
-  const pageSubtitle = showMainTabs
-    ? pickLocaleText(locale, 'Nạp tiền hoặc đăng ký gói', 'Top up balance or subscribe to a plan')
-    : pickLocaleText(locale, 'Thanh toán an toàn, tự động vào tài khoản', 'Secure payment, automatic crediting');
+  const pageTitle = pickLocaleText(locale, 'Nạp tiền tài khoản', 'Top Up Your Balance');
+  const pageSubtitle = pickLocaleText(locale, 'Nạp tiền và sử dụng theo nhu cầu', 'Pay as you go — top up and use');
 
   return (
     <PayPageLayout
@@ -644,7 +526,7 @@ function PayContent() {
           }} />
 
           {/* Loading */}
-          {(!channelsLoaded || !userLoaded) && !allEntriesClosed && (
+          {!userLoaded && (
             <div className="flex items-center justify-center py-12">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
               <span className={['ml-3 text-sm', isDark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
@@ -653,250 +535,92 @@ function PayContent() {
             </div>
           )}
 
-          {/* R7: All entries closed prompt */}
-          {allEntriesClosed && (
-            <div
-              className={[
-                'rounded-2xl border p-8 text-center',
-                isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-white shadow-sm',
-              ].join(' ')}
-            >
-              <div className={['text-4xl mb-4'].join(' ')}>
-                <svg
-                  className={['mx-auto h-12 w-12', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                </svg>
-              </div>
-              <p className={['text-lg font-medium mb-2', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
-                {pickLocaleText(locale, 'Nạp tiền / Đăng ký không khả dụng', 'Recharge / Subscription entry is not available')}
-              </p>
-              <p className={['text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                {pickLocaleText(
-                  locale,
-                  'Vui lòng liên hệ quản trị viên nếu có câu hỏi',
-                  'Please contact the administrator if you have questions',
-                )}
-              </p>
-            </div>
-          )}
-
-          {/* ── Have channel configuration: new UI ── */}
-          {channelsLoaded &&
-            showMainTabs &&
-            !selectedPlan &&
-            !showTopUpForm && (
-              <>
-                <MainTabs
-                  activeTab={effectiveTab}
-                  onTabChange={setMainTab}
-                  showSubscribeTab={hasPlans}
-                  showTopUpTab={canTopUp}
-                  isDark={isDark}
-                  locale={locale}
-                />
-
-                {effectiveTab === 'topup' && canTopUp && (
-                  <div className="mt-6">
-                    {/* Pay-as-you-go explanation banner */}
-                    <div
-                      className={[
-                        'mb-6 rounded-2xl border p-6',
-                        isDark
-                          ? 'border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-purple-500/10'
-                          : 'border-emerald-500/20 bg-gradient-to-r from-emerald-50 to-purple-50',
-                      ].join(' ')}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div
-                          className={[
-                            'flex-shrink-0 rounded-lg p-2',
-                            isDark ? 'bg-emerald-500/20' : 'bg-emerald-500/15',
-                          ].join(' ')}
-                        >
-                          <svg
-                            className="h-6 w-6 text-emerald-500"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <h3
-                            className={[
-                              'text-lg font-semibold mb-2',
-                              isDark ? 'text-emerald-400' : 'text-emerald-700',
-                            ].join(' ')}
-                          >
-                            {pickLocaleText(locale, 'Chế độ trả tiền theo cách sử dụng', 'Pay-as-you-go')}
-                          </h3>
-                          <p className={['text-sm mb-4', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                            {pickLocaleText(
-                              locale,
-                              'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Giá tính bằng USD',
-                              'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Priced in USD',
-                            )}
-                          </p>
-                          <div className="flex flex-wrap gap-4 text-sm">
-                            <div
-                              className={['flex items-center gap-2', isDark ? 'text-slate-400' : 'text-slate-500'].join(
-                                ' ',
-                              )}
-                            >
-                              <svg
-                                className="h-4 w-4 text-green-500"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                              >
-                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                                <polyline points="17 6 23 6 23 12" />
-                              </svg>
-                              <span>{pickLocaleText(locale, 'Tỷ lệ càng thấp càng tốt', 'Lower rate = better value')}</span>
-                            </div>
-                            <div
-                              className={['flex items-center gap-2', isDark ? 'text-slate-400' : 'text-slate-500'].join(
-                                ' ',
-                              )}
-                            >
-                              <svg
-                                className="h-4 w-4 text-blue-500"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                              >
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                              </svg>
-                              <span>
-                                {pickLocaleText(
-                                  locale,
-                                  '0.15 tỷ lệ = 1 USD ≈ 23,500 VND hạn mức',
-                                  '0.15 rate = 1 USD ≈ 23,500 VND quota',
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {hasChannels ? (
-                      <ChannelGrid
-                        channels={channels}
-                        onTopUp={() => setShowTopUpForm(true)}
-                        isDark={isDark}
-                        locale={locale}
-                        userBalance={userInfo?.balance}
-                      />
-                    ) : (
-                      <PaymentForm
-                        userId={resolvedUserId ?? 0}
-                        userName={userInfo?.username}
-                        userBalance={userInfo?.balance}
-                        enabledPaymentTypes={config.enabledPaymentTypes}
-                        methodLimits={config.methodLimits}
-                        minAmount={config.minAmount}
-                        maxAmount={config.maxAmount}
-                        onSubmit={handleSubmit}
-                        loading={loading}
-                        dark={isDark}
-                        locale={locale}
-                      />
-                    )}
-
-                    {renderHelpSection()}
-                  </div>
-                )}
-
-                {effectiveTab === 'subscribe' && (
-                  <div className="mt-6">
-                    {renewGroupId !== null && (
-                      <button
-                        type="button"
-                        onClick={() => setRenewGroupId(null)}
-                        className={[
-                          'mb-4 flex items-center gap-1 text-sm transition-colors',
-                          isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700',
-                        ].join(' ')}
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
-                        {pickLocaleText(locale, 'Xem tất cả gói', 'View All Plans')}
-                      </button>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {(renewGroupId !== null ? plans.filter((p) => p.groupId === renewGroupId) : plans).map((plan) => (
-                        <SubscriptionPlanCard
-                          key={plan.id}
-                          plan={plan}
-                          onSubscribe={() => setSelectedPlan(plan)}
-                          isDark={isDark}
-                          locale={locale}
-                        />
-                      ))}
-                    </div>
-
-                    {renderHelpSection()}
-                  </div>
-                )}
-
-                {/* User has subscriptions — shared across all tabs */}
-                {userSubscriptions.length > 0 && (
-                  <div className="mt-8">
-                    <h3
-                      className={['text-lg font-semibold mb-3', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}
-                    >
-                      {pickLocaleText(locale, 'Đăng ký của tôi', 'My Subscriptions')}
-                    </h3>
-                    <UserSubscriptions
-                      subscriptions={userSubscriptions}
-                      onRenew={(groupId) => {
-                        const groupPlans = plans.filter((p) => p.groupId === groupId);
-                        if (groupPlans.length === 1) {
-                          setSelectedPlan(groupPlans[0]);
-                          setMainTab('subscribe');
-                        } else if (groupPlans.length > 1) {
-                          setRenewGroupId(groupId);
-                          setMainTab('subscribe');
-                        }
-                      }}
-                      isDark={isDark}
-                      locale={locale}
-                    />
-                  </div>
-                )}
-
-                <PurchaseFlow isDark={isDark} locale={locale} />
-              </>
-            )}
-
-          {/* After clicking "Top Up Now": directly show PaymentForm (with amount selection) */}
-          {showTopUpForm && step === 'form' && (
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowTopUpForm(false)}
+          {userLoaded && (
+            <>
+              {/* Pay-as-you-go explanation banner */}
+              <div
                 className={[
-                  'mb-4 flex items-center gap-1 text-sm transition-colors',
-                  isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700',
+                  'mb-6 rounded-2xl border p-6',
+                  isDark
+                    ? 'border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-purple-500/10'
+                    : 'border-emerald-500/20 bg-gradient-to-r from-emerald-50 to-purple-50',
                 ].join(' ')}
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-                {pickLocaleText(locale, 'Quay lại', 'Back')}
-              </button>
+                <div className="flex items-start gap-4">
+                  <div
+                    className={[
+                      'flex-shrink-0 rounded-lg p-2',
+                      isDark ? 'bg-emerald-500/20' : 'bg-emerald-500/15',
+                    ].join(' ')}
+                  >
+                    <svg
+                      className="h-6 w-6 text-emerald-500"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3
+                      className={[
+                        'text-lg font-semibold mb-2',
+                        isDark ? 'text-emerald-400' : 'text-emerald-700',
+                      ].join(' ')}
+                    >
+                      {pickLocaleText(locale, 'Chế độ trả tiền theo cách sử dụng', 'Pay-as-you-go')}
+                    </h3>
+                    <p className={['text-sm mb-4', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+                      {pickLocaleText(
+                        locale,
+                        'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Giá tính bằng USD',
+                        'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Priced in USD',
+                      )}
+                    </p>
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <div
+                        className={['flex items-center gap-2', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}
+                      >
+                        <svg
+                          className="h-4 w-4 text-green-500"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                          <polyline points="17 6 23 6 23 12" />
+                        </svg>
+                        <span>{pickLocaleText(locale, 'Tỷ lệ càng thấp càng tốt', 'Lower rate = better value')}</span>
+                      </div>
+                      <div
+                        className={['flex items-center gap-2', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}
+                      >
+                        <svg
+                          className="h-4 w-4 text-blue-500"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        <span>
+                          {pickLocaleText(
+                            locale,
+                            '0.15 tỷ lệ = 1 USD ≈ 23,500 VND hạn mức',
+                            '0.15 rate = 1 USD ≈ 23,500 VND quota',
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment form */}
               <PaymentForm
                 userId={resolvedUserId ?? 0}
                 userName={userInfo?.username}
@@ -910,61 +634,14 @@ function PayContent() {
                 dark={isDark}
                 locale={locale}
               />
-              {renderHelpSection()}
-            </div>
-          )}
 
-          {/* Subscription confirmation page */}
-          {selectedPlan && step === 'form' && (
-            <>
-              <SubscriptionConfirm
-                plan={selectedPlan}
-                paymentTypes={config.enabledPaymentTypes}
-                onBack={() => setSelectedPlan(null)}
-                onSubmit={handleSubscriptionSubmit}
-                loading={loading}
-                isDark={isDark}
-                locale={locale}
-              />
               {renderHelpSection()}
+
+              <div className="mt-8">
+                <PurchaseFlow isDark={isDark} locale={locale} />
+              </div>
             </>
           )}
-
-          {/* ── No channel configuration: traditional recharge UI ── */}
-          {channelsLoaded && userLoaded && !showMainTabs && canTopUp && !selectedPlan && (
-            <>
-              {isMobile ? (
-                  <PaymentForm
-                    userId={resolvedUserId ?? 0}
-                    userName={userInfo?.username}
-                    userBalance={userInfo?.balance}
-                    enabledPaymentTypes={config.enabledPaymentTypes}
-                    methodLimits={config.methodLimits}
-                    minAmount={config.minAmount}
-                    maxAmount={config.maxAmount}
-                    onSubmit={handleSubmit}
-                    loading={loading}
-                    dark={isDark}
-                    locale={locale}
-                  />
-              ) : (
-                <PaymentForm
-                    userId={resolvedUserId ?? 0}
-                    userName={userInfo?.username}
-                    userBalance={userInfo?.balance}
-                    enabledPaymentTypes={config.enabledPaymentTypes}
-                    methodLimits={config.methodLimits}
-                    minAmount={config.minAmount}
-                    maxAmount={config.maxAmount}
-                    onSubmit={handleSubmit}
-                    loading={loading}
-                    dark={isDark}
-                    locale={locale}
-                  />
-              )}
-            </>
-          )}
-
         </>
       )}
 
