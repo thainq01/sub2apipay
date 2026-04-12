@@ -92,7 +92,7 @@ export default function PurchaseFlow({ isDark, locale }: PurchaseFlowProps) {
               >
                 {step.icon}
               </div>
-              <span className={['text-xs font-medium', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
+              <span className={['text-xs font-medium text-center', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
                 {pickLocaleText(locale, step.vi, step.en)}
               </span>
             </div>

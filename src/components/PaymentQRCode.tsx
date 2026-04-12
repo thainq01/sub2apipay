@@ -84,7 +84,7 @@ function BankTransferCard({
     { label: t.bankName, value: bankInfo.bankName, copyable: false },
     { label: t.accountNumber, value: bankInfo.accountNumber, copyable: true },
     { label: t.accountName, value: bankInfo.accountName, copyable: true },
-    { label: t.transferAmount, value: `${displayAmount.toLocaleString('vi-VN')} VND`, copyable: true, copyText: String(Math.round(displayAmount)) },
+    { label: t.transferAmount, value: `${displayAmount.toLocaleString('vi-VN')} ☕`, copyable: true, copyText: String(Math.round(displayAmount)) },
     { label: t.transferCode, value: bankInfo.transferCode, copyable: true, highlight: true },
   ];
 
@@ -301,7 +301,7 @@ export default function PaymentQRCode({
       {/* Amount + Timer */}
       <div className="text-center">
         <div className={['text-4xl font-bold', dark ? 'text-blue-400' : 'text-blue-600'].join(' ')}>
-          {displayAmount.toLocaleString('vi-VN')} VND
+          {displayAmount.toLocaleString('vi-VN')} ☕
         </div>
         {hasFeeDiff && (
           <div className={['mt-1 text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>

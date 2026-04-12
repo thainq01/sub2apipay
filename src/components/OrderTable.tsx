@@ -25,7 +25,7 @@ function formatCups(amount: number, locale: string): string {
 }
 
 function formatVND(amount: number): string {
-  return `${Math.round(amount).toLocaleString('vi-VN')} VND`;
+  return `${Math.round(amount).toLocaleString('vi-VN')} ☕`;
 }
 
 export default function OrderTable({ isDark, locale, loading, error, orders, userBalance, onRefundRequest }: OrderTableProps) {

@@ -123,7 +123,7 @@ export function formatCreatedAt(value: string, locale: Locale = 'vi'): string {
 }
 
 export function formatVND(amount: number): string {
-  return amount.toLocaleString('vi-VN') + ' VND';
+  return amount.toLocaleString('vi-VN') + ' ☕';
 }
 
 export interface PaymentTypeMeta {

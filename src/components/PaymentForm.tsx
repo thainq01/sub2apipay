@@ -52,7 +52,7 @@ export default function PaymentForm({
     ? paymentType
     : enabledPaymentTypes[0] || 'sepay';
 
-  const formatAmount = (n: number) => n.toLocaleString('vi-VN') + ' VND';
+  const formatAmount = (n: number) => n.toLocaleString('vi-VN') + ' ☕';
 
   const handleQuickAmount = (val: number) => {
     setAmount(val);
@@ -157,7 +157,7 @@ export default function PaymentForm({
               'pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium',
               dark ? 'text-slate-500' : 'text-slate-400',
             ].join(' ')}>
-              VND
+              VND ☕
             </div>
             <input
               type="text"

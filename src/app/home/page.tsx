@@ -170,7 +170,7 @@ function HomeContent() {
               <div className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
                 {t('home.balance')}:{' '}
                 <span className={['font-bold', isDark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
-                  {user.balance?.toFixed(2) || '0.00'}
+                  {user.balance?.toFixed(2) || '0.00'} ☕
                 </span>
               </div>
             </div>
