@@ -31,6 +31,8 @@ const envSchema = z.object({
   SEPAY_ORDER_TIMEOUT_MINUTES: z.string().default('30').transform(Number).pipe(z.number().int().positive()).optional(),
   // VND per 1 credit on Sub2API (e.g., 2000 means 2000 VND = 1 credit)
   SEPAY_VND_PER_CREDIT: z.string().default('2000').transform(Number).pipe(z.number().positive()).optional(),
+  // Coffee conversion rate (VND per 1 Coffee). Falls back to SEPAY_VND_PER_CREDIT if not set.
+  RATE: z.string().optional().transform((v) => (v ? Number(v) : undefined)).pipe(z.number().positive().optional()),
 
   // Enable specific payment types (comma-separated)
   ENABLED_PAYMENT_TYPES: optionalTrimmedString,

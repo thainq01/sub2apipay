@@ -138,7 +138,7 @@ const en: Record<string, string> = {
 
   // Common
   'common.back': 'Back',
-  'common.coffeeCup': 'Coffee Cup',
+  'common.coffeeCup': '☕',
 };
 
 export default en;

@@ -20,6 +20,7 @@ interface PaymentFormProps {
   methodLimits?: Record<string, MethodLimitInfo>;
   minAmount: number;
   maxAmount: number;
+  rate: number;
   onSubmit: (amount: number, paymentType: string) => Promise<void>;
   loading?: boolean;
   dark?: boolean;
@@ -27,7 +28,7 @@ interface PaymentFormProps {
   fixedAmount?: number;
 }
 
-const QUICK_AMOUNTS_VND = [50000, 100000, 200000, 500000, 1000000, 2000000];
+const QUICK_AMOUNTS_COFFEE = [25, 50, 100, 250, 500, 1000];
 const AMOUNT_TEXT_PATTERN_VND = /^\d*$/;
 
 export default function PaymentForm({
@@ -38,6 +39,7 @@ export default function PaymentForm({
   methodLimits,
   minAmount,
   maxAmount,
+  rate,
   onSubmit,
   loading,
   dark = false,
@@ -53,6 +55,7 @@ export default function PaymentForm({
     : enabledPaymentTypes[0] || 'sepay';
 
   const formatAmount = (n: number) => n.toLocaleString('vi-VN') + ' ☕';
+  const formatVND = (n: number) => n.toLocaleString('vi-VN') + ' VND';
 
   const handleQuickAmount = (val: number) => {
     setAmount(val);
@@ -72,6 +75,7 @@ export default function PaymentForm({
   };
 
   const selectedAmount = amount || 0;
+  const vndAmount = selectedAmount > 0 ? selectedAmount * rate : 0;
   const isMethodAvailable = !methodLimits || methodLimits[effectivePaymentType]?.available !== false;
   const methodSingleMax = methodLimits?.[effectivePaymentType]?.singleMax;
   const methodSingleMin = methodLimits?.[effectivePaymentType]?.singleMin;
@@ -93,8 +97,6 @@ export default function PaymentForm({
     if (!isValid || loading) return;
     await onSubmit(selectedAmount, effectivePaymentType);
   };
-
-  const coffeeCount = selectedAmount >= 2000 ? Math.floor(selectedAmount / 2000) : 0;
 
   const renderPaymentIcon = (type: string) => {
     return (
@@ -148,6 +150,9 @@ export default function PaymentForm({
           <div className={['mt-2 text-3xl font-bold', dark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
             {formatAmount(fixedAmount)}
           </div>
+          <div className={['mt-1 text-sm', dark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+            = {formatVND(fixedAmount * rate)}
+          </div>
         </div>
       ) : (
         <div className="space-y-3">
@@ -157,7 +162,7 @@ export default function PaymentForm({
               'pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium',
               dark ? 'text-slate-500' : 'text-slate-400',
             ].join(' ')}>
-              VND ☕
+              ☕
             </div>
             <input
               type="text"
@@ -169,7 +174,7 @@ export default function PaymentForm({
               onChange={(e) => handleCustomAmountChange(e.target.value)}
               placeholder={`${effectiveMax}`}
               className={[
-                'w-full rounded-xl border-2 py-3.5 pl-14 pr-4 text-lg font-semibold transition-all focus:outline-none',
+                'w-full rounded-xl border-2 py-3.5 pl-12 pr-4 text-lg font-semibold transition-all focus:outline-none',
                 dark
                   ? 'border-slate-700 bg-slate-800/60 text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20'
                   : 'border-slate-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
@@ -178,8 +183,8 @@ export default function PaymentForm({
           </div>
 
           {/* Quick amount chips */}
-          <div className="flex flex-wrap gap-2">
-            {QUICK_AMOUNTS_VND.map((val) => (
+          <div className="flex flex-wrap justify-center gap-2">
+            {QUICK_AMOUNTS_COFFEE.map((val) => (
               <button
                 key={val}
                 type="button"
@@ -200,29 +205,23 @@ export default function PaymentForm({
             ))}
           </div>
 
-          {/* Coffee meter */}
-          <div className={[
-            'flex items-center gap-2.5 rounded-xl px-4 py-3',
-            dark ? 'bg-amber-500/10' : 'bg-amber-50',
-          ].join(' ')}>
-            <span className="text-xl">☕</span>
-            <div className="flex-1">
-              {coffeeCount > 0 ? (
-                <div>
-                  <span className={['text-sm font-semibold', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>
-                    {coffeeCount} coffee{coffeeCount > 1 ? 's' : ''}
-                  </span>
-                  <span className={['ml-1.5 text-xs', dark ? 'text-amber-400/60' : 'text-amber-600/60'].join(' ')}>
-                    {Array.from({ length: Math.min(coffeeCount, 10) }, () => '☕').join('')}
-                  </span>
-                </div>
-              ) : (
-                <span className={['text-xs', dark ? 'text-amber-400/80' : 'text-amber-600/80'].join(' ')}>
-                  2,000 VND = 1 cup of coffee
+          {/* VND conversion display */}
+          {vndAmount > 0 && (
+            <div className={[
+              'flex items-center gap-2.5 rounded-xl px-4 py-3',
+              dark ? 'bg-amber-500/10' : 'bg-amber-50',
+            ].join(' ')}>
+              <span className="text-xl">💰</span>
+              <div className="flex-1">
+                <span className={['text-sm font-semibold', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>
+                  = {formatVND(vndAmount)}
                 </span>
-              )}
+                <span className={['ml-1.5 text-xs', dark ? 'text-amber-400/60' : 'text-amber-600/60'].join(' ')}>
+                  ({formatAmount(selectedAmount)} × {rate.toLocaleString('vi-VN')})
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Validation message */}
           {customAmount !== '' && !isValid && (() => {

@@ -138,7 +138,7 @@ const vi: Record<string, string> = {
 
   // Common
   'common.back': 'Quay lại',
-  'common.coffeeCup': 'Coffee Cup',
+  'common.coffeeCup': '☕',
 };
 
 export default vi;

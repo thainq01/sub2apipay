@@ -45,6 +45,7 @@ interface AppConfig {
   stripePublishableKey?: string | null;
   balanceDisabled?: boolean;
   maxPendingOrders?: number;
+  rate?: number;
 }
 
 function PayContent() {
@@ -204,6 +205,7 @@ function PayContent() {
             stripePublishableKey: cfgData.config.stripePublishableKey ?? null,
             balanceDisabled: cfgData.config.balanceDisabled ?? false,
             maxPendingOrders: cfgData.config.maxPendingOrders ?? 3,
+            rate: cfgData.config.rate ?? 2000,
           });
           if (cfgData.config.sublabelOverrides) {
             applySublabelOverrides(cfgData.config.sublabelOverrides);
@@ -369,13 +371,17 @@ function PayContent() {
     setLoading(true);
     setError('');
 
+    // Convert coffee amount to VND for the API (backend expects VND for sepay)
+    const rate = config.rate ?? 2000;
+    const vndAmount = amount * rate;
+
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token,
-          amount,
+          amount: vndAmount,
           payment_type: paymentType,
           is_mobile: isMobile,
           src_host: srcHost,
@@ -570,7 +576,7 @@ function PayContent() {
                         isDark ? 'text-emerald-400' : 'text-emerald-700',
                       ].join(' ')}
                     >
-                      {pickLocaleText(locale, 'Chế độ trả tiền theo cách sử dụng', 'Pay-as-you-go')}
+                      {pickLocaleText(locale, 'Sử dụng bao nhiêu, trả tiền bấy nhiêu !', 'Pay-as-you-go')}
                     </h3>
                     <p className={['text-sm mb-4', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
                       {pickLocaleText(
@@ -629,6 +635,7 @@ function PayContent() {
                 methodLimits={config.methodLimits}
                 minAmount={config.minAmount}
                 maxAmount={config.maxAmount}
+                rate={config.rate ?? 2000}
                 onSubmit={handleSubmit}
                 loading={loading}
                 dark={isDark}

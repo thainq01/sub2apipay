@@ -142,6 +142,7 @@ export async function GET(request: NextRequest) {
         balanceDisabled,
         maxPendingOrders,
         sublabelOverrides: Object.keys(sublabelOverrides).length > 0 ? sublabelOverrides : null,
+        rate: env.RATE ?? env.SEPAY_VND_PER_CREDIT ?? 2000,
       },
     });
   } catch (error) {

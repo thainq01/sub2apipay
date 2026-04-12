@@ -21,7 +21,7 @@ interface OrderTableProps {
 
 function formatCups(amount: number, locale: string): string {
   const n = Math.round(amount);
-  return locale === 'vi' ? `${n.toLocaleString('vi-VN')} Coffee Cup` : `${n.toLocaleString('en-US')} Coffee Cup`;
+  return locale === 'vi' ? `${n.toLocaleString('vi-VN')} ☕` : `${n.toLocaleString('en-US')} ☕`;
 }
 
 function formatVND(amount: number): string {

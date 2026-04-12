@@ -73,7 +73,7 @@ export default function PendingOrderBanner({ orders, dark, locale, buildPayUrl }
                 {t.pending}
               </div>
               <div className={['text-xs', remaining.expired ? dark ? 'text-slate-500' : 'text-slate-400' : dark ? 'text-amber-300/80' : 'text-amber-600/80'].join(' ')}>
-                #{order.id.slice(0, 10)} · {Math.round(order.amount)} Coffee Cup · {timeStr}
+                #{order.id.slice(0, 10)} · {Math.round(order.amount)} ☕ · {timeStr}
               </div>
             </div>
             {buildPayUrl && !remaining.expired && (

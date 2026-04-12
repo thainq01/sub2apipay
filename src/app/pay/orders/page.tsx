@@ -53,7 +53,16 @@ function OrdersContent() {
   const [summary, setSummary] = useState<Summary>({ total: 0, pending: 0, completed: 0, failed: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeFilter, setActiveFilter] = useState<OrderStatusFilter>('ALL');
+  const [activeFilter, setActiveFilter] = useState<OrderStatusFilter>(() => {
+    const filterParam = searchParams.get('filter');
+    if (filterParam) {
+      const validFilters: OrderStatusFilter[] = ['ALL', 'PENDING', 'COMPLETED', 'FAILED', 'CANCELLED', 'EXPIRED', 'REFUND_REQUESTED', 'REFUNDING', 'PARTIALLY_REFUNDED', 'REFUNDED', 'REFUND_FAILED'];
+      if (validFilters.includes(filterParam as OrderStatusFilter)) {
+        return filterParam as OrderStatusFilter;
+      }
+    }
+    return 'ALL';
+  });
   const [resolvedUserId, setResolvedUserId] = useState<number | null>(null);
 
   const [page, setPage] = useState(1);
