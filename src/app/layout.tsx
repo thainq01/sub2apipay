@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
+import { Suspense } from 'react';
 import { PRODUCT_NAME } from '@/lib/constants';
+import StoreHydrator from '@/components/StoreHydrator';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -8,20 +9,23 @@ export const metadata: Metadata = {
   description: `${PRODUCT_NAME} balance recharge platform`,
 };
 
-export default async function RootLayout({
+const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}})()`;
+
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headerStore = await headers();
-  const pathname = headerStore.get('x-pathname') || '';
-  const search = headerStore.get('x-search') || '';
-  const locale = new URLSearchParams(search).get('lang')?.trim().toLowerCase() === 'en' ? 'en' : 'zh';
-  const htmlLang = locale === 'en' ? 'en' : 'zh-CN';
-
   return (
-    <html lang={htmlLang} data-pathname={pathname}>
-      <body className="antialiased">{children}</body>
+    <html lang="vi" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
+      <body className="antialiased">
+        <Suspense fallback={<div className="pay-layout h-screen w-full" />}>
+          <StoreHydrator>{children}</StoreHydrator>
+        </Suspense>
+      </body>
     </html>
   );
 }

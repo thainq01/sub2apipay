@@ -10,6 +10,7 @@ import PaginationBar from '@/components/PaginationBar';
 import { applyLocaleToSearchParams, pickLocaleText, resolveLocale } from '@/lib/locale';
 import { PRODUCT_NAME } from '@/lib/constants';
 import { detectDeviceIsMobile, type UserInfo, type MyOrder, type OrderStatusFilter } from '@/lib/pay-utils';
+import { useThemeStore, hydrateTheme } from '@/stores/theme';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
 
@@ -26,8 +27,8 @@ function OrdersContent() {
   const themeParam = searchParams.get('theme');
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const locale = resolveLocale(searchParams.get('lang'));
-  const [systemDark, setSystemDark] = useState(false);
-  const isDark = themeParam ? themeParam === 'dark' : systemDark;
+  const { theme } = useThemeStore();
+  const isDark = theme === 'dark';
 
   const text = {
     missingAuth: pickLocaleText(locale, 'Missing authentication information', 'Missing authentication information'),
@@ -63,24 +64,13 @@ function OrdersContent() {
   const hasToken = token.length > 0;
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    setIsIframeContext(window.self !== window.top);
-    setIsMobile(detectDeviceIsMobile());
+    hydrateTheme(searchParams.get('theme'));
   }, []);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('theme');
-      if (stored === 'dark' || stored === 'light') {
-        setSystemDark(stored === 'dark');
-        return;
-      }
-    } catch {}
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    setSystemDark(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    if (typeof window === 'undefined') return;
+    setIsIframeContext(window.self !== window.top);
+    setIsMobile(detectDeviceIsMobile());
   }, []);
 
   useEffect(() => {
@@ -179,7 +169,7 @@ function OrdersContent() {
 
   if (isMobile) {
     return (
-      <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+      <div suppressHydrationWarning className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
         {text.switchingMobileTab}
       </div>
     );
@@ -187,7 +177,7 @@ function OrdersContent() {
 
   if (!hasToken && !resolvedUserId) {
     return (
-      <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
+      <div suppressHydrationWarning className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
         <div className="text-center text-red-500">
           <p className="text-lg font-medium">{text.missingAuth}</p>
           <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>{text.visitOrders}</p>
@@ -255,7 +245,7 @@ function OrdersPageFallback() {
   const isDark = searchParams.get('theme') === 'dark';
 
   return (
-    <div className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
+    <div suppressHydrationWarning className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
       <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>{pickLocaleText(locale, 'Loading...', 'Loading...')}</div>
     </div>
   );

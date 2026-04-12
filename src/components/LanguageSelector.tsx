@@ -1,31 +1,28 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useLocaleStore } from '@/stores/locale';
+import { useThemeStore } from '@/stores/theme';
 import type { Locale } from '@/lib/locale';
-
-interface LanguageSelectorProps {
-  locale: Locale;
-  onChange: (locale: Locale) => void;
-  dark?: boolean;
-}
 
 const LANGUAGES: { code: Locale; label: string; flag: string }[] = [
   { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
   { code: 'en', label: 'English', flag: '🇺🇸' },
 ];
 
-export default function LanguageSelector({ locale, onChange, dark = false }: LanguageSelectorProps) {
+export default function LanguageSelector() {
+  const locale = useLocaleStore((s) => s.locale);
+  const setLocale = useLocaleStore((s) => s.setLocale);
+  const isDark = useThemeStore((s) => s.theme) === 'dark';
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   const current = LANGUAGES.find((l) => l.code === locale) || LANGUAGES[0];
@@ -34,11 +31,8 @@ export default function LanguageSelector({ locale, onChange, dark = false }: Lan
     setOpen(false);
     if (code === locale) return;
 
-    try {
-      localStorage.setItem('locale', code);
-    } catch {}
+    setLocale(code);
 
-    // Update URL
     const url = new URL(window.location.href);
     if (code === 'vi') {
       url.searchParams.delete('lang');
@@ -46,8 +40,6 @@ export default function LanguageSelector({ locale, onChange, dark = false }: Lan
       url.searchParams.set('lang', code);
     }
     window.history.replaceState(null, '', url.toString());
-
-    onChange(code);
   };
 
   return (
@@ -56,8 +48,8 @@ export default function LanguageSelector({ locale, onChange, dark = false }: Lan
         type="button"
         onClick={() => setOpen(!open)}
         className={[
-          'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors',
-          dark
+          'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+          isDark
             ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
         ].join(' ')}
@@ -71,8 +63,8 @@ export default function LanguageSelector({ locale, onChange, dark = false }: Lan
 
       {open && (
         <div className={[
-          'absolute right-0 top-full z-50 mt-1 min-w-[140px] overflow-hidden rounded-lg border shadow-lg',
-          dark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white',
+          'absolute right-0 top-full z-50 mt-1 min-w-[160px] overflow-hidden rounded-lg border shadow-lg',
+          isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white',
         ].join(' ')}>
           {LANGUAGES.map((lang) => (
             <button
@@ -80,14 +72,10 @@ export default function LanguageSelector({ locale, onChange, dark = false }: Lan
               type="button"
               onClick={() => handleSelect(lang.code)}
               className={[
-                'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors',
+                'flex w-full items-center gap-2 px-3 py-2 text-left text-sm whitespace-nowrap transition-colors',
                 locale === lang.code
-                  ? dark
-                    ? 'bg-indigo-500/20 text-indigo-300'
-                    : 'bg-indigo-50 text-indigo-700'
-                  : dark
-                    ? 'text-slate-300 hover:bg-slate-700'
-                    : 'text-slate-700 hover:bg-slate-50',
+                  ? isDark ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-50 text-indigo-700'
+                  : isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-700 hover:bg-slate-50',
               ].join(' ')}
             >
               <span>{lang.flag}</span>

@@ -87,6 +87,7 @@ export async function GET(request: NextRequest) {
           status: item.status,
           paymentType: item.paymentType,
           createdAt: item.createdAt,
+          expiresAt: item.expiresAt,
           orderType: item.orderType,
           canRefundRequest: item.orderType === 'balance' && item.status === 'COMPLETED' && instanceRefundEnabled,
           refundRequestedAt: item.refundRequestedAt,

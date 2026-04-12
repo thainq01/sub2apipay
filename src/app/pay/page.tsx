@@ -2,6 +2,7 @@
 
 import { useSearchParams, notFound } from 'next/navigation';
 import { useState, useEffect, Suspense, useCallback, useRef } from 'react';
+import { useThemeStore, hydrateTheme } from '@/stores/theme';
 import PaymentForm from '@/components/PaymentForm';
 import PaymentQRCode from '@/components/PaymentQRCode';
 import OrderStatus from '@/components/OrderStatus';
@@ -59,29 +60,19 @@ function PayContent() {
   const searchParams = useSearchParams();
   const token = (searchParams.get('token') || '').trim();
   const themeParam = searchParams.get('theme');
-  const [systemDark, setSystemDark] = useState(false);
+  const { theme } = useThemeStore();
+  const isDark = theme === 'dark';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const tab = searchParams.get('tab');
   const srcHost = searchParams.get('src_host') || undefined;
   const srcUrl = searchParams.get('src_url') || undefined;
   const locale = resolveLocale(searchParams.get('lang'));
   const autoAmount = searchParams.get('amount') ? Number(searchParams.get('amount')) : null;
-  const isDark = themeParam ? themeParam === 'dark' : systemDark;
+  const resumeOrderId = searchParams.get('resume_order');
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('theme');
-      if (stored === 'dark' || stored === 'light') {
-        setSystemDark(stored === 'dark');
-        return;
-      }
-    } catch {}
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    setSystemDark(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
+    hydrateTheme(themeParam);
+  }, [themeParam]);
 
   const [isIframeContext, setIsIframeContext] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -322,6 +313,40 @@ function PayContent() {
     }
   }, [autoAmount, userLoaded, config.enabledPaymentTypes, step, loading]);
 
+  // Resume order flow
+  useEffect(() => {
+    if (!resumeOrderId || !userLoaded) return;
+
+    const resumeOrder = async () => {
+      try {
+        const res = await fetch(`/api/orders/resume?token=${encodeURIComponent(token)}&order_id=${encodeURIComponent(resumeOrderId)}`);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          setError(errData.error || pickLocaleText(locale, 'Không thể lấy thông tin đơn hàng', 'Failed to retrieve order information'));
+          return;
+        }
+
+        const data = await res.json();
+        setOrderResult({
+          orderId: data.orderId,
+          amount: data.amount,
+          payAmount: data.payAmount,
+          status: data.status,
+          paymentType: data.paymentType,
+          expiresAt: data.expiresAt,
+          statusAccessToken: data.statusAccessToken,
+          qrCode: data.qrCode,
+          sepayBankInfo: data.sepayBankInfo,
+        });
+        setStep('paying');
+      } catch {
+        setError(pickLocaleText(locale, 'Lỗi mạng', 'Network error'));
+      }
+    };
+
+    resumeOrder();
+  }, [resumeOrderId, userLoaded, token, locale]);
+
   useEffect(() => {
     if (step !== 'result' || finalOrderState?.status !== 'COMPLETED') return;
     loadUserAndOrders();
@@ -358,7 +383,7 @@ function PayContent() {
 
   if (userNotFound) {
     return (
-      <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
+      <div suppressHydrationWarning className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
         <div className="text-center text-red-500">
           <p className="text-lg font-medium">{pickLocaleText(locale, 'Người dùng không tồn tại', 'User not found')}</p>
           <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
@@ -572,6 +597,7 @@ function PayContent() {
     <PayPageLayout
       isDark={isDark}
       isEmbedded={isEmbedded}
+      isIframe={isIframeContext}
       title={pageTitle}
       subtitle={pageSubtitle}
       backHref={buildHomeUrl()}
@@ -610,7 +636,12 @@ function PayContent() {
       {step === 'form' && (
         <>
           {/* Pending order notification */}
-          <PendingOrderBanner orders={myOrders} dark={isDark} locale={locale} />
+          <PendingOrderBanner orders={myOrders} dark={isDark} locale={locale} buildPayUrl={(orderId) => {
+            const params = new URLSearchParams();
+            if (token) params.set('token', token);
+            params.set('resume_order', orderId);
+            return `/pay?${params.toString()}`;
+          }} />
 
           {/* Loading */}
           {(!channelsLoaded || !userLoaded) && !allEntriesClosed && (
@@ -954,6 +985,7 @@ function PayContent() {
             dark={isDark}
             isMobile={isMobile}
             locale={locale}
+            isIframe={isIframeContext}
             sepayBankInfo={orderResult.sepayBankInfo}
           />
           {renderHelpSection()}
@@ -996,7 +1028,7 @@ function PayPageFallback() {
   const locale = resolveLocale(searchParams.get('lang'));
   const isDark = searchParams.get('theme') === 'dark';
   return (
-    <div className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
+    <div suppressHydrationWarning className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
       <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>
         {pickLocaleText(locale, 'Đang tải...', 'Loading...')}
       </div>

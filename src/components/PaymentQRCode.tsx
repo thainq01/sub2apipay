@@ -18,6 +18,7 @@ interface PaymentQRCodeProps {
   onStatusChange: (status: PublicOrderStatusSnapshot) => void;
   onBack: () => void;
   dark?: boolean;
+  isIframe?: boolean;
   isMobile?: boolean;
   locale?: Locale;
   sepayBankInfo?: {
@@ -159,6 +160,7 @@ export default function PaymentQRCode({
   onStatusChange,
   onBack,
   dark = false,
+  isIframe = false,
   locale = 'vi',
   sepayBankInfo,
 }: PaymentQRCodeProps) {
@@ -326,7 +328,7 @@ export default function PaymentQRCode({
 
       {/* Actions */}
       <div className="w-full">
-        {!expired && token && (
+        {!isIframe && !expired && token && (
           <button
             onClick={handleCancel}
             className={['w-full rounded-lg border py-2.5 text-sm font-medium', dark ? 'border-red-700 text-red-400 hover:bg-red-900/30' : 'border-red-300 text-red-600 hover:bg-red-50'].join(' ')}
