@@ -23,11 +23,11 @@ interface Summary {
 function OrdersContent() {
   const searchParams = useSearchParams();
   const token = (searchParams.get('token') || '').trim();
-  const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
+  const themeParam = searchParams.get('theme');
   const uiMode = searchParams.get('ui_mode') || 'standalone';
-  const srcHost = searchParams.get('src_host') || '';
   const locale = resolveLocale(searchParams.get('lang'));
-  const isDark = theme === 'dark';
+  const [systemDark, setSystemDark] = useState(false);
+  const isDark = themeParam ? themeParam === 'dark' : systemDark;
 
   const text = {
     missingAuth: pickLocaleText(locale, 'Missing authentication information', 'Missing authentication information'),
@@ -69,15 +69,30 @@ function OrdersContent() {
   }, []);
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'dark' || stored === 'light') {
+        setSystemDark(stored === 'dark');
+        return;
+      }
+    } catch {}
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    setSystemDark(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
     if (!isMobile || isEmbedded || typeof window === 'undefined') return;
     const params = new URLSearchParams();
     if (token) params.set('token', token);
-    params.set('theme', theme);
+    if (themeParam) params.set('theme', themeParam);
     params.set('ui_mode', uiMode);
     params.set('tab', 'orders');
     applyLocaleToSearchParams(params, locale);
     window.location.replace(`/pay?${params.toString()}`);
-  }, [isMobile, isEmbedded, token, theme, uiMode, locale]);
+  }, [isMobile, isEmbedded, token, themeParam, uiMode, locale]);
 
   const loadOrders = async (targetPage = page, targetPageSize = pageSize) => {
     setLoading(true);
@@ -162,11 +177,6 @@ function OrdersContent() {
 
   const filteredOrders = activeFilter === 'ALL' ? orders : orders.filter((o) => o.status === activeFilter);
 
-  const btnClass = [
-    'inline-flex items-center rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
-    isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-800' : 'border-slate-300 text-slate-700 hover:bg-slate-100',
-  ].join(' ');
-
   if (isMobile) {
     return (
       <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
@@ -186,33 +196,20 @@ function OrdersContent() {
     );
   }
 
-  const buildScopedUrl = (path: string) => {
+  const buildHomeUrl = () => {
     const params = new URLSearchParams();
     if (token) params.set('token', token);
-    params.set('theme', theme);
-    params.set('ui_mode', uiMode);
     applyLocaleToSearchParams(params, locale);
-    return `${path}?${params.toString()}`;
+    return `/home?${params.toString()}`;
   };
 
   return (
     <PayPageLayout
       isDark={isDark}
       isEmbedded={isEmbedded}
+      backHref={buildHomeUrl()}
       title={text.myOrders}
       subtitle={userInfo?.username || text.myOrders}
-      actions={
-        <>
-          <button type="button" onClick={() => loadOrders(page, pageSize)} className={btnClass}>
-            {text.refresh}
-          </button>
-          {!srcHost && (
-            <a href={buildScopedUrl('/pay')} className={btnClass}>
-              {text.backToPay}
-            </a>
-          )}
-        </>
-      }
     >
       <OrderSummaryCards isDark={isDark} locale={locale} summary={summary} />
 

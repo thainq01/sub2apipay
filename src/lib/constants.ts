@@ -41,21 +41,10 @@ export const REFUND_STATUSES = new Set<string>([
 
 /** Payment method identifier */
 export const PAYMENT_TYPE = {
-  ALIPAY: 'alipay',
-  ALIPAY_DIRECT: 'alipay_direct',
-  WXPAY: 'wxpay',
-  WXPAY_DIRECT: 'wxpay_direct',
-  STRIPE: 'stripe',
   SEPAY: 'sepay',
 } as const;
 
 /** Payment method prefix (used for startsWith check) */
 export const PAYMENT_PREFIX = {
-  ALIPAY: 'alipay',
-  WXPAY: 'wxpay',
-  STRIPE: 'stripe',
   SEPAY: 'sepay',
 } as const;
-
-/** Payment methods requiring page redirect (instead of QR code) */
-export const REDIRECT_PAYMENT_TYPES = new Set<string>([PAYMENT_TYPE.ALIPAY_DIRECT]);

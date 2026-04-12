@@ -13,6 +13,7 @@ import SubscriptionPlanCard from '@/components/SubscriptionPlanCard';
 import SubscriptionConfirm from '@/components/SubscriptionConfirm';
 import UserSubscriptions from '@/components/UserSubscriptions';
 import PurchaseFlow from '@/components/PurchaseFlow';
+import PendingOrderBanner from '@/components/PendingOrderBanner';
 import { resolveLocale, pickLocaleText, applyLocaleToSearchParams } from '@/lib/locale';
 import { PRODUCT_NAME } from '@/lib/constants';
 import { detectDeviceIsMobile, applySublabelOverrides, type UserInfo, type MyOrder } from '@/lib/pay-utils';
@@ -57,14 +58,30 @@ interface AppConfig {
 function PayContent() {
   const searchParams = useSearchParams();
   const token = (searchParams.get('token') || '').trim();
-  const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
+  const themeParam = searchParams.get('theme');
+  const [systemDark, setSystemDark] = useState(false);
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const tab = searchParams.get('tab');
   const srcHost = searchParams.get('src_host') || undefined;
   const srcUrl = searchParams.get('src_url') || undefined;
   const locale = resolveLocale(searchParams.get('lang'));
   const autoAmount = searchParams.get('amount') ? Number(searchParams.get('amount')) : null;
-  const isDark = theme === 'dark';
+  const isDark = themeParam ? themeParam === 'dark' : systemDark;
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'dark' || stored === 'light') {
+        setSystemDark(stored === 'dark');
+        return;
+      }
+    } catch {}
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    setSystemDark(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const [isIframeContext, setIsIframeContext] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -212,7 +229,7 @@ function PayContent() {
         const cfgData = await cfgRes.json();
         if (cfgData.config) {
           setConfig({
-            enabledPaymentTypes: cfgData.config.enabledPaymentTypes ?? ['alipay', 'wxpay'],
+            enabledPaymentTypes: cfgData.config.enabledPaymentTypes ?? ['sepay'],
             minAmount: cfgData.config.minAmount ?? 1,
             maxAmount: cfgData.config.maxAmount ?? 1000,
             maxDailyAmount: cfgData.config.maxDailyAmount ?? 0,
@@ -359,13 +376,20 @@ function PayContent() {
   const buildScopedUrl = (path: string, forceOrdersTab = false) => {
     const params = new URLSearchParams();
     if (token) params.set('token', token);
-    params.set('theme', theme);
+    if (themeParam) params.set('theme', themeParam);
     params.set('ui_mode', uiMode);
     if (forceOrdersTab) params.set('tab', 'orders');
     if (srcHost) params.set('src_host', srcHost);
     if (srcUrl) params.set('src_url', srcUrl);
     applyLocaleToSearchParams(params, locale);
     return `${path}?${params.toString()}`;
+  };
+
+  const buildHomeUrl = () => {
+    const params = new URLSearchParams();
+    if (token) params.set('token', token);
+    applyLocaleToSearchParams(params, locale);
+    return `/home?${params.toString()}`;
   };
 
   const pcOrdersUrl = buildScopedUrl('/pay/orders');
@@ -548,9 +572,9 @@ function PayContent() {
     <PayPageLayout
       isDark={isDark}
       isEmbedded={isEmbedded}
-      maxWidth={isMobile ? 'sm' : 'lg'}
       title={pageTitle}
       subtitle={pageSubtitle}
+      backHref={buildHomeUrl()}
       locale={locale}
     >
       {/* Subscription group removal persistent error */}
@@ -585,6 +609,8 @@ function PayContent() {
       {/* ── Form phase ── */}
       {step === 'form' && (
         <>
+          {/* Pending order notification */}
+          <PendingOrderBanner orders={myOrders} dark={isDark} locale={locale} />
 
           {/* Loading */}
           {(!channelsLoaded || !userLoaded) && !allEntriesClosed && (
@@ -684,8 +710,8 @@ function PayContent() {
                           <p className={['text-sm mb-4', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
                             {pickLocaleText(
                               locale,
-                              'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Giá tính bằng USD (tỷ lệ hiện tại: 1 USD ≈ 1 CNY)',
-                              'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Priced in USD (current rate: 1 USD ≈ 1 CNY)',
+                              'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Giá tính bằng USD',
+                              'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Priced in USD',
                             )}
                           </p>
                           <div className="flex flex-wrap gap-4 text-sm">
@@ -723,8 +749,8 @@ function PayContent() {
                               <span>
                                 {pickLocaleText(
                                   locale,
-                                  '0.15 tỷ lệ = 1 CNY ≈ $6.67 hạn mức',
-                                  '0.15 rate = 1 CNY ≈ $6.67 quota',
+                                  '0.15 tỷ lệ = 1 USD ≈ 23,500 VND hạn mức',
+                                  '0.15 rate = 1 USD ≈ 23,500 VND quota',
                                 )}
                               </span>
                             </div>
@@ -917,10 +943,7 @@ function PayContent() {
           <PaymentQRCode
             orderId={orderResult.orderId}
             token={token || undefined}
-            payUrl={orderResult.payUrl}
             qrCode={orderResult.qrCode}
-            clientSecret={orderResult.clientSecret}
-            stripePublishableKey={config.stripePublishableKey}
             paymentType={orderResult.paymentType}
             amount={orderResult.amount}
             payAmount={orderResult.payAmount}
@@ -929,7 +952,6 @@ function PayContent() {
             onStatusChange={handleStatusChange}
             onBack={handleBack}
             dark={isDark}
-            isEmbedded={isEmbedded}
             isMobile={isMobile}
             locale={locale}
             sepayBankInfo={orderResult.sepayBankInfo}

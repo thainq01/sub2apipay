@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Locale } from '@/lib/locale';
-import { PAYMENT_TYPE_META, getPaymentIconType, getPaymentMeta, getPaymentDisplayInfo, isSepayType } from '@/lib/pay-utils';
+import { PAYMENT_TYPE_META, getPaymentMeta, getPaymentDisplayInfo } from '@/lib/pay-utils';
 
 export interface MethodLimitInfo {
   available: boolean;
@@ -27,14 +27,8 @@ interface PaymentFormProps {
   fixedAmount?: number;
 }
 
-const QUICK_AMOUNTS = [10, 20, 50, 100, 200, 500, 1000, 2000];
 const QUICK_AMOUNTS_VND = [50000, 100000, 200000, 500000, 1000000, 2000000];
-const AMOUNT_TEXT_PATTERN = /^\d*(\.\d{0,2})?$/;
 const AMOUNT_TEXT_PATTERN_VND = /^\d*$/;
-
-function hasValidCentPrecision(num: number): boolean {
-  return Math.abs(Math.round(num * 100) - num * 100) < 1e-8;
-}
 
 export default function PaymentForm({
   userId,
@@ -47,23 +41,18 @@ export default function PaymentForm({
   onSubmit,
   loading,
   dark = false,
-  locale = 'en',
+  locale = 'vi',
   fixedAmount,
 }: PaymentFormProps) {
   const [amount, setAmount] = useState<number | ''>(fixedAmount ?? '');
-  const [paymentType, setPaymentType] = useState(enabledPaymentTypes[0] || 'alipay');
+  const [paymentType, setPaymentType] = useState(enabledPaymentTypes[0] || 'sepay');
   const [customAmount, setCustomAmount] = useState(fixedAmount ? String(fixedAmount) : '');
 
   const effectivePaymentType = enabledPaymentTypes.includes(paymentType)
     ? paymentType
-    : enabledPaymentTypes[0] || 'stripe';
+    : enabledPaymentTypes[0] || 'sepay';
 
-  const isVND = isSepayType(effectivePaymentType);
-  const currencySymbol = isVND ? '' : '¥';
-  const currencySuffix = isVND ? ' VND' : '';
-  const formatAmount = (n: number) => isVND ? `${n.toLocaleString('en-US')}${currencySuffix}` : `¥${n.toFixed(2)}`;
-  const activeQuickAmounts = isVND ? QUICK_AMOUNTS_VND : QUICK_AMOUNTS;
-  const activeAmountPattern = isVND ? AMOUNT_TEXT_PATTERN_VND : AMOUNT_TEXT_PATTERN;
+  const formatAmount = (n: number) => n.toLocaleString('vi-VN') + ' VND';
 
   const handleQuickAmount = (val: number) => {
     setAmount(val);
@@ -71,11 +60,11 @@ export default function PaymentForm({
   };
 
   const handleCustomAmountChange = (val: string) => {
-    if (!activeAmountPattern.test(val)) return;
+    if (!AMOUNT_TEXT_PATTERN_VND.test(val)) return;
     setCustomAmount(val);
     if (val === '') { setAmount(''); return; }
     const num = parseFloat(val);
-    if (!isNaN(num) && num > 0 && (isVND ? Number.isInteger(num) : hasValidCentPrecision(num))) {
+    if (!isNaN(num) && num > 0 && Number.isInteger(num)) {
       setAmount(num);
     } else {
       setAmount('');
@@ -96,7 +85,7 @@ export default function PaymentForm({
   const isValid =
     selectedAmount >= effectiveMin &&
     selectedAmount <= effectiveMax &&
-    (isVND ? Number.isInteger(selectedAmount) : hasValidCentPrecision(selectedAmount)) &&
+    Number.isInteger(selectedAmount) &&
     isMethodAvailable;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,49 +94,18 @@ export default function PaymentForm({
     await onSubmit(selectedAmount, effectivePaymentType);
   };
 
-  const coffeeCount = isVND && selectedAmount >= 2000 ? Math.floor(selectedAmount / 2000) : 0;
+  const coffeeCount = selectedAmount >= 2000 ? Math.floor(selectedAmount / 2000) : 0;
 
   const renderPaymentIcon = (type: string) => {
-    const iconType = getPaymentIconType(type);
-    if (iconType === 'alipay') {
-      return (
-        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#00AEEF] text-xl font-bold leading-none text-white">
-          A
-        </span>
-      );
-    }
-    if (iconType === 'wxpay') {
-      return (
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#07C160] text-white">
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
-            <path d="M10 3C6.13 3 3 5.58 3 8.75c0 1.7.84 3.23 2.17 4.29l-.5 2.21 2.4-1.32c.61.17 1.25.27 1.93.27.22 0 .43-.01.64-.03C9.41 13.72 9 12.88 9 12c0-3.31 3.13-6 7-6 .26 0 .51.01.76.03C15.96 3.98 13.19 3 10 3z" />
-            <path d="M16 8c-3.31 0-6 2.24-6 5s2.69 5 6 5c.67 0 1.31-.1 1.9-.28l2.1 1.15-.55-2.44C20.77 15.52 22 13.86 22 12c0-2.21-2.69-4-6-4z" />
-          </svg>
-        </span>
-      );
-    }
-    if (iconType === 'stripe') {
-      return (
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#635bff] text-white">
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="5" width="20" height="14" rx="2" />
-            <path d="M2 10h20" />
-          </svg>
-        </span>
-      );
-    }
-    if (iconType === 'sepay') {
-      return (
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="1" y="6" width="22" height="15" rx="2" />
-            <path d="M1 10h22" />
-            <path d="M12 2L2 6h20L12 2z" />
-          </svg>
-        </span>
-      );
-    }
-    return null;
+    return (
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="1" y="6" width="22" height="15" rx="2" />
+          <path d="M1 10h22" />
+          <path d="M12 2L2 6h20L12 2z" />
+        </svg>
+      </span>
+    );
   };
 
   return (
@@ -165,13 +123,13 @@ export default function PaymentForm({
         </div>
         <div className="min-w-0 flex-1">
           <div className={['truncate text-sm font-medium', dark ? 'text-slate-100' : 'text-slate-900'].join(' ')}>
-            {userName || (locale === 'vi' ? `Ng\u01b0\u1eddi d\u00f9ng #${userId}` : `User #${userId}`)}
+            {userName || (locale === 'vi' ? `Người dùng #${userId}` : `User #${userId}`)}
           </div>
           {userBalance !== undefined && (
             <div className={['text-xs', dark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-              {locale === 'vi' ? 'S\u1ed1 d\u01b0:' : 'Balance:'}{' '}
+              {locale === 'vi' ? 'Số dư:' : 'Balance:'}{' '}
               <span className={['font-semibold', dark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
-                {userBalance.toFixed(2)}
+                {formatAmount(Math.round(userBalance))}
               </span>
             </div>
           )}
@@ -185,7 +143,7 @@ export default function PaymentForm({
           dark ? 'bg-slate-800/60' : 'bg-slate-50',
         ].join(' ')}>
           <div className={['text-xs font-medium uppercase tracking-wider', dark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-            {locale === 'vi' ? 'S\u1ed1 ti\u1ec1n n\u1ea1p' : 'Recharge Amount'}
+            {locale === 'vi' ? 'Số tiền nạp' : 'Recharge Amount'}
           </div>
           <div className={['mt-2 text-3xl font-bold', dark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
             {formatAmount(fixedAmount)}
@@ -199,17 +157,17 @@ export default function PaymentForm({
               'pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium',
               dark ? 'text-slate-500' : 'text-slate-400',
             ].join(' ')}>
-              {isVND ? 'VND' : '\u00a5'}
+              VND
             </div>
             <input
               type="text"
-              inputMode="decimal"
-              step={isVND ? '1' : '0.01'}
+              inputMode="numeric"
+              step="1"
               min={effectiveMin}
               max={effectiveMax}
               value={customAmount}
               onChange={(e) => handleCustomAmountChange(e.target.value)}
-              placeholder={isVND ? `${effectiveMax}` : `${effectiveMin} - ${effectiveMax}`}
+              placeholder={`${effectiveMax}`}
               className={[
                 'w-full rounded-xl border-2 py-3.5 pl-14 pr-4 text-lg font-semibold transition-all focus:outline-none',
                 dark
@@ -221,7 +179,7 @@ export default function PaymentForm({
 
           {/* Quick amount chips */}
           <div className="flex flex-wrap gap-2">
-            {activeQuickAmounts.map((val) => (
+            {QUICK_AMOUNTS_VND.map((val) => (
               <button
                 key={val}
                 type="button"
@@ -243,42 +201,40 @@ export default function PaymentForm({
           </div>
 
           {/* Coffee meter */}
-          {isVND && (
-            <div className={[
-              'flex items-center gap-2.5 rounded-xl px-4 py-3',
-              dark ? 'bg-amber-500/10' : 'bg-amber-50',
-            ].join(' ')}>
-              <span className="text-xl">{'\u2615'}</span>
-              <div className="flex-1">
-                {coffeeCount > 0 ? (
-                  <div>
-                    <span className={['text-sm font-semibold', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>
-                      {coffeeCount} coffee{coffeeCount > 1 ? 's' : ''}
-                    </span>
-                    <span className={['ml-1.5 text-xs', dark ? 'text-amber-400/60' : 'text-amber-600/60'].join(' ')}>
-                      {Array.from({ length: Math.min(coffeeCount, 10) }, () => '\u2615').join('')}
-                    </span>
-                  </div>
-                ) : (
-                  <span className={['text-xs', dark ? 'text-amber-400/80' : 'text-amber-600/80'].join(' ')}>
-                    2,000 VND = 1 cup of coffee
+          <div className={[
+            'flex items-center gap-2.5 rounded-xl px-4 py-3',
+            dark ? 'bg-amber-500/10' : 'bg-amber-50',
+          ].join(' ')}>
+            <span className="text-xl">☕</span>
+            <div className="flex-1">
+              {coffeeCount > 0 ? (
+                <div>
+                  <span className={['text-sm font-semibold', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>
+                    {coffeeCount} coffee{coffeeCount > 1 ? 's' : ''}
                   </span>
-                )}
-              </div>
+                  <span className={['ml-1.5 text-xs', dark ? 'text-amber-400/60' : 'text-amber-600/60'].join(' ')}>
+                    {Array.from({ length: Math.min(coffeeCount, 10) }, () => '☕').join('')}
+                  </span>
+                </div>
+              ) : (
+                <span className={['text-xs', dark ? 'text-amber-400/80' : 'text-amber-600/80'].join(' ')}>
+                  2,000 VND = 1 cup of coffee
+                </span>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Validation message */}
           {customAmount !== '' && !isValid && (() => {
             const num = parseFloat(customAmount);
             let msg = locale === 'vi'
-              ? 'S\u1ed1 ti\u1ec1n ph\u1ea3i n\u1eb1m trong ph\u1ea1m vi v\u00e0 h\u1ed7 tr\u1ee3 t\u1ed1i \u0111a 2 ch\u1eef s\u1ed1 th\u1eadp ph\u00e2n'
-              : 'Amount must be within range and support up to 2 decimal places';
+              ? 'Số tiền phải nằm trong phạm vi cho phép'
+              : 'Amount must be within range';
             if (!isNaN(num)) {
               if (num < minAmount)
-                msg = locale === 'vi' ? `N\u1ea1p t\u1ed1i thi\u1ec3u: ${formatAmount(minAmount)}` : `Minimum: ${formatAmount(minAmount)}`;
+                msg = locale === 'vi' ? `Nạp tối thiểu: ${formatAmount(minAmount)}` : `Minimum: ${formatAmount(minAmount)}`;
               else if (num > effectiveMax)
-                msg = locale === 'vi' ? `N\u1ea1p t\u1ed1i \u0111a: ${formatAmount(effectiveMax)}` : `Maximum: ${formatAmount(effectiveMax)}`;
+                msg = locale === 'vi' ? `Nạp tối đa: ${formatAmount(effectiveMax)}` : `Maximum: ${formatAmount(effectiveMax)}`;
             }
             return (
               <div className={[
@@ -301,7 +257,7 @@ export default function PaymentForm({
       {enabledPaymentTypes.length > 1 && (
         <div className="space-y-2">
           <label className={['text-xs font-medium uppercase tracking-wider', dark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-            {locale === 'vi' ? 'Ph\u01b0\u01a1ng th\u1ee9c thanh to\u00e1n' : 'Payment Method'}
+            {locale === 'vi' ? 'Phương thức thanh toán' : 'Payment Method'}
           </label>
           <div className="grid grid-cols-2 gap-2 sm:flex">
             {enabledPaymentTypes.map((type) => {
@@ -320,7 +276,7 @@ export default function PaymentForm({
                   title={
                     isUnavailable
                       ? locale === 'vi'
-                        ? 'H\u1ea1n ng\u00e0y h\u00f4m nay \u0111\u00e3 \u0111\u1ea1t'
+                        ? 'Hạn ngày hôm nay đã đạt'
                         : 'Daily limit reached'
                       : undefined
                   }
@@ -344,7 +300,7 @@ export default function PaymentForm({
                     <span className="text-sm font-semibold">{displayInfo.channel || type}</span>
                     {isUnavailable ? (
                       <span className="text-[10px] text-red-400">
-                        {locale === 'vi' ? 'H\u1ea1n ng\u00e0y \u0111\u00e3 \u0111\u1ea1t' : 'Limit reached'}
+                        {locale === 'vi' ? 'Hạn ngày đã đạt' : 'Limit reached'}
                       </span>
                     ) : displayInfo.sublabel ? (
                       <span className={['text-[10px]', dark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
@@ -363,7 +319,7 @@ export default function PaymentForm({
             return (
               <p className={['text-xs', dark ? 'text-amber-300' : 'text-amber-600'].join(' ')}>
                 {locale === 'vi'
-                  ? 'Ph\u01b0\u01a1ng th\u1ee9c n\u00e0y \u0111\u00e3 \u0111\u1ea1t h\u1ea1n. Vui l\u00f2ng ch\u1ecdn ph\u01b0\u01a1ng th\u1ee9c kh\u00e1c.'
+                  ? 'Phương thức này đã đạt hạn. Vui lòng chọn phương thức khác.'
                   : "This method has reached today's limit. Please choose another."}
               </p>
             );
@@ -378,19 +334,19 @@ export default function PaymentForm({
           dark ? 'bg-slate-800/60 text-slate-300' : 'bg-slate-50 text-slate-600',
         ].join(' ')}>
           <div className="flex items-center justify-between">
-            <span>{locale === 'vi' ? 'S\u1ed1 ti\u1ec1n n\u1ea1p' : 'Amount'}</span>
+            <span>{locale === 'vi' ? 'Số tiền nạp' : 'Amount'}</span>
             <span>{formatAmount(selectedAmount)}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span>{locale === 'vi' ? `Ph\u00ed (${feeRate}%)` : `Fee (${feeRate}%)`}</span>
-            <span>{formatAmount(feeAmount)}</span>
+            <span>{locale === 'vi' ? `Phí (${feeRate}%)` : `Fee (${feeRate}%)`}</span>
+            <span>{formatAmount(Math.round(feeAmount))}</span>
           </div>
           <div className={[
             'flex items-center justify-between border-t pt-2 font-semibold',
             dark ? 'border-slate-700 text-slate-100' : 'border-slate-200 text-slate-900',
           ].join(' ')}>
-            <span>{locale === 'vi' ? 'T\u1ed5ng c\u1ed9ng' : 'Total'}</span>
-            <span>{formatAmount(payAmount)}</span>
+            <span>{locale === 'vi' ? 'Tổng cộng' : 'Total'}</span>
+            <span>{formatAmount(Math.round(payAmount))}</span>
           </div>
         </div>
       )}
@@ -418,7 +374,7 @@ export default function PaymentForm({
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            {locale === 'vi' ? '\u0110ang x\u1eed l\u00fd...' : 'Processing...'}
+            {locale === 'vi' ? 'Đang xử lý...' : 'Processing...'}
           </>
         ) : (
           <>
@@ -427,8 +383,8 @@ export default function PaymentForm({
               <line x1="1" y1="10" x2="23" y2="10" />
             </svg>
             {locale === 'vi'
-              ? `N\u1ea1p ${formatAmount(feeRate > 0 && selectedAmount > 0 ? payAmount : selectedAmount || 0)}`
-              : `Pay ${formatAmount(feeRate > 0 && selectedAmount > 0 ? payAmount : selectedAmount || 0)}`}
+              ? `Nạp ${formatAmount(feeRate > 0 && selectedAmount > 0 ? Math.round(payAmount) : selectedAmount || 0)}`
+              : `Pay ${formatAmount(feeRate > 0 && selectedAmount > 0 ? Math.round(payAmount) : selectedAmount || 0)}`}
           </>
         )}
       </button>

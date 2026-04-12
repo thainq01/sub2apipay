@@ -301,8 +301,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           'DAILY_LIMIT_EXCEEDED',
           message(
             locale,
-            `Đã đạt giới hạn nạp tiền hôm nay, còn có thể nạp ${remaining.toFixed(2)} CNY`,
-            `Daily recharge limit reached. Remaining amount: ${remaining.toFixed(2)} CNY`,
+            `Đã đạt giới hạn nạp tiền hôm nay, còn có thể nạp ${remaining.toFixed(0)} VND`,
+            `Daily recharge limit reached. Remaining amount: ${remaining.toFixed(0)} VND`,
           ),
           429,
         );
@@ -328,8 +328,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           remaining > 0
             ? message(
                 locale,
-                `Phương thức ${input.paymentType} hôm nay còn lại ${remaining.toFixed(2)} CNY, vui lòng giảm số tiền hoặc sử dụng phương thức khác`,
-                `${input.paymentType} remaining daily quota: ${remaining.toFixed(2)} CNY. Reduce the amount or use another payment method`,
+                `Phương thức ${input.paymentType} hôm nay còn lại ${remaining.toFixed(0)} VND, vui lòng giảm số tiền hoặc sử dụng phương thức khác`,
+                `${input.paymentType} remaining daily quota: ${remaining.toFixed(0)} VND. Reduce the amount or use another payment method`,
               )
             : message(
                 locale,
@@ -388,14 +388,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
 
     const instanceResult = await selectInstance(provider.providerKey, strategy, input.paymentType, input.amount);
     if (instanceResult) {
-      if (provider.providerKey === 'easypay') {
-        const { EasyPayProvider } = await import('@/lib/easy-pay/provider');
-        actualProvider = new EasyPayProvider(instanceResult.instanceId, instanceResult.config);
-      } else if (provider.providerKey === 'stripe') {
-        const { StripeProvider } = await import('@/lib/stripe/provider');
-        actualProvider = new StripeProvider(instanceResult.instanceId, instanceResult.config);
-      } else if (provider.providerKey === 'sepay') {
-        const { SepayProvider } = await import('@/lib/sepay/provider');
+      if (provider.providerKey === 'sepay') {
+        const { SepayProvider } = await import('@/lib/providers/sepay');
         actualProvider = new SepayProvider(instanceResult.instanceId, instanceResult.config);
       }
       selectedInstanceId = instanceResult.instanceId;
@@ -423,14 +417,6 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     // Only easypay from external notifyUrl, return_url unified back to result page with access token
     let notifyUrl: string | undefined;
     let returnUrl: string | undefined = orderResultUrl;
-    if (actualProvider.providerKey === 'easypay') {
-      if (selectedInstanceId) {
-        notifyUrl = `${env.NEXT_PUBLIC_APP_URL}/api/easy-pay/notify?inst=${selectedInstanceId}`;
-      } else {
-        notifyUrl = env.EASY_PAY_NOTIFY_URL || '';
-      }
-      returnUrl = orderResultUrl;
-    }
 
     // R3+R5: Build payment product name
     let paymentSubject: string;
@@ -445,7 +431,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       if (prefix || suffix) {
         paymentSubject = `${prefix || ''} ${payAmountStr} ${suffix || ''}`.trim();
       } else {
-        paymentSubject = `Sub2API ${payAmountStr} CNY`;
+        paymentSubject = `Sub2API ${payAmountStr} VND`;
       }
     }
 
@@ -516,7 +502,6 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       userBalance: user.balance,
       payUrl: paymentResult.payUrl,
       qrCode: paymentResult.qrCode,
-      clientSecret: paymentResult.clientSecret,
       expiresAt,
       statusAccessToken,
       sepayBankInfo,
@@ -578,9 +563,8 @@ export async function cancelOrderCore(options: {
       if (providerInstanceId) {
         const instConfig = await getInstanceConfig(providerInstanceId);
         if (instConfig) {
-          // Currently only easypay supports multi-instance
-          const { EasyPayProvider } = await import('@/lib/easy-pay/provider');
-          provider = new EasyPayProvider(providerInstanceId, instConfig);
+          const { SepayProvider } = await import('@/lib/providers/sepay');
+          provider = new SepayProvider(providerInstanceId, instConfig);
         }
       }
       if (!provider) {
@@ -600,7 +584,7 @@ export async function cancelOrderCore(options: {
         return 'already_paid';
       }
 
-      if (provider.cancelPayment) {
+      if ('cancelPayment' in provider && provider.cancelPayment) {
         try {
           await provider.cancelPayment(paymentTradeNo);
         } catch (cancelErr) {
@@ -1510,8 +1494,8 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
       if (order.providerInstanceId) {
         const instConfig = await getInstanceConfig(order.providerInstanceId);
         if (instConfig) {
-          const { EasyPayProvider } = await import('@/lib/easy-pay/provider');
-          provider = new EasyPayProvider(order.providerInstanceId, instConfig);
+          const { SepayProvider } = await import('@/lib/providers/sepay');
+          provider = new SepayProvider(order.providerInstanceId, instConfig);
         }
       }
       if (!provider) {

@@ -21,9 +21,9 @@ function formatDate(dateStr: string) {
 }
 
 function formatAmount(value: number) {
-  if (value >= 10000) return `¥${(value / 10000).toFixed(1)}w`;
-  if (value >= 1000) return `¥${(value / 1000).toFixed(1)}k`;
-  return `¥${value}`;
+  if (value >= 10000) return `${(value / 10000).toFixed(1)}w VND`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}k VND`;
+  return `${value} VND`;
 }
 
 interface TooltipPayload {
@@ -36,7 +36,7 @@ function CustomTooltip({
   payload,
   label,
   dark,
-  currency,
+  amountSuffix,
   amountLabel,
   countLabel,
 }: {
@@ -44,7 +44,7 @@ function CustomTooltip({
   payload?: TooltipPayload[];
   label?: string;
   dark?: boolean;
-  currency: string;
+  amountSuffix: string;
   amountLabel: string;
   countLabel: string;
 }) {
@@ -60,7 +60,7 @@ function CustomTooltip({
       {payload.map((p) => (
         <p key={p.dataKey}>
           {p.dataKey === 'amount' ? amountLabel : countLabel}:{' '}
-          {p.dataKey === 'amount' ? `${currency}${p.value.toLocaleString()}` : p.value}
+          {p.dataKey === 'amount' ? `${p.value.toLocaleString()}${amountSuffix}` : p.value}
         </p>
       ))}
     </div>
@@ -68,7 +68,8 @@ function CustomTooltip({
 }
 
 export default function DailyChart({ data, dark, locale = 'en' }: DailyChartProps) {
-  const currency = locale === 'vi' ? 'VND' : '$';
+  const currency = '';
+  const amountSuffix = ' VND';
   const chartTitle = locale === 'vi' ? 'Xu hướng nạp tiền hàng ngày' : 'Daily Recharge Trend';
   const emptyText = locale === 'vi' ? 'Không có dữ liệu' : 'No data';
   const amountLabel = locale === 'vi' ? 'Số tiền' : 'Amount';
@@ -125,7 +126,7 @@ export default function DailyChart({ data, dark, locale = 'en' }: DailyChartProp
           />
           <Tooltip
             content={
-              <CustomTooltip dark={dark} currency={currency} amountLabel={amountLabel} countLabel={countLabel} />
+              <CustomTooltip dark={dark} amountSuffix={amountSuffix} amountLabel={amountLabel} countLabel={countLabel} />
             }
           />
           <Line

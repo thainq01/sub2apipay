@@ -139,7 +139,7 @@ export default function SubscriptionConfirm({
         <span className={['text-sm font-medium', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
           {pickLocaleText(locale, 'Số tiền phải trả', 'Amount Due')}
         </span>
-        <span className="text-xl font-bold text-emerald-500">¥{plan.price}</span>
+        <span className="text-xl font-bold text-emerald-500">{Math.round(plan.price).toLocaleString('vi-VN')} VND</span>
       </div>
 
       {/* Submit button */}

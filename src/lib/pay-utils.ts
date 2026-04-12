@@ -1,4 +1,4 @@
-import { ORDER_STATUS, PAYMENT_TYPE, PAYMENT_PREFIX, REDIRECT_PAYMENT_TYPES } from './constants';
+import { ORDER_STATUS, PAYMENT_TYPE, PAYMENT_PREFIX } from './constants';
 import type { Locale } from './locale';
 
 export interface UserInfo {
@@ -13,6 +13,7 @@ export interface MyOrder {
   status: string;
   paymentType: string;
   createdAt: string;
+  expiresAt?: string;
   orderType?: string;
   refundRequestedAt?: string | null;
   refundRequestReason?: string | null;
@@ -92,7 +93,7 @@ const FILTER_OPTIONS_MAP: Record<Locale, { key: OrderStatusFilter; label: string
   ],
 };
 
-export function getFilterOptions(locale: Locale = 'en'): { key: OrderStatusFilter; label: string }[] {
+export function getFilterOptions(locale: Locale = 'vi'): { key: OrderStatusFilter; label: string }[] {
   return FILTER_OPTIONS_MAP[locale];
 }
 
@@ -111,14 +112,18 @@ export function detectDeviceIsMobile(): boolean {
   return touchCapable && smallPhysicalScreen;
 }
 
-export function formatStatus(status: string, locale: Locale = 'en'): string {
+export function formatStatus(status: string, locale: Locale = 'vi'): string {
   return STATUS_TEXT_MAP[locale][status] || status;
 }
 
-export function formatCreatedAt(value: string, locale: Locale = 'en'): string {
+export function formatCreatedAt(value: string, locale: Locale = 'vi'): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN');
+}
+
+export function formatVND(amount: number): string {
+  return amount.toLocaleString('vi-VN') + ' VND';
 }
 
 export interface PaymentTypeMeta {
@@ -136,65 +141,6 @@ export interface PaymentTypeMeta {
 }
 
 export const PAYMENT_TYPE_META: Record<string, PaymentTypeMeta> = {
-  [PAYMENT_TYPE.ALIPAY]: {
-    label: 'Alipay',
-    provider: 'EasyPay',
-    color: '#00AEEF',
-    selectedBorder: 'border-cyan-400',
-    selectedBg: 'bg-cyan-50',
-    selectedBgDark: 'bg-cyan-950',
-    iconBg: 'bg-[#00AEEF]',
-    iconSrc: '/icons/alipay.svg',
-    chartBar: { light: 'bg-cyan-500', dark: 'bg-cyan-400' },
-    buttonClass: 'bg-[#00AEEF] hover:bg-[#009dd6] active:bg-[#008cbe]',
-  },
-  [PAYMENT_TYPE.ALIPAY_DIRECT]: {
-    label: 'Alipay',
-    provider: 'Alipay',
-    color: '#1677FF',
-    selectedBorder: 'border-blue-500',
-    selectedBg: 'bg-blue-50',
-    selectedBgDark: 'bg-blue-950',
-    iconBg: 'bg-[#1677FF]',
-    iconSrc: '/icons/alipay.svg',
-    chartBar: { light: 'bg-blue-500', dark: 'bg-blue-400' },
-    buttonClass: 'bg-[#1677FF] hover:bg-[#0958d9] active:bg-[#003eb3]',
-  },
-  [PAYMENT_TYPE.WXPAY]: {
-    label: 'WeChat Pay',
-    provider: 'EasyPay',
-    color: '#2BB741',
-    selectedBorder: 'border-green-500',
-    selectedBg: 'bg-green-50',
-    selectedBgDark: 'bg-green-950',
-    iconBg: 'bg-[#2BB741]',
-    iconSrc: '/icons/wxpay.svg',
-    chartBar: { light: 'bg-green-500', dark: 'bg-green-400' },
-    buttonClass: 'bg-[#2BB741] hover:bg-[#24a038] active:bg-[#1d8a2f]',
-  },
-  [PAYMENT_TYPE.WXPAY_DIRECT]: {
-    label: 'WeChat Pay',
-    provider: 'WeChat Pay',
-    color: '#07C160',
-    selectedBorder: 'border-green-600',
-    selectedBg: 'bg-green-50',
-    selectedBgDark: 'bg-green-950',
-    iconBg: 'bg-[#07C160]',
-    iconSrc: '/icons/wxpay.svg',
-    chartBar: { light: 'bg-emerald-500', dark: 'bg-emerald-400' },
-    buttonClass: 'bg-[#07C160] hover:bg-[#06ad56] active:bg-[#05994c]',
-  },
-  [PAYMENT_TYPE.STRIPE]: {
-    label: 'Stripe',
-    provider: 'Stripe',
-    color: '#635bff',
-    selectedBorder: 'border-[#635bff]',
-    selectedBg: 'bg-[#635bff]/10',
-    selectedBgDark: 'bg-[#635bff]/20',
-    iconBg: 'bg-[#635bff]',
-    chartBar: { light: 'bg-purple-500', dark: 'bg-purple-400' },
-    buttonClass: 'bg-[#635bff] hover:bg-[#5249d9] active:bg-[#4840c4]',
-  },
   [PAYMENT_TYPE.SEPAY]: {
     label: 'Bank Transfer',
     provider: 'SePay',
@@ -211,24 +157,14 @@ export const PAYMENT_TYPE_META: Record<string, PaymentTypeMeta> = {
 
 const PAYMENT_TEXT_MAP: Record<Locale, Record<string, { label: string; provider: string; sublabel?: string }>> = {
   vi: {
-    [PAYMENT_TYPE.ALIPAY]: { label: 'Alipay', provider: 'EasyPay' },
-    [PAYMENT_TYPE.ALIPAY_DIRECT]: { label: 'Alipay', provider: 'Alipay' },
-    [PAYMENT_TYPE.WXPAY]: { label: 'WeChat Pay', provider: 'EasyPay' },
-    [PAYMENT_TYPE.WXPAY_DIRECT]: { label: 'WeChat Pay', provider: 'WeChat Pay' },
-    [PAYMENT_TYPE.STRIPE]: { label: 'Stripe', provider: 'Stripe' },
-    [PAYMENT_TYPE.SEPAY]: { label: 'Bank Transfer', provider: 'SePay' },
+    [PAYMENT_TYPE.SEPAY]: { label: 'Chuyển khoản', provider: 'SePay' },
   },
   en: {
-    [PAYMENT_TYPE.ALIPAY]: { label: 'Alipay', provider: 'EasyPay' },
-    [PAYMENT_TYPE.ALIPAY_DIRECT]: { label: 'Alipay', provider: 'Alipay' },
-    [PAYMENT_TYPE.WXPAY]: { label: 'WeChat Pay', provider: 'EasyPay' },
-    [PAYMENT_TYPE.WXPAY_DIRECT]: { label: 'WeChat Pay', provider: 'WeChat Pay' },
-    [PAYMENT_TYPE.STRIPE]: { label: 'Stripe', provider: 'Stripe' },
     [PAYMENT_TYPE.SEPAY]: { label: 'Bank Transfer', provider: 'SePay' },
   },
 };
 
-function getPaymentText(type: string, locale: Locale = 'en'): { label: string; provider: string; sublabel?: string } {
+function getPaymentText(type: string, locale: Locale = 'vi'): { label: string; provider: string; sublabel?: string } {
   const meta = PAYMENT_TYPE_META[type];
   if (!meta) return { label: type, provider: '' };
   const baseText = PAYMENT_TEXT_MAP[locale][type] || { label: meta.label, provider: meta.provider };
@@ -238,66 +174,37 @@ function getPaymentText(type: string, locale: Locale = 'en'): { label: string; p
   };
 }
 
-export function getPaymentTypeLabel(type: string, locale: Locale = 'en'): string {
+export function getPaymentTypeLabel(type: string, locale: Locale = 'vi'): string {
   const meta = getPaymentText(type, locale);
   if (!meta) return type;
   if (meta.sublabel) {
     return locale === 'en' ? `${meta.label} (${meta.sublabel})` : `${meta.label}（${meta.sublabel}）`;
   }
-  const hasDuplicate = Object.keys(PAYMENT_TYPE_META).some(
-    (key) => key !== type && getPaymentText(key, locale).label === meta.label,
-  );
-  if (!hasDuplicate || !meta.provider) return meta.label;
-  return locale === 'en' ? `${meta.label} (${meta.provider})` : `${meta.label}（${meta.provider}）`;
+  return meta.label;
 }
 
 export function getPaymentDisplayInfo(
   type: string,
-  locale: Locale = 'en',
+  locale: Locale = 'vi',
 ): { channel: string; provider: string; sublabel?: string } {
   const meta = getPaymentText(type, locale);
   return { channel: meta.label, provider: meta.provider, sublabel: meta.sublabel };
 }
 
-export function getPaymentIconType(type: string): string {
-  if (type.startsWith(PAYMENT_PREFIX.ALIPAY)) return PAYMENT_PREFIX.ALIPAY;
-  if (type.startsWith(PAYMENT_PREFIX.WXPAY)) return PAYMENT_PREFIX.WXPAY;
-  if (type.startsWith(PAYMENT_PREFIX.STRIPE)) return PAYMENT_PREFIX.STRIPE;
-  if (type.startsWith(PAYMENT_PREFIX.SEPAY)) return PAYMENT_PREFIX.SEPAY;
-  return type;
-}
-
 export function getPaymentMeta(type: string): PaymentTypeMeta {
-  const base = getPaymentIconType(type);
-  return PAYMENT_TYPE_META[type] || PAYMENT_TYPE_META[base] || PAYMENT_TYPE_META[PAYMENT_TYPE.ALIPAY];
+  return PAYMENT_TYPE_META[type] || PAYMENT_TYPE_META[PAYMENT_TYPE.SEPAY];
 }
 
 export function getPaymentIconSrc(type: string): string {
   return getPaymentMeta(type).iconSrc || '';
 }
 
-export function getPaymentChannelLabel(type: string, locale: Locale = 'en'): string {
+export function getPaymentChannelLabel(type: string, locale: Locale = 'vi'): string {
   return getPaymentDisplayInfo(type, locale).channel;
-}
-
-export function isStripeType(type: string | undefined | null): boolean {
-  return !!type?.startsWith(PAYMENT_PREFIX.STRIPE);
-}
-
-export function isWxpayType(type: string | undefined | null): boolean {
-  return !!type?.startsWith(PAYMENT_PREFIX.WXPAY);
-}
-
-export function isAlipayType(type: string | undefined | null): boolean {
-  return !!type?.startsWith(PAYMENT_PREFIX.ALIPAY);
 }
 
 export function isSepayType(type: string | undefined | null): boolean {
   return !!type?.startsWith(PAYMENT_PREFIX.SEPAY);
-}
-
-export function isRedirectPayment(type: string | undefined | null): boolean {
-  return !!type && REDIRECT_PAYMENT_TYPES.has(type);
 }
 
 export function applySublabelOverrides(overrides: Record<string, string>): void {

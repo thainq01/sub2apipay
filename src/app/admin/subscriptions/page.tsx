@@ -93,8 +93,8 @@ function buildText(locale: Locale) {
         fieldGroupPlaceholder: 'Select a group',
         fieldName: 'Plan Name',
         fieldDescription: 'Description',
-        fieldPrice: 'Price (CNY)',
-        fieldOriginalPrice: 'Original Price (CNY)',
+        fieldPrice: 'Price (VND)',
+        fieldOriginalPrice: 'Original Price (VND)',
         fieldValidDays: 'Validity',
         fieldValidUnit: 'Unit',
         unitDay: 'Day(s)',
@@ -855,12 +855,12 @@ function SubscriptionsContent() {
                           {t.colPrice}
                         </span>
                         <div className={isDark ? 'text-slate-200' : 'text-slate-800'}>
-                          ¥{plan.price.toFixed(2)}
+                          {Math.round(plan.price).toLocaleString('vi-VN')} VND
                           {plan.originalPrice != null && (
                             <span
                               className={`ml-1 line-through text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
                             >
-                              ¥{plan.originalPrice.toFixed(2)}
+                              {Math.round(plan.originalPrice).toLocaleString('vi-VN')} VND
                             </span>
                           )}
                         </div>

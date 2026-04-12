@@ -3,8 +3,8 @@ import { handlePaymentNotify } from '@/lib/order/service';
 import { prisma } from '@/lib/db';
 import { getEnv } from '@/lib/config';
 import { getSystemConfig } from '@/lib/system-config';
-import { SepayProvider } from '@/lib/sepay/provider';
-import type { SepayWebhookPayload } from '@/lib/sepay/provider';
+import { SepayProvider } from '@/lib/providers/sepay';
+import type { SepayWebhookPayload } from '@/lib/providers/sepay';
 import { extractHeaders } from '@/lib/utils/api';
 
 export async function POST(request: NextRequest) {

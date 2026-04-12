@@ -111,7 +111,7 @@ export default function MobileOrderList({
               ].join(' ')}
             >
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-semibold">¥{order.amount.toFixed(2)}</span>
+                <span className="text-2xl font-semibold">{Math.round(order.amount).toLocaleString('vi-VN')} VND</span>
                 <span
                   className={['rounded-full px-2 py-0.5 text-xs', getStatusBadgeClass(order.status, isDark)].join(' ')}
                 >

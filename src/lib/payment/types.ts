@@ -1,37 +1,23 @@
 /** Unified payment method types across all providers */
 export type PaymentType = string;
 
-/**
- * Extract base payment method from composite key (e.g., 'alipay_direct' → 'alipay')
- * Used to map back to standard names when passing to third-party APIs
- */
-export function getBasePaymentType(type: string): string {
-  if (type.startsWith('alipay')) return 'alipay';
-  if (type.startsWith('wxpay')) return 'wxpay';
-  if (type.startsWith('stripe')) return 'stripe';
-  if (type.startsWith('sepay')) return 'sepay';
-  return type;
-}
-
 /** Request to create a payment with any provider */
 export interface CreatePaymentRequest {
   orderId: string;
-  amount: number; // in CNY (yuan)
+  amount: number; // in VND
   paymentType: PaymentType;
   subject: string; // product description
   notifyUrl?: string;
   returnUrl?: string;
   clientIp?: string;
-  /** Whether from mobile (affects Alipay choosing PC page payment / H5 mobile website payment) */
   isMobile?: boolean;
 }
 
 /** Response from creating a payment */
 export interface CreatePaymentResponse {
   tradeNo: string; // third-party transaction ID
-  payUrl?: string; // H5 payment URL (alipay/wxpay)
+  payUrl?: string; // H5 payment URL
   qrCode?: string; // QR code content
-  clientSecret?: string; // Stripe PaymentIntent client secret (for embedded Payment Element)
 }
 
 /** Response from querying an order's payment status */
@@ -78,7 +64,7 @@ export interface PaymentProvider {
   readonly name: string;
   readonly providerKey: string;
   readonly supportedTypes: PaymentType[];
-  /** Default limits per channel (key is PaymentType like 'alipay'), can be overridden by environment variables */
+  /** Default limits per channel (key is PaymentType), can be overridden by environment variables */
   readonly defaultLimits?: Record<string, MethodDefaultLimits>;
 
   createPayment(request: CreatePaymentRequest): Promise<CreatePaymentResponse>;

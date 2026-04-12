@@ -12,30 +12,8 @@ import type {
   RefundResponse,
   MethodDefaultLimits,
 } from '@/lib/payment/types';
-
-export interface SepayWebhookPayload {
-  id: number;
-  gateway: string;
-  transactionDate: string;
-  accountNumber: string;
-  code: string;
-  content: string;
-  transferType: string;
-  transferAmount: number;
-  accumulated: number;
-  subAccount: string;
-  referenceCode: string;
-  description: string;
-}
-
-/**
- * Extract a recharge code from SePay webhook fields.
- * Format: ORDER + 10 digits (e.g., ORDER1234567890)
- */
-export function extractRechargeCode(text: string): string | null {
-  const match = text.match(/\bORDER\d{10}\b/);
-  return match ? match[0] : null;
-}
+import type { SepayWebhookPayload } from './types';
+import { extractRechargeCode } from './types';
 
 export class SepayProvider implements PaymentProvider {
   readonly name: string;
@@ -56,9 +34,6 @@ export class SepayProvider implements PaymentProvider {
   }
 
   async createPayment(request: CreatePaymentRequest): Promise<CreatePaymentResponse> {
-    // SePay is a bank transfer monitor — no external API call needed.
-    // The orderId (which is the rechargeCode) serves as the transfer memo code.
-    // Generate a VietQR code URL via SePay's QR API.
     const bankAccount = this.getConfig('bankAccount') || (await getSystemConfig('SEPAY_BANK_ACCOUNT')) || getEnv().SEPAY_BANK_ACCOUNT || '';
     const bankName = this.getConfig('bankName') || (await getSystemConfig('SEPAY_BANK_NAME')) || getEnv().SEPAY_BANK_NAME || '';
 
@@ -75,7 +50,6 @@ export class SepayProvider implements PaymentProvider {
   }
 
   async queryOrder(tradeNo: string): Promise<QueryOrderResponse> {
-    // SePay is push-only (webhook). We check our own DB for the order status.
     const order = await prisma.order.findUnique({
       where: { id: tradeNo },
       select: { status: true, payAmount: true, amount: true, paidAt: true },
@@ -98,7 +72,6 @@ export class SepayProvider implements PaymentProvider {
     rawBody: string | Buffer,
     headers: Record<string, string>,
   ): Promise<PaymentNotification | null> {
-    // Validate API key
     const apiKey = this.getConfig('apiKey') || (await getSystemConfig('SEPAY_API_KEY')) || getEnv().SEPAY_API_KEY;
     if (!apiKey) {
       throw new Error('SEPAY_API_KEY not configured');
@@ -109,22 +82,18 @@ export class SepayProvider implements PaymentProvider {
       throw new Error('SePay webhook unauthorized');
     }
 
-    // Parse payload
     const body = typeof rawBody === 'string' ? rawBody : rawBody.toString('utf-8');
     const payload: SepayWebhookPayload = JSON.parse(body);
 
-    // Only process incoming transfers with positive amount
     if (payload.transferType !== 'in' || payload.transferAmount <= 0) {
       return null;
     }
 
-    // Try to find matching order by extracting rechargeCode from both `code` and `content` fields
     const code = extractRechargeCode(payload.code) || extractRechargeCode(payload.content);
     if (!code) {
       return null;
     }
 
-    // Find matching PENDING sepay order
     const order = await prisma.order.findFirst({
       where: {
         rechargeCode: code,
@@ -138,7 +107,6 @@ export class SepayProvider implements PaymentProvider {
       return null;
     }
 
-    // Validate amount: parseInt(order.payAmount) === transferAmount
     const expectedAmount = Math.round(Number(order.payAmount ?? order.amount));
     if (expectedAmount !== payload.transferAmount) {
       console.warn(

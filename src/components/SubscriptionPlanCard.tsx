@@ -80,10 +80,10 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
         <div className="flex items-baseline gap-2">
           {plan.originalPrice !== null && (
             <span className={['text-sm line-through', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-              ¥{plan.originalPrice}
+              {Math.round(plan.originalPrice).toLocaleString('vi-VN')} VND
             </span>
           )}
-          <span className={['text-3xl font-bold', accentCls].join(' ')}>¥{plan.price}</span>
+          <span className={['text-3xl font-bold', accentCls].join(' ')}>{Math.round(plan.price).toLocaleString('vi-VN')} VND</span>
           <span className={['text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>{periodSuffix}</span>
         </div>
       </div>
