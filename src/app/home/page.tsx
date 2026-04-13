@@ -97,6 +97,17 @@ function HomeContent() {
       color: isDark ? 'from-blue-600 to-blue-700' : 'from-blue-500 to-blue-600',
     },
     {
+      title: t('home.subscriptions'),
+      desc: t('home.subscriptionsDesc'),
+      href: buildUrl('/pay/subscriptions'),
+      icon: (
+        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+      ),
+      color: isDark ? 'from-amber-600 to-amber-700' : 'from-amber-500 to-amber-600',
+    },
+    {
       title: t('home.orderHistory'),
       desc: t('home.orderHistoryDesc'),
       href: buildUrl('/pay/orders'),
@@ -190,7 +201,7 @@ function HomeContent() {
       </div>
 
       {/* Navigation cards */}
-      <div className={['grid gap-3 mb-6', isIframe ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-3'].join(' ')}>
+      <div className={['grid gap-3 mb-6', isIframe ? 'grid-cols-4' : 'grid-cols-2 sm:grid-cols-4'].join(' ')}>
         {navCards.map((card) => (
           <a
             key={card.title}
@@ -240,26 +251,31 @@ function HomeContent() {
               'divide-y overflow-hidden rounded-2xl shadow-sm',
               isDark ? 'divide-slate-800 bg-slate-900 ring-1 ring-slate-800' : 'divide-slate-100 bg-white ring-1 ring-slate-100',
             ].join(' ')}>
-              {orders.map((order) => (
-                <div key={order.id} className={['flex items-center justify-between px-4 py-3', isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'].join(' ')}>
-                  <div>
-                    <div className={['text-xs font-mono', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-                      {order.id}
+              {orders.map((order) => {
+                const isSubscription = order.orderType === 'subscription';
+                return (
+                  <div key={order.id} className={['flex items-center justify-between px-4 py-3', isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'].join(' ')}>
+                    <div>
+                      <div className={['text-xs font-mono', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+                        {order.id}
+                      </div>
+                      <div className={['text-xs', isDark ? 'text-slate-600' : 'text-slate-400'].join(' ')}>
+                        {formatCreatedAt(order.createdAt, locale)}
+                      </div>
                     </div>
-                    <div className={['text-xs', isDark ? 'text-slate-600' : 'text-slate-400'].join(' ')}>
-                      {formatCreatedAt(order.createdAt, locale)}
+                    <div className="text-right">
+                      <div className={['text-sm font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
+                        {isSubscription
+                          ? (order.subscriptionPlanName || (locale === 'vi' ? 'Gói đăng ký' : 'Subscription'))
+                          : formatVND(order.amount)}
+                      </div>
+                      <span className={['inline-block rounded-full px-2 py-0.5 text-[10px] font-medium', getStatusBadgeClass(order.status, isDark)].join(' ')}>
+                        {formatStatus(order.status, locale)}
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={['text-sm font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
-                      {formatVND(order.amount)}
-                    </div>
-                    <span className={['inline-block rounded-full px-2 py-0.5 text-[10px] font-medium', getStatusBadgeClass(order.status, isDark)].join(' ')}>
-                      {formatStatus(order.status, locale)}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

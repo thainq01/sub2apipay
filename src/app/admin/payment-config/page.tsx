@@ -683,7 +683,7 @@ function PaymentConfigContent() {
         </div>
       )}
 
-      {/* ══ 基础配置 ══ */}
+      {/* Basic configuration */}
       <div className={cardCls}>
         <h2 className={`text-base font-semibold mb-1 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
           {t.basicConfig}
@@ -817,7 +817,7 @@ function PaymentConfigContent() {
           )}
         </div>
 
-        {/* ── 覆盖环境变量配置 ── */}
+        {/* Override environment variable config */}
         <div className={subCardCls}>
           <div className="flex items-center gap-3 mb-2">
             <Toggle value={rcOverrideEnv} onChange={handleOverrideEnvToggle} disabled={rcOverrideSaved} />
@@ -935,7 +935,7 @@ function PaymentConfigContent() {
                   </div>
                 </div>
 
-                {/* ── 服务商管理 ── */}
+                {/* Provider management */}
                 {enabledProviderKeys.length > 0 && (
                   <div className="pt-4 border-t border-dashed" style={{ borderColor: isDark ? '#475569' : '#e2e8f0' }}>
                     <div className="flex items-center justify-between mb-3">
@@ -1281,7 +1281,7 @@ function PaymentConfigContent() {
                 </div>
               </div>
 
-              {/* ── 限额配置 (collapsible) ── */}
+              {/* Limit configuration (collapsible) */}
               <div>
                 <button
                   type="button"

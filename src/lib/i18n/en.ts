@@ -9,6 +9,8 @@ const en: Record<string, string> = {
   'home.orderHistoryDesc': 'View past transactions',
   'home.refund': 'Refund Requests',
   'home.refundDesc': 'Manage your refund requests',
+  'home.subscriptions': 'Subscriptions',
+  'home.subscriptionsDesc': 'Browse and purchase plans',
   'home.recentOrders': 'Recent Transactions',
   'home.noOrders': 'No transactions yet',
   'home.viewAll': 'View All',

@@ -26,6 +26,7 @@ interface OrderResult {
   clientSecret?: string | null;
   expiresAt: string;
   statusAccessToken: string;
+  orderType?: 'balance' | 'subscription';
   sepayBankInfo?: {
     bankName: string;
     accountNumber: string;
@@ -284,6 +285,7 @@ function PayContent() {
           statusAccessToken: data.statusAccessToken,
           qrCode: data.qrCode,
           sepayBankInfo: data.sepayBankInfo,
+          orderType: data.orderType,
         });
         setStep('paying');
       } catch {
@@ -298,11 +300,8 @@ function PayContent() {
     if (step !== 'result' || finalOrderState?.status !== 'COMPLETED') return;
     loadUserAndOrders();
     const timer = setTimeout(() => {
-      setStep('form');
-      setOrderResult(null);
-      setFinalOrderState(null);
-      setError('');
-      setSubscriptionError('');
+      // Redirect to home after successful payment
+      window.location.href = buildHomeUrl();
     }, 2200);
     return () => clearTimeout(timer);
   }, [step, finalOrderState, loadUserAndOrders]);
@@ -454,6 +453,7 @@ function PayContent() {
         expiresAt: data.expiresAt,
         statusAccessToken: data.statusAccessToken,
         sepayBankInfo: data.sepayBankInfo,
+        orderType: data.orderType,
       });
       setStep('paying');
     } catch {
@@ -478,8 +478,13 @@ function PayContent() {
   };
 
   // ── Render ──
-  const pageTitle = pickLocaleText(locale, 'Nạp tiền tài khoản', 'Top Up Your Balance');
-  const pageSubtitle = pickLocaleText(locale, 'Nạp tiền và sử dụng theo nhu cầu', 'Pay as you go — top up and use');
+  const isSubscriptionOrder = orderResult?.orderType === 'subscription';
+  const pageTitle = isSubscriptionOrder
+    ? pickLocaleText(locale, 'Thanh toán đăng ký', 'Subscription Payment')
+    : pickLocaleText(locale, 'Nạp tiền tài khoản', 'Top Up Your Balance');
+  const pageSubtitle = isSubscriptionOrder
+    ? pickLocaleText(locale, 'Hoàn tất thanh toán để kích hoạt gói', 'Complete payment to activate your plan')
+    : pickLocaleText(locale, 'Nạp tiền và sử dụng theo nhu cầu', 'Pay as you go — top up and use');
 
   return (
     <PayPageLayout
@@ -671,6 +676,7 @@ function PayContent() {
             locale={locale}
             isIframe={isIframeContext}
             sepayBankInfo={orderResult.sepayBankInfo}
+            orderType={orderResult.orderType}
           />
           {renderHelpSection()}
         </>
@@ -686,6 +692,8 @@ function PayContent() {
           onBack={handleBack}
           dark={isDark}
           locale={locale}
+          orderType={orderResult.orderType}
+          homeUrl={buildHomeUrl()}
         />
       )}
 

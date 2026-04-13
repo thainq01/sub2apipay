@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import type { Locale } from '@/lib/locale';
 import { pickLocaleText } from '@/lib/locale';
@@ -27,7 +27,14 @@ export default function SubscriptionConfirm({
   isDark,
   locale,
 }: SubscriptionConfirmProps) {
-  const [selectedPayment, setSelectedPayment] = useState(paymentTypes[0] || '');
+  const [selectedPayment, setSelectedPayment] = useState('');
+
+  // Update selectedPayment when paymentTypes changes
+  useEffect(() => {
+    if (paymentTypes.length > 0) {
+      setSelectedPayment(paymentTypes[0]);
+    }
+  }, [paymentTypes]);
 
   const handleSubmit = () => {
     if (selectedPayment && !loading) {
@@ -67,67 +74,69 @@ export default function SubscriptionConfirm({
         <PlanInfoDisplay plan={plan} isDark={isDark} locale={locale} />
       </div>
 
-      {/* Payment method selector */}
-      <div>
-        <label className={['mb-2 block text-sm font-medium', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
-          {pickLocaleText(locale, 'Phương thức thanh toán', 'Payment Method')}
-        </label>
-        <div className="space-y-2">
-          {paymentTypes.map((type) => {
-            const isSelected = selectedPayment === type;
-            const iconSrc = getPaymentIconSrc(type);
-            const meta = PAYMENT_TYPE_META[type];
-            return (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setSelectedPayment(type)}
-                className={[
-                  'flex w-full items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all',
-                  isSelected
-                    ? `${meta?.selectedBorder || 'border-emerald-500'} ring-1 ring-current/20`
-                    : isDark
-                      ? 'border-slate-700 hover:border-slate-600'
-                      : 'border-slate-200 hover:border-slate-300',
-                  isSelected
-                    ? isDark
-                      ? meta?.selectedBgDark || 'bg-emerald-950/30'
-                      : meta?.selectedBg || 'bg-emerald-50/50'
-                    : isDark
-                      ? 'bg-slate-800/60'
-                      : 'bg-white',
-                ].join(' ')}
-              >
-                {/* Radio indicator */}
-                <span
+      {/* Payment method selector - only show if multiple options */}
+      {paymentTypes.length > 1 && (
+        <div>
+          <label className={['mb-2 block text-sm font-medium', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
+            {pickLocaleText(locale, 'Phương thức thanh toán', 'Payment Method')}
+          </label>
+          <div className="space-y-2">
+            {paymentTypes.map((type) => {
+              const isSelected = selectedPayment === type;
+              const iconSrc = getPaymentIconSrc(type);
+              const meta = PAYMENT_TYPE_META[type];
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setSelectedPayment(type)}
                   className={[
-                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2',
+                    'flex w-full items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all',
                     isSelected
-                      ? `${meta?.selectedBorder || 'border-emerald-500'}`
+                      ? `${meta?.selectedBorder || 'border-emerald-500'} ring-1 ring-current/20`
                       : isDark
-                        ? 'border-slate-600'
-                        : 'border-slate-300',
+                        ? 'border-slate-700 hover:border-slate-600'
+                        : 'border-slate-200 hover:border-slate-300',
+                    isSelected
+                      ? isDark
+                        ? meta?.selectedBgDark || 'bg-emerald-950/30'
+                        : meta?.selectedBg || 'bg-emerald-50/50'
+                      : isDark
+                        ? 'bg-slate-800/60'
+                        : 'bg-white',
                   ].join(' ')}
                 >
-                  {isSelected && (
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: meta?.color || '#10b981' }} />
+                  {/* Radio indicator */}
+                  <span
+                    className={[
+                      'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2',
+                      isSelected
+                        ? `${meta?.selectedBorder || 'border-emerald-500'}`
+                        : isDark
+                          ? 'border-slate-600'
+                          : 'border-slate-300',
+                    ].join(' ')}
+                  >
+                    {isSelected && (
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: meta?.color || '#10b981' }} />
+                    )}
+                  </span>
+
+                  {/* Icon */}
+                  {iconSrc && (
+                    <Image src={iconSrc} alt="" width={24} height={24} className="h-6 w-6 shrink-0 object-contain" />
                   )}
-                </span>
 
-                {/* Icon */}
-                {iconSrc && (
-                  <Image src={iconSrc} alt="" width={24} height={24} className="h-6 w-6 shrink-0 object-contain" />
-                )}
-
-                {/* Label */}
-                <span className={['text-sm font-medium', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
-                  {getPaymentTypeLabel(type, locale)}
-                </span>
-              </button>
-            );
-          })}
+                  {/* Label */}
+                  <span className={['text-sm font-medium', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
+                    {getPaymentTypeLabel(type, locale)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Amount to pay */}
       <div

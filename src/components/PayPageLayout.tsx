@@ -24,7 +24,7 @@ export default function PayPageLayout({
   backHref,
   children,
 }: PayPageLayoutProps) {
-  const maxWidthClass = maxWidth === 'lg' ? 'max-w-4xl' : 'max-w-2xl';
+  const maxWidthClass = maxWidth === 'full' ? '' : maxWidth === 'lg' ? 'max-w-4xl' : 'max-w-2xl';
 
   return (
     <div className="pay-layout relative w-full h-screen overflow-hidden flex flex-col p-4 sm:p-6">

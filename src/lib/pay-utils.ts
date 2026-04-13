@@ -15,6 +15,7 @@ export interface MyOrder {
   createdAt: string;
   expiresAt?: string;
   orderType?: string;
+  subscriptionPlanName?: string | null;
   refundRequestedAt?: string | null;
   refundRequestReason?: string | null;
   refundAmount?: number | null;

@@ -5,13 +5,13 @@ import { getCurrentUserByToken, getGroup } from '@/lib/sub2api/client';
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get('token')?.trim();
   if (!token) {
-    return NextResponse.json({ error: '缺少 token' }, { status: 401 });
+    return NextResponse.json({ error: 'Missing token' }, { status: 401 });
   }
 
   try {
     await getCurrentUserByToken(token);
   } catch {
-    return NextResponse.json({ error: '无效的 token' }, { status: 401 });
+    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }
 
   try {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       orderBy: { sortOrder: 'asc' },
     });
 
-    // 并发校验每个套餐对应的 Sub2API 分组是否存在
+    // Validate each plan's Sub2API group in parallel
     const results = await Promise.all(
       plans.map(async (plan) => {
         if (plan.groupId === null) return null;
@@ -72,6 +72,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ plans: results.filter(Boolean) });
   } catch (error) {
     console.error('Failed to list subscription plans:', error);
-    return NextResponse.json({ error: '获取订阅套餐失败' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch subscription plans' }, { status: 500 });
   }
 }

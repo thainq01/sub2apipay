@@ -149,61 +149,71 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
   return (
     <>
       <div className="space-y-2">
-        {orders.map((order) => (
-          <div
-            key={order.id}
-            className={[
-              'rounded-xl border p-3 transition-colors',
-              isDark ? 'border-slate-700/60 bg-slate-800/40 hover:bg-slate-800/70' : 'border-slate-100 bg-white hover:bg-slate-50/80',
-            ].join(' ')}
-          >
-            {/* Row 1: ID + Status */}
-            <div className="flex items-center justify-between gap-2">
-              <span className={['truncate font-mono text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                #{order.id.slice(0, 13)}
-              </span>
-              <span className={['shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium', getStatusBadgeClass(order.status, isDark)].join(' ')}>
-                {formatStatus(order.status, locale)}
-              </span>
-            </div>
+        {orders.map((order) => {
+          const isSubscription = order.orderType === 'subscription';
+          return (
+            <div
+              key={order.id}
+              className={[
+                'rounded-xl border p-3 transition-colors',
+                isDark ? 'border-slate-700/60 bg-slate-800/40 hover:bg-slate-800/70' : 'border-slate-100 bg-white hover:bg-slate-50/80',
+              ].join(' ')}
+            >
+              {/* Row 1: ID + Status */}
+              <div className="flex items-center justify-between gap-2">
+                <span className={['truncate font-mono text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+                  #{order.id.slice(0, 13)}
+                </span>
+                <span className={['shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium', getStatusBadgeClass(order.status, isDark)].join(' ')}>
+                  {formatStatus(order.status, locale)}
+                </span>
+              </div>
 
-            {/* Row 2: Amount + Date + Action */}
-            <div className="mt-2 flex items-end justify-between gap-2">
-              <div>
-                <div className={['text-lg font-bold leading-tight', isDark ? 'text-slate-100' : 'text-slate-800'].join(' ')}>
-                  {formatCups(order.amount, locale)}
-                </div>
-                <div className={['text-[11px]', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-                  {formatCreatedAt(order.createdAt, locale)}
-                </div>
-                {(order.status === 'PARTIALLY_REFUNDED' || order.status === 'REFUND_REQUESTED') && order.refundAmount != null && (
-                  <div className={['text-[11px] mt-0.5', isDark ? 'text-fuchsia-300' : 'text-fuchsia-600'].join(' ')}>
-                    {order.status === 'PARTIALLY_REFUNDED' ? t.partialRefunded : t.requested}: {formatVND(order.refundAmount)}
+              {/* Row 2: Amount + Date + Action */}
+              <div className="mt-2 flex items-end justify-between gap-2">
+                <div>
+                  <div className={['text-lg font-bold leading-tight', isDark ? 'text-slate-100' : 'text-slate-800'].join(' ')}>
+                    {isSubscription
+                      ? (order.subscriptionPlanName || (locale === 'vi' ? 'Gói đăng ký' : 'Subscription'))
+                      : formatCups(order.amount, locale)}
                   </div>
-                )}
-              </div>
-              <div className="shrink-0">
-                {order.canRefundRequest ? (
-                  <button
-                    type="button"
-                    disabled={submittingId === order.id}
-                    onClick={() => openRefundDialog(order)}
-                    className={[
-                      'rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors',
-                      isDark
-                        ? 'bg-red-500/15 text-red-300 hover:bg-red-500/25 disabled:opacity-50'
-                        : 'bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50',
-                    ].join(' ')}
-                  >
-                    {submittingId === order.id ? '...' : t.refundRequest}
-                  </button>
-                ) : order.status === 'REFUND_REQUESTED' ? (
-                  <span className={['text-[11px]', isDark ? 'text-violet-300' : 'text-violet-600'].join(' ')}>{t.requested}</span>
-                ) : null}
+                  {isSubscription && (
+                    <div className={['text-sm', isDark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
+                      {Math.round(order.amount).toLocaleString('vi-VN')} VND
+                    </div>
+                  )}
+                  <div className={['text-[11px]', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+                    {formatCreatedAt(order.createdAt, locale)}
+                  </div>
+                  {(order.status === 'PARTIALLY_REFUNDED' || order.status === 'REFUND_REQUESTED') && order.refundAmount != null && (
+                    <div className={['text-[11px] mt-0.5', isDark ? 'text-fuchsia-300' : 'text-fuchsia-600'].join(' ')}>
+                      {order.status === 'PARTIALLY_REFUNDED' ? t.partialRefunded : t.requested}: {formatVND(order.refundAmount)}
+                    </div>
+                  )}
+                </div>
+                <div className="shrink-0">
+                  {order.canRefundRequest ? (
+                    <button
+                      type="button"
+                      disabled={submittingId === order.id}
+                      onClick={() => openRefundDialog(order)}
+                      className={[
+                        'rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors',
+                        isDark
+                          ? 'bg-red-500/15 text-red-300 hover:bg-red-500/25 disabled:opacity-50'
+                          : 'bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50',
+                      ].join(' ')}
+                    >
+                      {submittingId === order.id ? '...' : t.refundRequest}
+                    </button>
+                  ) : order.status === 'REFUND_REQUESTED' ? (
+                    <span className={['text-[11px]', isDark ? 'text-violet-300' : 'text-violet-600'].join(' ')}>{t.requested}</span>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Refund Dialog */}

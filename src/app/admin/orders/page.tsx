@@ -264,7 +264,7 @@ function AdminContent() {
 
     try {
       if (order.orderType === 'subscription' && order.subscriptionGroupId) {
-        // 订阅订单：获取用户该分组的活跃订阅剩余天数
+        // Subscription order: get remaining days of user's active subscription in this group
         const subsRes = await fetch(
           `/api/admin/subscriptions?token=${token}&user_id=${order.userId}&group_id=${order.subscriptionGroupId}&status=active`,
         );
@@ -280,7 +280,7 @@ function AdminContent() {
           }
         }
       } else {
-        // 余额订单：获取用户余额
+        // Balance order: get user balance
         const userRes = await fetch(`/api/admin/user-balance?token=${token}&userId=${order.userId}`);
         if (userRes.ok) {
           const userData = await userRes.json();
@@ -288,7 +288,7 @@ function AdminContent() {
         }
       }
     } catch {
-      // 获取失败不阻塞
+      // Fetch failure does not block
     }
   };
 

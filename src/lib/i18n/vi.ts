@@ -9,6 +9,8 @@ const vi: Record<string, string> = {
   'home.orderHistoryDesc': 'Xem các giao dịch trước đây',
   'home.refund': 'Yêu cầu hoàn tiền',
   'home.refundDesc': 'Quản lý yêu cầu hoàn tiền',
+  'home.subscriptions': 'Gói đăng ký',
+  'home.subscriptionsDesc': 'Xem và mua gói đăng ký',
   'home.recentOrders': 'Giao dịch gần đây',
   'home.noOrders': 'Chưa có giao dịch nào',
   'home.viewAll': 'Xem tất cả',

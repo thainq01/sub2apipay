@@ -150,7 +150,7 @@ export default function RefundDialog({
             </div>
           </div>
 
-          {/* 扣除余额/订阅开关 */}
+          {/* Deduct balance/subscription toggle */}
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -164,7 +164,7 @@ export default function RefundDialog({
             </div>
           </label>
 
-          {/* 余额/订阅信息 */}
+          {/* Balance/subscription info */}
           {deductBalance && !isSub && userBalance != null && (
             <div className={['grid grid-cols-2 gap-3', dark ? 'text-slate-300' : 'text-gray-700'].join(' ')}>
               <div className={['rounded-lg p-3 text-sm', dark ? 'bg-slate-800' : 'bg-gray-50'].join(' ')}>
@@ -195,7 +195,7 @@ export default function RefundDialog({
             </div>
           )}
 
-          {/* 不足提示 */}
+          {/* Insufficient warning */}
           {deductBalance && balanceInsufficient && (
             <div
               className={[

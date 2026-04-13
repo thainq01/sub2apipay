@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
       paymentType: true,
       expiresAt: true,
       rechargeCode: true,
+      orderType: true,
     },
   });
 
@@ -53,9 +54,10 @@ export async function GET(request: NextRequest) {
   const accountName = (await getSystemConfig('SEPAY_ACCOUNT_NAME')) || env.SEPAY_ACCOUNT_NAME || '';
 
   const payAmount = Number(order.payAmount ?? order.amount);
+  const transferCode = order.rechargeCode || order.id;
   let qrCode: string | undefined;
   if (bankAccount && bankName) {
-    qrCode = `https://qr.sepay.vn/img?acc=${encodeURIComponent(bankAccount)}&bank=${encodeURIComponent(bankName)}&amount=${Math.round(payAmount)}&des=${encodeURIComponent(order.id)}`;
+    qrCode = `https://qr.sepay.vn/img?acc=${encodeURIComponent(bankAccount)}&bank=${encodeURIComponent(bankName)}&amount=${Math.round(payAmount)}&des=${encodeURIComponent(transferCode)}`;
   }
 
   const statusAccessToken = createOrderStatusAccessToken(order.id);
@@ -75,5 +77,6 @@ export async function GET(request: NextRequest) {
       accountName,
       transferCode: order.rechargeCode || order.id,
     } : null,
+    orderType: order.orderType || 'balance',
   });
 }

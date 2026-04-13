@@ -21,6 +21,7 @@ interface PaymentQRCodeProps {
   isIframe?: boolean;
   isMobile?: boolean;
   locale?: Locale;
+  orderType?: 'balance' | 'subscription';
   sepayBankInfo?: {
     bankName: string;
     accountNumber: string;
@@ -80,6 +81,8 @@ function BankTransferCard({
   t: Record<string, string>;
   qrCodeUrl?: string;
 }) {
+  const [qrLoaded, setQrLoaded] = useState(false);
+
   const rows = [
     { label: t.bankName, value: bankInfo.bankName, copyable: false },
     { label: t.accountNumber, value: bankInfo.accountNumber, copyable: true },
@@ -93,8 +96,18 @@ function BankTransferCard({
       {/* QR Code */}
       {qrCodeUrl && (
         <div className="flex justify-center">
-          <div className={['overflow-hidden rounded-xl border p-3', dark ? 'border-slate-700 bg-white' : 'border-gray-200 bg-white'].join(' ')}>
-            <img src={qrCodeUrl} alt="Bank Transfer QR" className="h-52 w-52 rounded" />
+          <div className={['relative overflow-hidden rounded-xl border p-3', dark ? 'border-slate-700 bg-white' : 'border-gray-200 bg-white'].join(' ')}>
+            {!qrLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white">
+                <div className="h-8 w-8 animate-spin rounded-full border-3 border-blue-500 border-t-transparent" />
+              </div>
+            )}
+            <img
+              src={qrCodeUrl}
+              alt="Bank Transfer QR"
+              className={['h-52 w-52 rounded transition-opacity duration-200', qrLoaded ? 'opacity-100' : 'opacity-0'].join(' ')}
+              onLoad={() => setQrLoaded(true)}
+            />
           </div>
         </div>
       )}
@@ -162,10 +175,11 @@ export default function PaymentQRCode({
   dark = false,
   isIframe = false,
   locale = 'vi',
+  orderType = 'balance',
   sepayBankInfo,
 }: PaymentQRCodeProps) {
   const displayAmount = payAmountProp ?? amount;
-  const hasFeeDiff = payAmountProp !== undefined && payAmountProp !== amount;
+  const hasFeeDiff = payAmountProp !== undefined && payAmountProp !== amount && orderType === 'balance';
   const [timeLeft, setTimeLeft] = useState('');
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(Infinity);
   const [expired, setExpired] = useState(false);

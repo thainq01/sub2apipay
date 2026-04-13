@@ -47,6 +47,12 @@ export async function GET(request: NextRequest) {
           refundRequestedAt: true,
           refundRequestReason: true,
           refundAmount: true,
+          plan: {
+            select: {
+              name: true,
+              groupId: true,
+            },
+          },
         },
       }),
       prisma.order.count({ where }),
@@ -89,6 +95,7 @@ export async function GET(request: NextRequest) {
           createdAt: item.createdAt,
           expiresAt: item.expiresAt,
           orderType: item.orderType,
+          subscriptionPlanName: item.plan?.name || null,
           canRefundRequest: item.orderType === 'balance' && item.status === 'COMPLETED' && instanceRefundEnabled,
           refundRequestedAt: item.refundRequestedAt,
           refundRequestReason: item.refundRequestReason,

@@ -59,6 +59,7 @@ export interface CreateOrderResult {
   clientSecret?: string | null;
   expiresAt: Date;
   statusAccessToken: string;
+  orderType: 'balance' | 'subscription';
   // SePay bank transfer info
   sepayBankInfo?: {
     bankName: string;
@@ -505,6 +506,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       expiresAt,
       statusAccessToken,
       sepayBankInfo,
+      orderType: input.orderType || 'balance',
     };
   } catch (error) {
     await prisma.order.delete({ where: { id: order.id } });
