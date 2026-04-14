@@ -363,6 +363,7 @@ function PayContent() {
   const buildHomeUrl = () => {
     const params = new URLSearchParams();
     if (token) params.set('token', token);
+    if (themeParam) params.set('theme', themeParam);
     applyLocaleToSearchParams(params, locale);
     return `/home?${params.toString()}`;
   };
@@ -557,6 +558,7 @@ function PayContent() {
             buildPayUrl={(order) => {
               const params = new URLSearchParams();
               if (token) params.set('token', token);
+              if (themeParam) params.set('theme', themeParam);
               params.set('resume_order', order.id);
               // Route subscription orders to subscriptions page for inline QR display
               if (order.orderType === 'subscription') {

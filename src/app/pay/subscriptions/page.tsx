@@ -194,6 +194,7 @@ function SubscriptionsContent() {
   const buildHomeUrl = () => {
     const params = new URLSearchParams();
     params.set('token', token);
+    if (themeParam) params.set('theme', themeParam);
     if (locale !== 'vi') params.set('lang', locale);
     return `/home?${params.toString()}`;
   };

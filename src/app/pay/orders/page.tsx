@@ -198,6 +198,7 @@ function OrdersContent() {
   const buildHomeUrl = () => {
     const params = new URLSearchParams();
     if (token) params.set('token', token);
+    if (themeParam) params.set('theme', themeParam);
     applyLocaleToSearchParams(params, locale);
     return `/home?${params.toString()}`;
   };

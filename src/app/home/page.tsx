@@ -66,6 +66,7 @@ function HomeContent() {
     const params = new URLSearchParams();
     if (token) params.set('token', token);
     if (locale === 'en') params.set('lang', 'en');
+    if (theme) params.set('theme', theme);
     return `${path}?${params.toString()}`;
   };
 
@@ -200,6 +201,7 @@ function HomeContent() {
         <PendingOrderBanner orders={orders} dark={isDark} locale={locale} buildPayUrl={(order) => {
           const params = new URLSearchParams();
           if (token) params.set('token', token);
+          if (theme) params.set('theme', theme);
           if (locale === 'en') params.set('lang', 'en');
           params.set('resume_order', order.id);
           // Route subscription orders to subscriptions page for inline QR display
