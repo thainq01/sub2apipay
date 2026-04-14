@@ -20,10 +20,8 @@ export default function StoreHydrator({ children }: { children: ReactNode }) {
     setHydrated(true);
   }, [searchParams]);
 
-  // On first mount, don't render children until stores are hydrated.
-  // The inline <script> already set data-theme on <html>, so the background is correct.
-  // This prevents any text/component flicker from wrong locale or theme.
-  if (!hydrated) return null;
-
+  // Always render children - the inline <script> already set data-theme on <html>,
+  // so CSS will show correct colors. Returning null causes a blank flash.
+  // The brief moment before hydration completes is acceptable since colors match.
   return <>{children}</>;
 }

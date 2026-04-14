@@ -75,6 +75,10 @@ body {
 body.embedded-iframe .pay-layout {
   background: transparent !important;
 }
+/* Dark embedded - match parent dashboard bg */
+[data-theme='dark'] body.embedded-iframe .pay-layout {
+  background: #0D1427 !important;
+}
 body.embedded-iframe .pay-layout .pay-layout-blur-1,
 body.embedded-iframe .pay-layout .pay-layout-blur-2 {
   display: none !important;

@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-        <style dangerouslySetInnerHTML={{ __html: `body.embedded-iframe{background:transparent!important}[data-theme='dark'] body.embedded-iframe{background:#0D1427!important}` }} />
+        <style dangerouslySetInnerHTML={{ __html: `body.embedded-iframe,body.embedded-iframe .pay-layout{background:transparent!important}[data-theme='dark'] body.embedded-iframe,[data-theme='dark'] body.embedded-iframe .pay-layout{background:#0D1427!important}` }} />
       </head>
       <body className="antialiased">
         <Suspense fallback={<div className="pay-layout h-screen w-full" />}>
