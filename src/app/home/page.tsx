@@ -97,7 +97,7 @@ function HomeContent() {
         </svg>
       ),
       color: isDark ? 'from-blue-600 to-blue-700' : 'from-blue-500 to-blue-600',
-      embeddedColor: 'from-blue-600/70 to-blue-700/70',
+      embeddedColor: isDark ? 'from-blue-600/80 to-blue-700/80' : 'from-blue-500/90 to-blue-600/90',
     },
     {
       title: t('home.subscriptions'),
@@ -109,7 +109,7 @@ function HomeContent() {
         </svg>
       ),
       color: isDark ? 'from-amber-600 to-amber-700' : 'from-amber-500 to-amber-600',
-      embeddedColor: 'from-amber-600/70 to-amber-700/70',
+      embeddedColor: isDark ? 'from-amber-600/80 to-amber-700/80' : 'from-amber-500/90 to-amber-600/90',
     },
     {
       title: t('home.orderHistory'),
@@ -124,7 +124,7 @@ function HomeContent() {
         </svg>
       ),
       color: isDark ? 'from-emerald-600 to-emerald-700' : 'from-emerald-500 to-emerald-600',
-      embeddedColor: 'from-emerald-600/70 to-emerald-700/70',
+      embeddedColor: isDark ? 'from-emerald-600/80 to-emerald-700/80' : 'from-emerald-500/90 to-emerald-600/90',
     },
     {
       title: t('home.refund'),
@@ -137,7 +137,7 @@ function HomeContent() {
         </svg>
       ),
       color: isDark ? 'from-violet-600 to-violet-700' : 'from-violet-500 to-violet-600',
-      embeddedColor: 'from-violet-600/70 to-violet-700/70',
+      embeddedColor: isDark ? 'from-violet-600/80 to-violet-700/80' : 'from-violet-500/90 to-violet-600/90',
     },
   ];
 
@@ -180,8 +180,8 @@ function HomeContent() {
         <div className={[
           'rounded-2xl p-5 shadow-sm mb-6',
           isIframe
-            ? (isDark ? 'bg-slate-900/60 ring-1 ring-slate-700/50 backdrop-blur-sm' : 'bg-white/60 ring-1 ring-slate-200/50 backdrop-blur-sm')
-            : (isDark ? 'bg-slate-900 ring-1 ring-slate-800' : 'bg-white ring-1 ring-slate-100'),
+            ? (isDark ? 'bg-slate-900/60 ring-1 ring-slate-700/50 backdrop-blur-sm' : 'bg-white/80 ring-1 ring-slate-300/60 backdrop-blur-sm shadow-md')
+            : (isDark ? 'bg-slate-900 ring-1 ring-slate-800' : 'bg-white ring-1 ring-slate-200 shadow-md'),
         ].join(' ')}>
           <div className="flex items-center gap-3">
             <div className={[
@@ -194,7 +194,7 @@ function HomeContent() {
               <div className={['text-sm font-medium', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
                 {t('home.welcome')}, {user.username || user.email}
               </div>
-              <div className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+              <div className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-500'].join(' ')}>
                 {t('home.balance')}:{' '}
                 <span className={['font-bold', isDark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
                   {user.balance?.toFixed(2) || '0.00'} ☕
@@ -260,30 +260,30 @@ function HomeContent() {
             <div className={[
               'rounded-2xl py-10 text-center',
               isIframe
-                ? (isDark ? 'bg-slate-900/60 ring-1 ring-slate-700/50 backdrop-blur-sm' : 'bg-white/60 ring-1 ring-slate-200/50 backdrop-blur-sm')
-                : (isDark ? 'bg-slate-900 ring-1 ring-slate-800' : 'bg-white ring-1 ring-slate-100'),
+                ? (isDark ? 'bg-slate-900/60 ring-1 ring-slate-700/50 backdrop-blur-sm' : 'bg-white/80 ring-1 ring-slate-300/60 backdrop-blur-sm shadow-md')
+                : (isDark ? 'bg-slate-900 ring-1 ring-slate-800' : 'bg-white ring-1 ring-slate-200 shadow-md'),
             ].join(' ')}>
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-xl dark:bg-slate-800">
                 📋
               </div>
-              <p className={['text-sm', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>{t('home.noOrders')}</p>
+              <p className={['text-sm', isDark ? 'text-slate-500' : 'text-slate-500'].join(' ')}>{t('home.noOrders')}</p>
             </div>
           ) : (
             <div className={[
               'divide-y overflow-hidden rounded-2xl shadow-sm',
               isIframe
-                ? (isDark ? 'divide-slate-700/50 bg-slate-900/60 ring-1 ring-slate-700/50 backdrop-blur-sm' : 'divide-slate-200/50 bg-white/60 ring-1 ring-slate-200/50 backdrop-blur-sm')
-                : (isDark ? 'divide-slate-800 bg-slate-900 ring-1 ring-slate-800' : 'divide-slate-100 bg-white ring-1 ring-slate-100'),
+                ? (isDark ? 'divide-slate-700/50 bg-slate-900/60 ring-1 ring-slate-700/50 backdrop-blur-sm' : 'divide-slate-200 bg-white/80 ring-1 ring-slate-300/60 backdrop-blur-sm shadow-md')
+                : (isDark ? 'divide-slate-800 bg-slate-900 ring-1 ring-slate-800' : 'divide-slate-200 bg-white ring-1 ring-slate-200 shadow-md'),
             ].join(' ')}>
               {orders.map((order) => {
                 const isSubscription = order.orderType === 'subscription';
                 return (
-                  <div key={order.id} className={['flex items-center justify-between px-4 py-3', isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'].join(' ')}>
+                  <div key={order.id} className={['flex items-center justify-between px-4 py-3', isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-100/80'].join(' ')}>
                     <div>
-                      <div className={['text-xs font-mono', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+                      <div className={['text-xs font-mono', isDark ? 'text-slate-500' : 'text-slate-500'].join(' ')}>
                         {order.id}
                       </div>
-                      <div className={['text-xs', isDark ? 'text-slate-600' : 'text-slate-400'].join(' ')}>
+                      <div className={['text-xs', isDark ? 'text-slate-600' : 'text-slate-500'].join(' ')}>
                         {formatCreatedAt(order.createdAt, locale)}
                       </div>
                     </div>
