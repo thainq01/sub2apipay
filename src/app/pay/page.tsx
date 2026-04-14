@@ -605,47 +605,10 @@ function PayContent() {
                     <p className={['text-sm mb-4', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
                       {pickLocaleText(
                         locale,
-                        'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Giá tính bằng USD',
-                        'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Priced in USD',
+                        'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Giá tính bằng VND',
+                        'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Priced in VND',
                       )}
                     </p>
-                    <div className="flex flex-wrap gap-4 text-sm">
-                      <div
-                        className={['flex items-center gap-2', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}
-                      >
-                        <svg
-                          className="h-4 w-4 text-green-500"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                          <polyline points="17 6 23 6 23 12" />
-                        </svg>
-                        <span>{pickLocaleText(locale, 'Tỷ lệ càng thấp càng tốt', 'Lower rate = better value')}</span>
-                      </div>
-                      <div
-                        className={['flex items-center gap-2', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}
-                      >
-                        <svg
-                          className="h-4 w-4 text-blue-500"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        </svg>
-                        <span>
-                          {pickLocaleText(
-                            locale,
-                            '0.15 tỷ lệ = 1 USD ≈ 23,500 VND hạn mức',
-                            '0.15 rate = 1 USD ≈ 23,500 VND quota',
-                          )}
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
