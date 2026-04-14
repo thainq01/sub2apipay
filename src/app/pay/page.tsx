@@ -490,7 +490,6 @@ function PayContent() {
     <PayPageLayout
       isDark={isDark}
       isEmbedded={isEmbedded}
-      isIframe={isIframeContext}
       title={pageTitle}
       subtitle={pageSubtitle}
       backHref={buildHomeUrl()}

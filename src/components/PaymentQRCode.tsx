@@ -50,16 +50,36 @@ function CopyButton({ text, dark }: { text: string; label?: string; dark: boolea
       className={[
         'ml-2 inline-flex shrink-0 items-center justify-center rounded p-1 transition-colors',
         copied
-          ? dark ? 'bg-green-800 text-green-200' : 'bg-green-100 text-green-600'
-          : dark ? 'text-slate-400 hover:bg-slate-700 hover:text-slate-200' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600',
+          ? dark
+            ? 'bg-green-800 text-green-200'
+            : 'bg-green-100 text-green-600'
+          : dark
+            ? 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+            : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600',
       ].join(' ')}
     >
       {copied ? (
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          className="h-3.5 w-3.5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <polyline points="20 6 9 17 4 12" />
         </svg>
       ) : (
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          className="h-3.5 w-3.5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
           <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
         </svg>
@@ -87,7 +107,12 @@ function BankTransferCard({
     { label: t.bankName, value: bankInfo.bankName, copyable: false },
     { label: t.accountNumber, value: bankInfo.accountNumber, copyable: true },
     { label: t.accountName, value: bankInfo.accountName, copyable: true },
-    { label: t.transferAmount, value: `${displayAmount.toLocaleString('vi-VN')} VND`, copyable: true, copyText: String(Math.round(displayAmount)) },
+    {
+      label: t.transferAmount,
+      value: `${displayAmount.toLocaleString('vi-VN')} VND`,
+      copyable: true,
+      copyText: String(Math.round(displayAmount)),
+    },
     { label: t.transferCode, value: bankInfo.transferCode, copyable: true, highlight: true },
   ];
 
@@ -96,7 +121,12 @@ function BankTransferCard({
       {/* QR Code */}
       {qrCodeUrl && (
         <div className="flex justify-center">
-          <div className={['relative overflow-hidden rounded-xl border p-3', dark ? 'border-slate-700 bg-white' : 'border-gray-200 bg-white'].join(' ')}>
+          <div
+            className={[
+              'relative overflow-hidden rounded-xl border p-3',
+              dark ? 'border-slate-700 bg-white' : 'border-gray-200 bg-white',
+            ].join(' ')}
+          >
             {!qrLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-white">
                 <div className="h-8 w-8 animate-spin rounded-full border-3 border-blue-500 border-t-transparent" />
@@ -105,7 +135,10 @@ function BankTransferCard({
             <img
               src={qrCodeUrl}
               alt="Bank Transfer QR"
-              className={['h-52 w-52 rounded transition-opacity duration-200', qrLoaded ? 'opacity-100' : 'opacity-0'].join(' ')}
+              className={[
+                'h-52 w-52 rounded transition-opacity duration-200',
+                qrLoaded ? 'opacity-100' : 'opacity-0',
+              ].join(' ')}
               onLoad={() => setQrLoaded(true)}
             />
           </div>
@@ -113,10 +146,23 @@ function BankTransferCard({
       )}
 
       {/* Bank info */}
-      <div className={['rounded-xl border p-4 space-y-3', dark ? 'border-blue-800 bg-blue-950/50' : 'border-blue-200 bg-blue-50'].join(' ')}>
+      <div
+        className={[
+          'rounded-xl border p-4 space-y-3',
+          dark ? 'border-blue-800 bg-blue-950/50' : 'border-blue-200 bg-blue-50',
+        ].join(' ')}
+      >
         <div className="flex items-center gap-2 mb-3">
           <div className="rounded-full bg-blue-600 p-1.5">
-            <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="h-4 w-4 text-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <rect x="1" y="6" width="22" height="15" rx="2" />
               <path d="M1 10h22" />
               <path d="M12 2L2 6h20L12 2z" />
@@ -136,8 +182,12 @@ function BankTransferCard({
                 className={[
                   'text-sm font-mono truncate',
                   row.highlight
-                    ? dark ? 'font-bold text-yellow-300' : 'font-bold text-blue-700'
-                    : dark ? 'text-slate-200' : 'text-gray-900',
+                    ? dark
+                      ? 'font-bold text-yellow-300'
+                      : 'font-bold text-blue-700'
+                    : dark
+                      ? 'text-slate-200'
+                      : 'text-gray-900',
                 ].join(' ')}
               >
                 {row.value}
@@ -148,15 +198,11 @@ function BankTransferCard({
         ))}
       </div>
 
-      <p className={['text-center text-xs', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
-        {t.transferHint}
-      </p>
+      <p className={['text-center text-xs', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>{t.transferHint}</p>
 
       <div className="flex items-center justify-center gap-2">
         <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-        <span className={['text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
-          {t.waitingTransfer}
-        </span>
+        <span className={['text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>{t.waitingTransfer}</span>
       </div>
     </div>
   );
@@ -193,9 +239,10 @@ export default function PaymentQRCode({
     back: lang === 'vi' ? 'Quay lại' : 'Back',
     cancelOrder: lang === 'vi' ? 'Hủy đơn hàng' : 'Cancel Order',
     paid: lang === 'vi' ? 'Đơn hàng đã thanh toán' : 'Order Paid',
-    paidCancelBlocked: lang === 'vi'
-      ? 'Đơn hàng này đã thanh toán xong, không thể hủy. Tiền nạp sẽ được cập nhật tự động.'
-      : 'This order has already been paid and cannot be cancelled. The recharge will be credited automatically.',
+    paidCancelBlocked:
+      lang === 'vi'
+        ? 'Đơn hàng này đã thanh toán xong, không thể hủy. Tiền nạp sẽ được cập nhật tự động.'
+        : 'This order has already been paid and cannot be cancelled. The recharge will be credited automatically.',
     backToRecharge: lang === 'vi' ? 'Quay lại nạp tiền' : 'Back to Recharge',
     credited: lang === 'vi' ? 'Bạn sẽ nhận được' : 'You will receive',
     bankTransferTitle: lang === 'vi' ? 'Thông tin chuyển khoản' : 'Bank Transfer Info',
@@ -206,9 +253,10 @@ export default function PaymentQRCode({
     transferCode: lang === 'vi' ? 'Nội dung CK' : 'Memo / Note',
     copy: lang === 'vi' ? 'Sao chép' : 'Copy',
     waitingTransfer: lang === 'vi' ? 'Đang chờ chuyển khoản...' : 'Waiting for bank transfer...',
-    transferHint: lang === 'vi'
-      ? 'Vui lòng chuyển khoản chính xác số tiền và nội dung bên trên.'
-      : 'Please transfer the exact amount with the memo code above.',
+    transferHint:
+      lang === 'vi'
+        ? 'Vui lòng chuyển khoản chính xác số tiền và nội dung bên trên.'
+        : 'Please transfer the exact amount with the memo code above.',
   };
 
   useEffect(() => {
@@ -302,7 +350,10 @@ export default function PaymentQRCode({
         </p>
         <button
           onClick={onBack}
-          className={['mt-4 w-full rounded-lg py-3 font-medium text-white', dark ? 'bg-blue-600/90 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'].join(' ')}
+          className={[
+            'mt-4 w-full rounded-lg py-3 font-medium text-white',
+            dark ? 'bg-blue-600/90 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700',
+          ].join(' ')}
         >
           {t.backToRecharge}
         </button>
@@ -342,10 +393,13 @@ export default function PaymentQRCode({
 
       {/* Actions */}
       <div className="w-full">
-        {!isIframe && !expired && token && (
+        {!expired && token && (
           <button
             onClick={handleCancel}
-            className={['w-full rounded-lg border py-2.5 text-sm font-medium', dark ? 'border-red-700 text-red-400 hover:bg-red-900/30' : 'border-red-300 text-red-600 hover:bg-red-50'].join(' ')}
+            className={[
+              'w-full rounded-lg border py-2.5 text-sm font-medium',
+              dark ? 'border-red-700 text-red-400 hover:bg-red-900/30' : 'border-red-300 text-red-600 hover:bg-red-50',
+            ].join(' ')}
           >
             {t.cancelOrder}
           </button>
