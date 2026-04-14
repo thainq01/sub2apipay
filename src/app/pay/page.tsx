@@ -135,7 +135,6 @@ function PayContent() {
     );
   };
 
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
     setIsIframeContext(window.self !== window.top);
@@ -267,10 +266,15 @@ function PayContent() {
 
     const resumeOrder = async () => {
       try {
-        const res = await fetch(`/api/orders/resume?token=${encodeURIComponent(token)}&order_id=${encodeURIComponent(resumeOrderId)}`);
+        const res = await fetch(
+          `/api/orders/resume?token=${encodeURIComponent(token)}&order_id=${encodeURIComponent(resumeOrderId)}`,
+        );
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          setError(errData.error || pickLocaleText(locale, 'Không thể lấy thông tin đơn hàng', 'Failed to retrieve order information'));
+          setError(
+            errData.error ||
+              pickLocaleText(locale, 'Không thể lấy thông tin đơn hàng', 'Failed to retrieve order information'),
+          );
           return;
         }
 
@@ -326,7 +330,10 @@ function PayContent() {
 
   if (userNotFound) {
     return (
-      <div suppressHydrationWarning className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
+      <div
+        suppressHydrationWarning
+        className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}
+      >
         <div className="text-center text-red-500">
           <p className="text-lg font-medium">{pickLocaleText(locale, 'Người dùng không tồn tại', 'User not found')}</p>
           <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
@@ -366,7 +373,6 @@ function PayContent() {
 
   // ── Balance recharge submission ──
   const handleSubmit = async (amount: number, paymentType: string) => {
-
     setLoading(true);
     setError('');
 
@@ -544,16 +550,21 @@ function PayContent() {
       {step === 'form' && (
         <>
           {/* Pending order notification */}
-          <PendingOrderBanner orders={myOrders} dark={isDark} locale={locale} buildPayUrl={(order) => {
-            const params = new URLSearchParams();
-            if (token) params.set('token', token);
-            params.set('resume_order', order.id);
-            // Route subscription orders to subscriptions page for inline QR display
-            if (order.orderType === 'subscription') {
-              return `/pay/subscriptions?${params.toString()}`;
-            }
-            return `/pay?${params.toString()}`;
-          }} />
+          <PendingOrderBanner
+            orders={myOrders}
+            dark={isDark}
+            locale={locale}
+            buildPayUrl={(order) => {
+              const params = new URLSearchParams();
+              if (token) params.set('token', token);
+              params.set('resume_order', order.id);
+              // Route subscription orders to subscriptions page for inline QR display
+              if (order.orderType === 'subscription') {
+                return `/pay/subscriptions?${params.toString()}`;
+              }
+              return `/pay?${params.toString()}`;
+            }}
+          />
 
           {/* Loading */}
           {!userLoaded && (
@@ -595,18 +606,17 @@ function PayContent() {
                   </div>
                   <div className="flex-1">
                     <h3
-                      className={[
-                        'text-lg font-semibold mb-2',
-                        isDark ? 'text-emerald-400' : 'text-emerald-700',
-                      ].join(' ')}
+                      className={['text-lg font-semibold mb-2', isDark ? 'text-emerald-400' : 'text-emerald-700'].join(
+                        ' ',
+                      )}
                     >
                       {pickLocaleText(locale, 'Sử dụng bao nhiêu, trả tiền bấy nhiêu !', 'Pay-as-you-go')}
                     </h3>
                     <p className={['text-sm mb-4', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
                       {pickLocaleText(
                         locale,
-                        'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Giá tính bằng VND',
-                        'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Priced in VND',
+                        'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Credit tính bằng ☕',
+                        'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Credit in ☕',
                       )}
                     </p>
                   </div>
@@ -702,7 +712,10 @@ function PayPageFallback() {
   const locale = resolveLocale(searchParams.get('lang'));
   const isDark = searchParams.get('theme') === 'dark';
   return (
-    <div suppressHydrationWarning className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
+    <div
+      suppressHydrationWarning
+      className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}
+    >
       <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>
         {pickLocaleText(locale, 'Đang tải...', 'Loading...')}
       </div>

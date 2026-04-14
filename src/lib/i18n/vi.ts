@@ -26,7 +26,7 @@ const vi: Record<string, string> = {
   'pay.allEntriesClosed': 'Nạp tiền / Đăng ký không khả dụng',
   'pay.allEntriesClosedDesc': 'Vui lòng liên hệ quản trị viên nếu có câu hỏi',
   'pay.payAsYouGo': 'Chế độ trả tiền theo cách sử dụng',
-  'pay.payAsYouGoDesc': 'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Giá tính bằng VND',
+  'pay.payAsYouGoDesc': 'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Giá tính bằng ☕',
   'pay.back': 'Quay lại',
   'pay.viewAllPlans': 'Xem tất cả gói',
   'pay.mySubscriptions': 'Đăng ký của tôi',

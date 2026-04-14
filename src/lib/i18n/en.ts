@@ -26,7 +26,7 @@ const en: Record<string, string> = {
   'pay.allEntriesClosed': 'Recharge / Subscription entry is not available',
   'pay.allEntriesClosedDesc': 'Please contact the administrator if you have questions',
   'pay.payAsYouGo': 'Pay-as-you-go',
-  'pay.payAsYouGoDesc': 'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Priced in VND',
+  'pay.payAsYouGoDesc': 'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Priced in ☕',
   'pay.back': 'Back',
   'pay.viewAllPlans': 'View All Plans',
   'pay.mySubscriptions': 'My Subscriptions',
