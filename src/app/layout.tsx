@@ -21,7 +21,7 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-        <style dangerouslySetInnerHTML={{ __html: `body.embedded-iframe{background:transparent!important}` }} />
+        <style dangerouslySetInnerHTML={{ __html: `body.embedded-iframe{background:transparent!important}[data-theme='dark'] body.embedded-iframe{background:transparent!important}` }} />
       </head>
       <body className="antialiased">
         <Suspense fallback={<div className="pay-layout h-screen w-full" />}>
