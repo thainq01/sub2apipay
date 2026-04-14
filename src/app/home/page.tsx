@@ -225,8 +225,7 @@ function HomeContent() {
       </div>
 
       {/* Recent orders */}
-      {!isIframe && (
-        <div>
+      <div>
           <div className="mb-3 flex items-center justify-between">
             <h2 className={['text-sm font-semibold', isDark ? 'text-slate-300' : 'text-slate-700'].join(' ')}>
               {t('home.recentOrders')}
@@ -283,7 +282,6 @@ function HomeContent() {
             </div>
           )}
         </div>
-      )}
     </PayPageLayout>
   );
 }

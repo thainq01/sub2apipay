@@ -69,7 +69,7 @@ function PayContent() {
 
   const [isIframeContext, setIsIframeContext] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [step, setStep] = useState<'form' | 'paying' | 'result'>('form');
+  const [step, setStep] = useState<'form' | 'paying' | 'result'>(resumeOrderId ? 'paying' : 'form');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [subscriptionError, setSubscriptionError] = useState('');
@@ -464,12 +464,28 @@ function PayContent() {
   };
 
   const handleStatusChange = (order: PublicOrderStatusSnapshot) => {
+    // For cancelled/expired orders, go back to form (or home if resumed)
+    if (order.status === 'CANCELLED' || order.status === 'EXPIRED') {
+      if (resumeOrderId) {
+        window.location.href = buildHomeUrl();
+        return;
+      }
+      setStep('form');
+      setOrderResult(null);
+      setFinalOrderState(null);
+      return;
+    }
     setFinalOrderState(order);
     setStep('result');
     if (isMobile) setActiveMobileTab('orders');
   };
 
   const handleBack = () => {
+    // If resumed from home, go back to home instead of showing form
+    if (resumeOrderId) {
+      window.location.href = buildHomeUrl();
+      return;
+    }
     setStep('form');
     setOrderResult(null);
     setFinalOrderState(null);

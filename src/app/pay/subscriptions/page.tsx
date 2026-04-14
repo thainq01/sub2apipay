@@ -60,7 +60,7 @@ function SubscriptionsContent() {
   const [selectedPlan, setSelectedPlan] = useState<PlanInfo | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
-  const [paymentStep, setPaymentStep] = useState<PaymentStep>('selecting');
+  const [paymentStep, setPaymentStep] = useState<PaymentStep>(resumeOrderId ? 'paying' : 'selecting');
 
   const t = buildText(locale);
 
@@ -199,6 +199,11 @@ function SubscriptionsContent() {
   };
 
   const handlePaymentBack = () => {
+    // If resumed from home, go back to home instead of showing subscription list
+    if (resumeOrderId) {
+      window.location.href = buildHomeUrl();
+      return;
+    }
     setPaymentStep('selecting');
     setOrderResult(null);
   };
@@ -212,8 +217,17 @@ function SubscriptionsContent() {
         setSelectedPlan(null);
         setOrderResult(null);
         setPaymentStep('selecting');
+        // If resumed from home, redirect to home after success
+        if (resumeOrderId) {
+          window.location.href = buildHomeUrl();
+        }
       }, 2000);
     } else if (status.status === 'CANCELLED' || status.status === 'EXPIRED') {
+      // If resumed from home, go back to home
+      if (resumeOrderId) {
+        window.location.href = buildHomeUrl();
+        return;
+      }
       setPaymentStep('selecting');
       setOrderResult(null);
     }
