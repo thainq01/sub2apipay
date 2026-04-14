@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 // Theme script that runs before paint - checks URL param first (for iframe), then localStorage
-const THEME_SCRIPT = `(function(){try{var u=new URLSearchParams(location.search);var t=u.get('theme');if(!t){t=localStorage.getItem('theme')}if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;if(u.get('ui_mode')==='embedded'||window.self!==window.top){document.body.style.background='transparent'}}catch(e){}})()`;
+const THEME_SCRIPT = `(function(){try{var u=new URLSearchParams(location.search);var t=u.get('theme');if(!t){t=localStorage.getItem('theme')}if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;if(u.get('ui_mode')==='embedded'||window.self!==window.top){document.body.classList.add('embedded-iframe');document.body.style.background='transparent'}}catch(e){}})()`;
 
 export default function RootLayout({
   children,
@@ -21,6 +21,7 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <style dangerouslySetInnerHTML={{ __html: `body.embedded-iframe{background:transparent!important}` }} />
       </head>
       <body className="antialiased">
         <Suspense fallback={<div className="pay-layout h-screen w-full" />}>

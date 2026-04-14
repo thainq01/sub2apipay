@@ -94,7 +94,7 @@ body {
 
 /* Body transparent when embedded */
 body:has(.pay-layout.embedded) {
-  background: transparent;
+  background: transparent !important;
 }
 
 /* Hide scrollbar in embedded mode */
@@ -111,11 +111,11 @@ body:has(.pay-layout.embedded) {
   scrollbar-width: none;
 }
 
-/* Embedded mode: make nested content transparent */
-.pay-layout.embedded [class*="bg-slate-800"],
-.pay-layout.embedded [class*="bg-slate-900"],
-.pay-layout.embedded [class*="bg-slate-50"],
-.pay-layout.embedded [class*="bg-white"] {
+/* Embedded mode: make nested content transparent (exclude dropdowns/modals with z-50) */
+.pay-layout.embedded [class*="bg-slate-800"]:not(.z-50):not([class*="z-50"] *),
+.pay-layout.embedded [class*="bg-slate-900"]:not(.z-50):not([class*="z-50"] *),
+.pay-layout.embedded [class*="bg-slate-50"]:not(.z-50):not([class*="z-50"] *),
+.pay-layout.embedded [class*="bg-white"]:not(.z-50):not([class*="z-50"] *) {
   background: transparent !important;
 }
 
