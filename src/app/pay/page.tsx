@@ -98,7 +98,7 @@ function PayContent() {
   const autoSubmitTriggered = useRef(false);
 
   const hasToken = token.length > 0;
-  const isEmbedded = uiMode === 'embedded' && isIframeContext;
+  const isEmbedded = uiMode === 'embedded' || isIframeContext;
   const helpImageUrl = (config.helpImageUrl || '').trim();
   const helpText = (config.helpText || '').trim();
   const hasHelpContent = Boolean(helpImageUrl || helpText);

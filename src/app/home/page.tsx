@@ -67,6 +67,7 @@ function HomeContent() {
     if (token) params.set('token', token);
     if (locale === 'en') params.set('lang', 'en');
     if (theme) params.set('theme', theme);
+    if (isIframe) params.set('ui_mode', 'embedded');
     return `${path}?${params.toString()}`;
   };
 
@@ -167,6 +168,13 @@ function HomeContent() {
         </div>
       }
     >
+      {/* Language selector for iframe mode */}
+      {isIframe && (
+        <div className="flex justify-end mb-4">
+          <LanguageSelector />
+        </div>
+      )}
+
       {/* User info card */}
       {user && (
         <div className={[
@@ -204,6 +212,7 @@ function HomeContent() {
           if (token) params.set('token', token);
           if (theme) params.set('theme', theme);
           if (locale === 'en') params.set('lang', 'en');
+          if (isIframe) params.set('ui_mode', 'embedded');
           params.set('resume_order', order.id);
           // Route subscription orders to subscriptions page for inline QR display
           if (order.orderType === 'subscription') {

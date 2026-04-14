@@ -48,9 +48,14 @@ function SubscriptionsContent() {
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const locale = resolveLocale(searchParams.get('lang'));
 
+  const [isIframeContext, setIsIframeContext] = useState(true);
+
   useEffect(() => {
     hydrateTheme(themeParam);
+    setIsIframeContext(typeof window !== 'undefined' && window.self !== window.top);
   }, [themeParam]);
+
+  const isEmbedded = uiMode === 'embedded' || isIframeContext;
 
   const [plans, setPlans] = useState<PlanInfo[]>([]);
   const [activeSubs, setActiveSubs] = useState<ActiveSubscription[]>([]);
@@ -247,7 +252,7 @@ function SubscriptionsContent() {
   return (
     <PayPageLayout
       isDark={isDark}
-      isEmbedded={uiMode === 'embedded'}
+      isEmbedded={isEmbedded}
       title={t.title}
       subtitle={t.subtitle}
       backHref={buildHomeUrl()}

@@ -69,7 +69,7 @@ function OrdersContent() {
   const [pageSize, setPageSize] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
 
-  const isEmbedded = uiMode === 'embedded' && isIframeContext;
+  const isEmbedded = uiMode === 'embedded' || isIframeContext;
   const hasToken = token.length > 0;
 
   useEffect(() => {
