@@ -144,6 +144,7 @@ function HomeContent() {
     <PayPageLayout
       isDark={isDark}
       isEmbedded={isIframe}
+      isIframe={isIframe}
       title={t('home.title')}
       subtitle={t('home.welcome')}
       actions={

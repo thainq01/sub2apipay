@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   description: `${PRODUCT_NAME} balance recharge platform`,
 };
 
-const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}})()`;
+// Theme script that runs before paint - checks URL param first (for iframe), then localStorage
+const THEME_SCRIPT = `(function(){try{var u=new URLSearchParams(location.search);var t=u.get('theme');if(!t){t=localStorage.getItem('theme')}if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;if(u.get('ui_mode')==='embedded'||window.self!==window.top){document.body.style.background='transparent'}}catch(e){}})()`;
 
 export default function RootLayout({
   children,
