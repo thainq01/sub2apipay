@@ -191,11 +191,15 @@ function HomeContent() {
 
       {/* Pending order notification */}
       <div className="mb-6">
-        <PendingOrderBanner orders={orders} dark={isDark} locale={locale} buildPayUrl={(orderId) => {
+        <PendingOrderBanner orders={orders} dark={isDark} locale={locale} buildPayUrl={(order) => {
           const params = new URLSearchParams();
           if (token) params.set('token', token);
           if (locale === 'en') params.set('lang', 'en');
-          params.set('resume_order', orderId);
+          params.set('resume_order', order.id);
+          // Route subscription orders to subscriptions page for inline QR display
+          if (order.orderType === 'subscription') {
+            return `/pay/subscriptions?${params.toString()}`;
+          }
           return `/pay?${params.toString()}`;
         }} />
       </div>

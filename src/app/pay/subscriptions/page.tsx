@@ -6,7 +6,26 @@ import { useThemeStore, hydrateTheme } from '@/stores/theme';
 import PayPageLayout from '@/components/PayPageLayout';
 import SubscriptionPlanCard, { type PlanInfo } from '@/components/SubscriptionPlanCard';
 import SubscriptionConfirm from '@/components/SubscriptionConfirm';
+import PaymentQRCode from '@/components/PaymentQRCode';
 import { resolveLocale, pickLocaleText, type Locale } from '@/lib/locale';
+import type { PublicOrderStatusSnapshot } from '@/lib/order/status';
+
+type PaymentStep = 'selecting' | 'paying' | 'success';
+
+interface OrderResult {
+  orderId: string;
+  amount: number;
+  payAmount?: number;
+  expiresAt: string;
+  qrCode?: string;
+  statusAccessToken?: string;
+  sepayBankInfo?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    transferCode: string;
+  } | null;
+}
 import { PlatformBadge } from '@/lib/platform-style';
 
 interface ActiveSubscription {
@@ -22,6 +41,7 @@ interface ActiveSubscription {
 function SubscriptionsContent() {
   const searchParams = useSearchParams();
   const token = (searchParams.get('token') || '').trim();
+  const resumeOrderId = searchParams.get('resume_order');
   const themeParam = searchParams.get('theme');
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
@@ -39,6 +59,8 @@ function SubscriptionsContent() {
   const [error, setError] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<PlanInfo | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
+  const [paymentStep, setPaymentStep] = useState<PaymentStep>('selecting');
 
   const t = buildText(locale);
 
@@ -88,6 +110,33 @@ function SubscriptionsContent() {
     fetchData();
   }, [fetchData]);
 
+  // Resume pending order if resume_order param is provided
+  useEffect(() => {
+    if (!resumeOrderId || !token) return;
+
+    const resumeOrder = async () => {
+      try {
+        const res = await fetch(`/api/orders/resume?token=${encodeURIComponent(token)}&order_id=${encodeURIComponent(resumeOrderId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setOrderResult({
+            orderId: data.orderId,
+            amount: data.amount,
+            payAmount: data.payAmount,
+            expiresAt: data.expiresAt,
+            qrCode: data.qrCode,
+            statusAccessToken: data.statusAccessToken,
+            sepayBankInfo: data.sepayBankInfo,
+          });
+          setPaymentStep('paying');
+          setLoading(false);
+        }
+      } catch {}
+    };
+
+    resumeOrder();
+  }, [resumeOrderId, token]);
+
   const handleSubscribe = (planId: string) => {
     const plan = plans.find((p) => p.id === planId);
     if (plan) {
@@ -124,12 +173,18 @@ function SubscriptionsContent() {
         throw new Error(data.error || t.orderFailed);
       }
 
-      // Redirect to payment page
-      const params = new URLSearchParams();
-      params.set('token', token);
-      params.set('resume_order', data.orderId);
-      if (locale !== 'vi') params.set('lang', locale);
-      window.location.href = `/pay?${params.toString()}`;
+      // Store order result and display QR inline
+      setOrderResult({
+        orderId: data.orderId,
+        amount: data.amount,
+        payAmount: data.payAmount,
+        expiresAt: data.expiresAt,
+        qrCode: data.qrCode,
+        statusAccessToken: data.statusAccessToken,
+        sepayBankInfo: data.sepayBankInfo,
+      });
+      setPaymentStep('paying');
+      setSubmitting(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.orderFailed);
       setSubmitting(false);
@@ -141,6 +196,27 @@ function SubscriptionsContent() {
     params.set('token', token);
     if (locale !== 'vi') params.set('lang', locale);
     return `/home?${params.toString()}`;
+  };
+
+  const handlePaymentBack = () => {
+    setPaymentStep('selecting');
+    setOrderResult(null);
+  };
+
+  const handlePaymentStatusChange = (status: PublicOrderStatusSnapshot) => {
+    if (status.paymentSuccess) {
+      setPaymentStep('success');
+      // Refresh subscriptions after brief delay
+      setTimeout(async () => {
+        await fetchData();
+        setSelectedPlan(null);
+        setOrderResult(null);
+        setPaymentStep('selecting');
+      }, 2000);
+    } else if (status.status === 'CANCELLED' || status.status === 'EXPIRED') {
+      setPaymentStep('selecting');
+      setOrderResult(null);
+    }
   };
 
   if (!token) {
@@ -178,6 +254,33 @@ function SubscriptionsContent() {
 
       {loading ? (
         <div className={['py-12 text-center', isDark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>{t.loading}</div>
+      ) : paymentStep === 'success' ? (
+        <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-4 py-8">
+          <div className={isDark ? 'text-6xl text-green-400' : 'text-6xl text-green-600'}>{'✓'}</div>
+          <h2 className={['text-xl font-bold', isDark ? 'text-green-400' : 'text-green-600'].join(' ')}>
+            {t.paymentSuccess}
+          </h2>
+          <p className={['text-center text-sm', isDark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
+            {t.subscriptionActivated}
+          </p>
+        </div>
+      ) : paymentStep === 'paying' && orderResult ? (
+        <PaymentQRCode
+            orderId={orderResult.orderId}
+            token={token}
+            qrCode={orderResult.qrCode}
+            amount={orderResult.amount}
+            payAmount={orderResult.payAmount}
+            expiresAt={orderResult.expiresAt}
+            statusAccessToken={orderResult.statusAccessToken}
+            onStatusChange={handlePaymentStatusChange}
+            onBack={handlePaymentBack}
+            dark={isDark}
+            isIframe={uiMode === 'embedded'}
+            locale={locale}
+            orderType="subscription"
+            sepayBankInfo={orderResult.sepayBankInfo}
+          />
       ) : selectedPlan ? (
         <SubscriptionConfirm
           plan={selectedPlan}
@@ -298,6 +401,9 @@ function buildText(locale: Locale) {
         noPlans: 'No subscription plans available',
         expiresIn: 'Expires in',
         days: 'days',
+        paymentSuccess: 'Payment Successful',
+        subscriptionActivated: 'Your subscription has been activated!',
+        backToConfirm: 'Back',
       }
     : {
         missingToken: 'Thiếu token',
@@ -312,6 +418,9 @@ function buildText(locale: Locale) {
         noPlans: 'Không có gói đăng ký nào',
         expiresIn: 'Hết hạn trong',
         days: 'ngày',
+        paymentSuccess: 'Thanh toán thành công',
+        subscriptionActivated: 'Gói đăng ký của bạn đã được kích hoạt!',
+        backToConfirm: 'Quay lại',
       };
 }
 

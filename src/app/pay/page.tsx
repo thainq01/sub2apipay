@@ -529,10 +529,14 @@ function PayContent() {
       {step === 'form' && (
         <>
           {/* Pending order notification */}
-          <PendingOrderBanner orders={myOrders} dark={isDark} locale={locale} buildPayUrl={(orderId) => {
+          <PendingOrderBanner orders={myOrders} dark={isDark} locale={locale} buildPayUrl={(order) => {
             const params = new URLSearchParams();
             if (token) params.set('token', token);
-            params.set('resume_order', orderId);
+            params.set('resume_order', order.id);
+            // Route subscription orders to subscriptions page for inline QR display
+            if (order.orderType === 'subscription') {
+              return `/pay/subscriptions?${params.toString()}`;
+            }
             return `/pay?${params.toString()}`;
           }} />
 

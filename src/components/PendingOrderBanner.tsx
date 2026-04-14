@@ -8,7 +8,7 @@ interface PendingOrderBannerProps {
   orders: MyOrder[];
   dark: boolean;
   locale: Locale;
-  buildPayUrl?: (orderId: string) => string;
+  buildPayUrl?: (order: MyOrder) => string;
 }
 
 function getTimeRemaining(expiresAt: string): { minutes: number; seconds: number; expired: boolean } {
@@ -78,7 +78,7 @@ export default function PendingOrderBanner({ orders, dark, locale, buildPayUrl }
             </div>
             {buildPayUrl && !remaining.expired && (
               <a
-                href={buildPayUrl(order.id)}
+                href={buildPayUrl(order)}
                 className={[
                   'shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
                   dark ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500 text-white hover:bg-amber-600',
