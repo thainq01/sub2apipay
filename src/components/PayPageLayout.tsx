@@ -27,7 +27,7 @@ export default function PayPageLayout({
   const maxWidthClass = maxWidth === 'full' ? '' : maxWidth === 'lg' ? 'max-w-4xl' : 'max-w-2xl';
 
   return (
-    <div className="pay-layout relative w-full h-screen overflow-hidden flex flex-col p-4 sm:p-6">
+    <div className={['pay-layout relative w-full h-screen overflow-hidden flex flex-col p-4 sm:p-6', isEmbedded ? 'embedded' : ''].join(' ')}>
       {!isEmbedded && (
         <>
           <div className="pay-layout-blur-1 pointer-events-none fixed -left-32 -top-32 h-96 w-96 rounded-full blur-[100px]" />

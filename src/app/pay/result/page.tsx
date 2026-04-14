@@ -336,9 +336,7 @@ function ResultPageFallback() {
 
   return (
     <div className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
-      <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>
-        {pickLocaleText(locale, 'Loading...', 'Loading...')}
-      </div>
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
     </div>
   );
 }

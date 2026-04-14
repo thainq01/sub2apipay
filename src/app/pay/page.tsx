@@ -570,9 +570,6 @@ function PayContent() {
           {!userLoaded && (
             <div className="flex items-center justify-center py-12">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-              <span className={['ml-3 text-sm', isDark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
-                {pickLocaleText(locale, 'Đang tải...', 'Loading...')}
-              </span>
             </div>
           )}
 
@@ -612,7 +609,7 @@ function PayContent() {
                     >
                       {pickLocaleText(locale, 'Sử dụng bao nhiêu, trả tiền bấy nhiêu !', 'Pay-as-you-go')}
                     </h3>
-                    <p className={['text-sm mb-4', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+                    <p className={['text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
                       {pickLocaleText(
                         locale,
                         'Không cần đăng ký, nạp tiền và sử dụng. Tính phí theo mức sử dụng thực tế. Số dư hoạt động trên tất cả các kênh. Credit tính bằng ☕',
@@ -709,16 +706,13 @@ function PayContent() {
 
 function PayPageFallback() {
   const searchParams = useSearchParams();
-  const locale = resolveLocale(searchParams.get('lang'));
   const isDark = searchParams.get('theme') === 'dark';
   return (
     <div
       suppressHydrationWarning
       className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}
     >
-      <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>
-        {pickLocaleText(locale, 'Đang tải...', 'Loading...')}
-      </div>
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
     </div>
   );
 }

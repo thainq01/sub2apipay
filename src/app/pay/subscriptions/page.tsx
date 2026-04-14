@@ -267,7 +267,9 @@ function SubscriptionsContent() {
       )}
 
       {loading ? (
-        <div className={['py-12 text-center', isDark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>{t.loading}</div>
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+        </div>
       ) : paymentStep === 'success' ? (
         <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-4 py-8">
           <div className={isDark ? 'text-6xl text-green-400' : 'text-6xl text-green-600'}>{'✓'}</div>
@@ -441,7 +443,7 @@ function buildText(locale: Locale) {
 function SubscriptionsPageFallback() {
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="text-slate-500">Loading...</div>
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
     </div>
   );
 }

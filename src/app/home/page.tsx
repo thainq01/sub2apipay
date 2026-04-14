@@ -95,6 +95,7 @@ function HomeContent() {
         </svg>
       ),
       color: isDark ? 'from-blue-600 to-blue-700' : 'from-blue-500 to-blue-600',
+      embeddedColor: 'from-blue-600/70 to-blue-700/70',
     },
     {
       title: t('home.subscriptions'),
@@ -106,6 +107,7 @@ function HomeContent() {
         </svg>
       ),
       color: isDark ? 'from-amber-600 to-amber-700' : 'from-amber-500 to-amber-600',
+      embeddedColor: 'from-amber-600/70 to-amber-700/70',
     },
     {
       title: t('home.orderHistory'),
@@ -120,6 +122,7 @@ function HomeContent() {
         </svg>
       ),
       color: isDark ? 'from-emerald-600 to-emerald-700' : 'from-emerald-500 to-emerald-600',
+      embeddedColor: 'from-emerald-600/70 to-emerald-700/70',
     },
     {
       title: t('home.refund'),
@@ -132,6 +135,7 @@ function HomeContent() {
         </svg>
       ),
       color: isDark ? 'from-violet-600 to-violet-700' : 'from-violet-500 to-violet-600',
+      embeddedColor: 'from-violet-600/70 to-violet-700/70',
     },
   ];
 
@@ -165,7 +169,9 @@ function HomeContent() {
       {user && (
         <div className={[
           'rounded-2xl p-5 shadow-sm mb-6',
-          isDark ? 'bg-slate-900 ring-1 ring-slate-800' : 'bg-white ring-1 ring-slate-100',
+          isIframe
+            ? (isDark ? 'bg-slate-900/60 ring-1 ring-slate-700/50 backdrop-blur-sm' : 'bg-white/60 ring-1 ring-slate-200/50 backdrop-blur-sm')
+            : (isDark ? 'bg-slate-900 ring-1 ring-slate-800' : 'bg-white ring-1 ring-slate-100'),
         ].join(' ')}>
           <div className="flex items-center gap-3">
             <div className={[
@@ -212,14 +218,13 @@ function HomeContent() {
             href={card.href}
             className={[
               'group relative overflow-hidden rounded-2xl p-4 text-white shadow-md transition-all hover:shadow-lg active:scale-[0.98]',
-              `bg-gradient-to-br ${card.color}`,
+              'bg-gradient-to-br',
+              isIframe ? `${card.embeddedColor} backdrop-blur-sm` : card.color,
             ].join(' ')}
           >
             <div className="mb-2 opacity-80">{card.icon}</div>
             <div className="text-sm font-bold">{card.title}</div>
-            {!isIframe && (
-              <div className="mt-0.5 text-xs opacity-70">{card.desc}</div>
-            )}
+            <div className="mt-0.5 text-xs opacity-70">{card.desc}</div>
           </a>
         ))}
       </div>
@@ -242,7 +247,9 @@ function HomeContent() {
           {orders.length === 0 ? (
             <div className={[
               'rounded-2xl py-10 text-center',
-              isDark ? 'bg-slate-900 ring-1 ring-slate-800' : 'bg-white ring-1 ring-slate-100',
+              isIframe
+                ? (isDark ? 'bg-slate-900/60 ring-1 ring-slate-700/50 backdrop-blur-sm' : 'bg-white/60 ring-1 ring-slate-200/50 backdrop-blur-sm')
+                : (isDark ? 'bg-slate-900 ring-1 ring-slate-800' : 'bg-white ring-1 ring-slate-100'),
             ].join(' ')}>
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-xl dark:bg-slate-800">
                 📋
@@ -252,7 +259,9 @@ function HomeContent() {
           ) : (
             <div className={[
               'divide-y overflow-hidden rounded-2xl shadow-sm',
-              isDark ? 'divide-slate-800 bg-slate-900 ring-1 ring-slate-800' : 'divide-slate-100 bg-white ring-1 ring-slate-100',
+              isIframe
+                ? (isDark ? 'divide-slate-700/50 bg-slate-900/60 ring-1 ring-slate-700/50 backdrop-blur-sm' : 'divide-slate-200/50 bg-white/60 ring-1 ring-slate-200/50 backdrop-blur-sm')
+                : (isDark ? 'divide-slate-800 bg-slate-900 ring-1 ring-slate-800' : 'divide-slate-100 bg-white ring-1 ring-slate-100'),
             ].join(' ')}>
               {orders.map((order) => {
                 const isSubscription = order.orderType === 'subscription';

@@ -57,6 +57,34 @@ body {
 [data-theme='dark'] .pay-layout-subtitle { color: #64748b; }
 [data-theme='dark'] .pay-layout-divider { border-color: #1e293b; }
 
+/* ── Embedded/Iframe mode (transparent backgrounds) ── */
+
+/* Light embedded */
+.pay-layout.embedded {
+  background: transparent;
+}
+.pay-layout.embedded .pay-layout-blur-1,
+.pay-layout.embedded .pay-layout-blur-2 {
+  display: none;
+}
+.pay-layout.embedded .pay-layout-card {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(226, 232, 240, 0.5);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark embedded */
+[data-theme='dark'] .pay-layout.embedded {
+  background: transparent;
+}
+[data-theme='dark'] .pay-layout.embedded .pay-layout-card {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(51, 65, 85, 0.5);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
 /* ── Scrollbar ── */
 * {
   scrollbar-width: thin;
