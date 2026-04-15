@@ -8,7 +8,10 @@ export default async function Home({
   const params = await searchParams;
   const qs = new URLSearchParams();
 
-  // Preserve all query params (token, lang, etc.)
+  // Set screen to home
+  qs.set('screen', 'home');
+
+  // Preserve all query params (token, lang, theme, etc.)
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       const v = Array.isArray(value) ? value[0] : value;
@@ -16,6 +19,5 @@ export default async function Home({
     }
   }
 
-  const query = qs.toString();
-  redirect(query ? `/home?${query}` : '/home');
+  redirect(`/app?${qs.toString()}`);
 }

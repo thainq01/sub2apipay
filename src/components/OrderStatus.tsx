@@ -15,6 +15,7 @@ interface OrderStatusProps {
   locale?: Locale;
   orderType?: 'balance' | 'subscription';
   homeUrl?: string;
+  onGoHome?: () => void;
 }
 
 function getStatusConfig(order: PublicOrderStatusSnapshot, locale: Locale, isDark = false, orderType?: 'balance' | 'subscription') {
@@ -205,6 +206,7 @@ export default function OrderStatus({
   locale = 'en',
   orderType,
   homeUrl,
+  onGoHome,
 }: OrderStatusProps) {
   const [currentOrder, setCurrentOrder] = useState(order);
   const onStateChangeRef = useRef(onStateChange);
@@ -255,11 +257,15 @@ export default function OrderStatus({
 
   // For cancelled/expired/failed orders, redirect to home
   const isCancelledOrFailed = currentOrder.status === 'CANCELLED' || currentOrder.status === 'EXPIRED' || currentOrder.status === 'FAILED';
-  const shouldGoHome = isCancelledOrFailed && homeUrl;
+  const shouldGoHome = isCancelledOrFailed && (homeUrl || onGoHome);
 
   const handleButtonClick = () => {
     if (shouldGoHome) {
-      window.location.href = homeUrl;
+      if (onGoHome) {
+        onGoHome();
+      } else if (homeUrl) {
+        window.location.href = homeUrl;
+      }
     } else {
       onBack();
     }
