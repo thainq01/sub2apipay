@@ -4,98 +4,76 @@ import type { Locale } from '@/lib/locale';
 interface PayPageLayoutProps {
   isDark: boolean;
   isEmbedded?: boolean;
+  isIframe?: boolean;
   maxWidth?: 'sm' | 'lg' | 'full';
   title: string;
   subtitle: string;
   actions?: React.ReactNode;
+  backHref?: string;
   children: React.ReactNode;
   locale?: Locale;
 }
 
 export default function PayPageLayout({
-  isDark,
   isEmbedded = false,
-  maxWidth = 'full',
+  isIframe = false,
+  maxWidth,
   title,
   subtitle,
   actions,
+  backHref,
   children,
-  locale = 'en',
 }: PayPageLayoutProps) {
-  const maxWidthClass = maxWidth === 'sm' ? 'max-w-lg' : maxWidth === 'lg' ? 'max-w-4xl' : '';
+  const maxWidthClass = maxWidth === 'full' ? '' : maxWidth === 'lg' ? 'max-w-4xl' : 'max-w-2xl';
 
   return (
-    <div
-      data-theme={isDark ? 'dark' : 'light'}
-      className={[
-        'relative w-full overflow-auto',
-        isEmbedded
-          ? 'flex min-h-full items-start justify-center p-2'
-          : 'flex min-h-screen items-center justify-center p-4 sm:p-6',
-        isDark ? 'bg-slate-950 text-slate-100' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900',
-      ].join(' ')}
-    >
+    <div className={['pay-layout relative w-full h-screen overflow-hidden flex flex-col p-4 sm:p-6', isEmbedded ? 'embedded' : ''].join(' ')}>
       {!isEmbedded && (
         <>
-          <div
-            className={[
-              'pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full blur-[100px]',
-              isDark ? 'bg-indigo-500/15' : 'bg-blue-400/20',
-            ].join(' ')}
-          />
-          <div
-            className={[
-              'pointer-events-none absolute -right-32 bottom-0 h-96 w-96 rounded-full blur-[100px]',
-              isDark ? 'bg-cyan-400/10' : 'bg-violet-300/20',
-            ].join(' ')}
-          />
+          <div className="pay-layout-blur-1 pointer-events-none fixed -left-32 -top-32 h-96 w-96 rounded-full blur-[100px]" />
+          <div className="pay-layout-blur-2 pointer-events-none fixed -right-32 bottom-0 h-96 w-96 rounded-full blur-[100px]" />
         </>
       )}
 
       <div
         className={[
-          'relative mx-auto w-full',
+          'pay-layout-card relative mx-auto w-full flex flex-col min-h-0 flex-1',
           maxWidthClass,
-          isEmbedded
-            ? isDark
-              ? 'bg-slate-900'
-              : 'bg-white'
-            : [
-                'my-auto rounded-2xl border backdrop-blur-sm',
-                isDark
-                  ? 'border-slate-800 bg-slate-900/90 shadow-2xl shadow-black/40'
-                  : 'border-white/80 bg-white/80 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200/50',
-              ].join(' '),
+          isEmbedded ? '' : 'rounded-2xl border backdrop-blur-sm',
         ].join(' ')}
       >
-        {/* Header */}
-        <div className={[
-          'flex flex-col gap-3 p-5 pb-0 sm:flex-row sm:items-center sm:justify-between sm:p-6 sm:pb-0',
-        ].join(' ')}>
-          <div className="flex items-center gap-3">
-            <div className={[
-              'flex h-10 w-10 items-center justify-center rounded-xl',
-              isDark ? 'bg-indigo-500/20' : 'bg-gradient-to-br from-indigo-500 to-violet-500',
-            ].join(' ')}>
-              <svg className={['h-5 w-5', isDark ? 'text-indigo-300' : 'text-white'].join(' ')} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
+        {/* Header - hidden in iframe mode */}
+        {!isIframe && (
+          <div className="shrink-0">
+            <div className="flex items-center gap-3 p-5 pb-0 sm:p-6 sm:pb-0">
+              {backHref ? (
+                <a
+                  href={backHref}
+                  className="pay-layout-back flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </a>
+              ) : (
+                <div className="pay-layout-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <h1 className="pay-layout-title truncate text-base font-semibold tracking-tight">{title}</h1>
+                <p className="pay-layout-subtitle truncate text-xs">{subtitle}</p>
+              </div>
+              {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
             </div>
-            <div>
-              <h1 className={['text-lg font-semibold tracking-tight', isDark ? 'text-slate-100' : 'text-slate-900'].join(' ')}>
-                {title}
-              </h1>
-              <p className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>{subtitle}</p>
-            </div>
+            <div className="pay-layout-divider mx-5 mt-4 border-t sm:mx-6" />
           </div>
-          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-        </div>
+        )}
 
-        {/* Divider */}
-        <div className={['mx-5 mt-4 border-t sm:mx-6', isDark ? 'border-slate-800' : 'border-slate-100'].join(' ')} />
-
-        {/* Content */}
-        <div className="p-5 sm:p-6">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6">
           {children}
         </div>
       </div>

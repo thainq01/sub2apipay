@@ -80,9 +80,9 @@ export default function TopUpModal({ open, onClose, onConfirm, amounts, isDark, 
                 ].join(' ')}
               >
                 <span className={['text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                  {pickLocaleText(locale, `Nạp tiền +${amount}$`, `Balance +${amount}$`)}
+                  {pickLocaleText(locale, `Nạp tiền +${amount} ☕`, `Balance +${amount} ☕`)}
                 </span>
-                <span className="mt-1 text-2xl font-bold text-emerald-500">¥{amount}</span>
+                <span className="mt-1 text-2xl font-bold text-emerald-500">{amount.toLocaleString('vi-VN')} ☕</span>
               </button>
             );
           })}

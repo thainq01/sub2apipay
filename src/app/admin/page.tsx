@@ -56,16 +56,16 @@ function DashboardContent() {
           loading: 'Loading...',
         }
       : {
-          missingToken: '缺少管理员凭证',
-          missingTokenHint: '请从 Sub2API 平台正确访问管理页面',
-          invalidToken: '管理员凭证无效',
-          requestFailed: '请求失败',
-          loadFailed: '加载数据失败',
-          title: '数据概览',
-          subtitle: '充值订单统计与分析',
-          daySuffix: '天',
-          refresh: '刷新',
-          loading: '加载中...',
+          missingToken: 'Thiếu token quản trị',
+          missingTokenHint: 'Vui lòng truy cập trang quản trị từ nền tảng Sub2API',
+          invalidToken: 'Token quản trị không hợp lệ',
+          requestFailed: 'Yêu cầu thất bại',
+          loadFailed: 'Tải dữ liệu thất bại',
+          title: 'Tổng quan',
+          subtitle: 'Phân tích và thống kê đơn hàng',
+          daySuffix: ' ngày',
+          refresh: 'Làm mới',
+          loading: 'Đang tải...',
         };
 
   const [days, setDays] = useState<number>(30);
@@ -176,7 +176,7 @@ function DashboardPageFallback() {
 
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="text-slate-500">{locale === 'en' ? 'Loading...' : '加载中...'}</div>
+      <div className="text-slate-500">{locale === 'en' ? 'Loading...' : 'Đang tải...'}</div>
     </div>
   );
 }

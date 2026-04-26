@@ -124,11 +124,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. Manually configured PAYMENT_SUBLABEL_* has highest priority, overrides auto-generated
-    if (env.PAYMENT_SUBLABEL_ALIPAY) sublabelOverrides.alipay = env.PAYMENT_SUBLABEL_ALIPAY;
-    if (env.PAYMENT_SUBLABEL_ALIPAY_DIRECT) sublabelOverrides.alipay_direct = env.PAYMENT_SUBLABEL_ALIPAY_DIRECT;
-    if (env.PAYMENT_SUBLABEL_WXPAY) sublabelOverrides.wxpay = env.PAYMENT_SUBLABEL_WXPAY;
-    if (env.PAYMENT_SUBLABEL_WXPAY_DIRECT) sublabelOverrides.wxpay_direct = env.PAYMENT_SUBLABEL_WXPAY_DIRECT;
-    if (env.PAYMENT_SUBLABEL_STRIPE) sublabelOverrides.stripe = env.PAYMENT_SUBLABEL_STRIPE;
+    if (env.PAYMENT_SUBLABEL_SEPAY) sublabelOverrides.sepay = env.PAYMENT_SUBLABEL_SEPAY;
 
     return NextResponse.json({
       user: {
@@ -143,19 +139,10 @@ export async function GET(request: NextRequest) {
         methodLimits,
         helpImageUrl: env.PAY_HELP_IMAGE_URL ?? null,
         helpText: env.PAY_HELP_TEXT ?? null,
-        stripePublishableKey: (() => {
-          if (!enabledTypes.includes('stripe')) return null;
-          // Prioritize from registered StripeProvider instance
-          try {
-            const sp = paymentRegistry.getProvider('stripe' as import('@/lib/payment').PaymentType);
-            const pk = 'getPublishableKey' in sp ? (sp as { getPublishableKey(): string | undefined }).getPublishableKey() : undefined;
-            if (pk) return pk;
-          } catch { /* not registered */ }
-          return env.STRIPE_PUBLISHABLE_KEY || null;
-        })(),
         balanceDisabled,
         maxPendingOrders,
         sublabelOverrides: Object.keys(sublabelOverrides).length > 0 ? sublabelOverrides : null,
+        rate: env.RATE ?? env.SEPAY_VND_PER_CREDIT ?? 2000,
       },
     });
   } catch (error) {

@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
           platform: ch.platform,
           rateMultiplier: Number(ch.rateMultiplier),
           description: ch.description,
-          models: ch.models ? JSON.parse(ch.models) : [],
-          features: ch.features ? JSON.parse(ch.features) : [],
+          models: ch.models ? (ch.models.startsWith('[') ? JSON.parse(ch.models) : ch.models.split(',').map(s => s.trim()).filter(Boolean)) : [],
+          features: ch.features ? (ch.features.startsWith('[') ? JSON.parse(ch.features) : ch.features.split(',').map(s => s.trim()).filter(Boolean)) : [],
           sortOrder: ch.sortOrder,
         };
       }),

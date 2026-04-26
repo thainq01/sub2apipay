@@ -62,10 +62,10 @@ export default function ChannelCard({ channel, onTopUp, isDark, locale }: Channe
             {pickLocaleText(
               locale,
               <>
-                1 CNY có thể sử dụng khoảng <span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span> USD hạn mức
+                1 VND có thể sử dụng khoảng <span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span> USD hạn mức
               </>,
               <>
-                1 CNY ≈ <span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span> USD quota
+                1 VND ≈ <span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span> USD quota
               </>,
             )}
           </p>

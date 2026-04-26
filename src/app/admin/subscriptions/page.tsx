@@ -93,8 +93,8 @@ function buildText(locale: Locale) {
         fieldGroupPlaceholder: 'Select a group',
         fieldName: 'Plan Name',
         fieldDescription: 'Description',
-        fieldPrice: 'Price (CNY)',
-        fieldOriginalPrice: 'Original Price (CNY)',
+        fieldPrice: 'Price (VND)',
+        fieldOriginalPrice: 'Original Price (VND)',
         fieldValidDays: 'Validity',
         fieldValidUnit: 'Unit',
         unitDay: 'Day(s)',
@@ -153,84 +153,84 @@ function buildText(locale: Locale) {
         modelScopes: 'Models',
       }
     : {
-        missingToken: '缺少管理员凭证',
-        missingTokenHint: '请从 Sub2API 平台正确访问管理页面',
-        invalidToken: '管理员凭证无效',
-        requestFailed: '请求失败',
-        title: '订阅管理',
-        subtitle: '管理订阅套餐与用户订阅',
-        refresh: '刷新',
-        loading: '加载中...',
-        tabPlans: '套餐配置',
-        tabSubs: '用户订阅',
-        newPlan: '新建套餐',
-        editPlan: '编辑套餐',
-        deletePlan: '删除套餐',
-        deleteConfirm: '确认删除该套餐？',
-        save: '保存',
-        cancel: '取消',
-        fieldGroup: 'Sub2API 分组',
-        fieldGroupPlaceholder: '请选择分组',
-        fieldName: '套餐名称',
-        fieldDescription: '描述',
-        fieldPrice: '价格（元）',
-        fieldOriginalPrice: '原价（元）',
-        fieldValidDays: '有效期',
-        fieldValidUnit: '单位',
-        unitDay: '天',
-        unitWeek: '周',
-        unitMonth: '月',
-        fieldFeatures: '特性描述（每行一个）',
-        fieldSortOrder: '排序',
-        fieldEnabled: '启用售卖',
-        colName: '名称',
-        colGroup: '分组 ID',
-        colPrice: '价格',
-        colOriginalPrice: '原价',
-        colValidDays: '有效期',
-        colEnabled: '启用售卖',
-        colGroupStatus: 'Sub2API 状态',
-        colActions: '操作',
-        edit: '编辑',
-        delete: '删除',
-        enabled: '是',
-        disabled: '否',
-        groupExists: '存在',
-        groupMissing: '缺失',
-        noPlans: '暂无套餐配置',
-        searchUserId: '邮箱/用户名/备注/API Key',
-        search: '搜索',
-        noSubs: '未找到订阅记录',
-        enterUserId: '输入关键词搜索用户',
-        fieldProductName: '支付商品名称',
-        fieldProductNamePlaceholder: '留空使用默认名称',
-        saveFailed: '保存套餐失败',
-        deleteFailed: '删除套餐失败',
-        loadFailed: '加载数据失败',
-        days: '天',
-        user: '用户',
-        group: '分组',
-        usage: '用量',
-        expiresAt: '到期时间',
-        status: '状态',
-        active: '生效中',
-        expired: '已过期',
-        suspended: '已暂停',
-        daily: '日用量',
-        weekly: '周用量',
-        monthly: '月用量',
-        remaining: '剩余',
-        unlimited: '无限制',
-        resetIn: '重置于',
-        noGroup: '未知分组',
-        groupInfo: 'Sub2API 分组信息',
-        groupInfoReadonly: '（只读，来自 Sub2API）',
-        platform: '平台',
-        rateMultiplier: '倍率',
-        dailyLimit: '日限额',
-        weeklyLimit: '周限额',
-        monthlyLimit: '月限额',
-        modelScopes: '模型',
+        missingToken: 'Thiếu token quản trị',
+        missingTokenHint: 'Vui lòng truy cập trang quản trị từ nền tảng Sub2API',
+        invalidToken: 'Token quản trị không hợp lệ',
+        requestFailed: 'Yêu cầu thất bại',
+        title: 'Quản lý đăng ký',
+        subtitle: 'Quản lý gói và đăng ký người dùng',
+        refresh: 'Làm mới',
+        loading: 'Đang tải...',
+        tabPlans: 'Cấu hình gói',
+        tabSubs: 'Đăng ký người dùng',
+        newPlan: 'Tạo gói mới',
+        editPlan: 'Sửa gói',
+        deletePlan: 'Xóa gói',
+        deleteConfirm: 'Xác nhận xóa gói này?',
+        save: 'Lưu',
+        cancel: 'Hủy',
+        fieldGroup: 'Nhóm Sub2API',
+        fieldGroupPlaceholder: 'Chọn nhóm',
+        fieldName: 'Tên gói',
+        fieldDescription: 'Mô tả',
+        fieldPrice: 'Giá (VND)',
+        fieldOriginalPrice: 'Giá gốc (VND)',
+        fieldValidDays: 'Thời hạn',
+        fieldValidUnit: 'Đơn vị',
+        unitDay: 'Ngày',
+        unitWeek: 'Tuần',
+        unitMonth: 'Tháng',
+        fieldFeatures: 'Tính năng (mỗi dòng một tính năng)',
+        fieldSortOrder: 'Thứ tự',
+        fieldEnabled: 'Bán',
+        colName: 'Tên',
+        colGroup: 'ID Nhóm',
+        colPrice: 'Giá',
+        colOriginalPrice: 'Giá gốc',
+        colValidDays: 'Thời hạn',
+        colEnabled: 'Bán',
+        colGroupStatus: 'Trạng thái Sub2API',
+        colActions: 'Hành động',
+        edit: 'Sửa',
+        delete: 'Xóa',
+        enabled: 'Có',
+        disabled: 'Không',
+        groupExists: 'Tồn tại',
+        groupMissing: 'Thiếu',
+        noPlans: 'Chưa có gói nào được cấu hình',
+        searchUserId: 'Email / Tên người dùng / Ghi chú / API Key',
+        search: 'Tìm kiếm',
+        noSubs: 'Không tìm thấy đăng ký',
+        enterUserId: 'Nhập từ khóa để tìm kiếm người dùng',
+        fieldProductName: 'Tên sản phẩm thanh toán',
+        fieldProductNamePlaceholder: 'Để trống sử dụng mặc định',
+        saveFailed: 'Lưu gói thất bại',
+        deleteFailed: 'Xóa gói thất bại',
+        loadFailed: 'Tải dữ liệu thất bại',
+        days: 'ngày',
+        user: 'Người dùng',
+        group: 'Nhóm',
+        usage: 'Sử dụng',
+        expiresAt: 'Hết hạn',
+        status: 'Trạng thái',
+        active: 'Đang hoạt động',
+        expired: 'Đã hết hạn',
+        suspended: 'Đã tạm dừng',
+        daily: 'Ngày',
+        weekly: 'Tuần',
+        monthly: 'Tháng',
+        remaining: 'còn lại',
+        unlimited: 'Không giới hạn',
+        resetIn: 'Đặt lại sau',
+        noGroup: 'Nhóm không xác định',
+        groupInfo: 'Thông tin nhóm Sub2API',
+        groupInfoReadonly: '(chỉ đọc, từ Sub2API)',
+        platform: 'Nền tảng',
+        rateMultiplier: 'Tỉ lệ',
+        dailyLimit: 'Giới hạn ngày',
+        weeklyLimit: 'Giới hạn tuần',
+        monthlyLimit: 'Giới hạn tháng',
+        modelScopes: 'Mô hình',
       };
 }
 
@@ -239,7 +239,7 @@ function buildText(locale: Locale) {
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  return d.toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 function daysRemaining(expiresAt: string | null): number | null {
@@ -481,7 +481,7 @@ function SubscriptionsContent() {
       closeModal();
       fetchPlans();
     } catch (e) {
-      // 分组被删除等错误：刷新列表使前端状态同步
+      // Group deleted or other error: refresh list to sync frontend state
       setError(e instanceof Error ? e.message : t.saveFailed);
       fetchPlans();
     } finally {
@@ -755,7 +755,7 @@ function SubscriptionsContent() {
                     isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-white shadow-sm',
                   ].join(' ')}
                 >
-                  {/* ── 套餐配置（上半部分） ── */}
+                  {/* Plan config (upper section) */}
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -845,7 +845,7 @@ function SubscriptionsContent() {
                             </>
                           ) : (
                             <span className={`text-xs ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                              {locale === 'en' ? 'Unbound' : '未绑定'}
+                              {locale === 'en' ? 'Unbound' : 'Chưa liên kết'}
                             </span>
                           )}
                         </div>
@@ -855,12 +855,12 @@ function SubscriptionsContent() {
                           {t.colPrice}
                         </span>
                         <div className={isDark ? 'text-slate-200' : 'text-slate-800'}>
-                          ¥{plan.price.toFixed(2)}
+                          {Math.round(plan.price).toLocaleString('vi-VN')} VND
                           {plan.originalPrice != null && (
                             <span
                               className={`ml-1 line-through text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
                             >
-                              ¥{plan.originalPrice.toFixed(2)}
+                              {Math.round(plan.originalPrice).toLocaleString('vi-VN')} VND
                             </span>
                           )}
                         </div>
@@ -887,7 +887,7 @@ function SubscriptionsContent() {
                     </div>
                   </div>
 
-                  {/* ── Sub2API 分组信息（嵌套只读区域） ── */}
+                  {/* Sub2API group info (read-only section) */}
                   {plan.groupExists && (
                     <div
                       className={[
@@ -943,7 +943,7 @@ function SubscriptionsContent() {
                         {plan.groupPlatform?.toLowerCase() === 'openai' && (
                           <>
                             <div>
-                              <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>/v1/messages 调度</span>
+                              <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>/v1/messages dispatch</span>
                               <div
                                 className={[
                                   'mt-0.5 text-xs font-medium',
@@ -956,12 +956,12 @@ function SubscriptionsContent() {
                                       : 'text-slate-500',
                                 ].join(' ')}
                               >
-                                {plan.groupAllowMessagesDispatch ? '已启用' : '未启用'}
+                                {plan.groupAllowMessagesDispatch ? (locale === 'en' ? 'Enabled' : 'Đã bật') : (locale === 'en' ? 'Disabled' : 'Chưa bật')}
                               </div>
                             </div>
                             {plan.groupDefaultMappedModel && (
                               <div className="sm:col-span-2">
-                                <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>默认模型</span>
+                                <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>{locale === 'en' ? 'Default Model' : 'Mô hình mặc định'}</span>
                                 <div
                                   className={[
                                     'mt-0.5 font-mono text-xs',
@@ -988,8 +988,8 @@ function SubscriptionsContent() {
       {activeTab === 'subs' && (
         <>
           {/* Search bar (R1: fuzzy search) */}
-          <div className="mb-4 flex gap-2">
-            <div className="relative max-w-sm flex-1">
+          <div className="mb-4 flex justify-center gap-2">
+            <div className="relative w-full max-w-md">
               <input
                 type="text"
                 value={subsKeyword}
@@ -1282,7 +1282,7 @@ function SubscriptionsContent() {
                       </div>
                       {selectedGroup.platform?.toLowerCase() === 'openai' && (
                         <div>
-                          <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>/v1/messages 调度</span>
+                          <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>/v1/messages dispatch</span>
                           <div
                             className={[
                               'mt-0.5 font-medium',
@@ -1295,7 +1295,7 @@ function SubscriptionsContent() {
                                   : 'text-slate-500',
                             ].join(' ')}
                           >
-                            {selectedGroup.allow_messages_dispatch ? '已启用' : '未启用'}
+                            {selectedGroup.allow_messages_dispatch ? (locale === 'en' ? 'Enabled' : 'Đã bật') : (locale === 'en' ? 'Disabled' : 'Chưa bật')}
                           </div>
                         </div>
                       )}
@@ -1484,7 +1484,7 @@ function SubscriptionsPageFallback() {
 
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="text-slate-500">{locale === 'en' ? 'Loading...' : '加载中...'}</div>
+      <div className="text-slate-500">{locale === 'en' ? 'Loading...' : 'Đang tải...'}</div>
     </div>
   );
 }

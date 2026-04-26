@@ -13,10 +13,30 @@ interface OrderStatusProps {
   onStateChange?: (order: PublicOrderStatusSnapshot) => void;
   dark?: boolean;
   locale?: Locale;
+  orderType?: 'balance' | 'subscription';
+  homeUrl?: string;
+  onGoHome?: () => void;
 }
 
-function getStatusConfig(order: PublicOrderStatusSnapshot, locale: Locale, isDark = false) {
+function getStatusConfig(order: PublicOrderStatusSnapshot, locale: Locale, isDark = false, orderType?: 'balance' | 'subscription') {
+  const isSubscription = orderType === 'subscription';
+
   if (order.rechargeSuccess) {
+    if (isSubscription) {
+      return locale === 'vi'
+        ? {
+            label: 'Kích hoạt thành công',
+            color: isDark ? 'text-green-400' : 'text-green-600',
+            icon: '✓',
+            message: 'Gói đăng ký đã được kích hoạt cho tài khoản của bạn!',
+          }
+        : {
+            label: 'Subscription Activated',
+            color: isDark ? 'text-green-400' : 'text-green-600',
+            icon: '✓',
+            message: 'Your subscription has been activated successfully!',
+          };
+    }
     return locale === 'vi'
       ? {
           label: 'Nạp tiền thành công',
@@ -34,6 +54,21 @@ function getStatusConfig(order: PublicOrderStatusSnapshot, locale: Locale, isDar
 
   if (order.paymentSuccess) {
     if (order.rechargeStatus === 'paid_pending' || order.rechargeStatus === 'recharging') {
+      if (isSubscription) {
+        return locale === 'vi'
+          ? {
+              label: 'Đang kích hoạt',
+              color: isDark ? 'text-blue-400' : 'text-blue-600',
+              icon: '⟳',
+              message: 'Đã nhận thanh toán. Đang kích hoạt gói đăng ký...',
+            }
+          : {
+              label: 'Activating',
+              color: isDark ? 'text-blue-400' : 'text-blue-600',
+              icon: '⟳',
+              message: 'Payment received. Activating your subscription...',
+            };
+      }
       return locale === 'vi'
         ? {
             label: 'Đang nạp tiền',
@@ -50,6 +85,23 @@ function getStatusConfig(order: PublicOrderStatusSnapshot, locale: Locale, isDar
     }
 
     if (order.rechargeStatus === 'failed') {
+      if (isSubscription) {
+        return locale === 'vi'
+          ? {
+              label: 'Thanh toán thành công',
+              color: isDark ? 'text-amber-400' : 'text-amber-600',
+              icon: '!',
+              message:
+                'Thanh toán đã hoàn tất, nhưng kích hoạt đăng ký chưa hoàn thành. Hệ thống có thể thử lại tự động. Vui lòng kiểm tra danh sách đơn hàng sau này hoặc liên hệ quản trị viên.',
+            }
+          : {
+              label: 'Payment Successful',
+              color: isDark ? 'text-amber-400' : 'text-amber-600',
+              icon: '!',
+              message:
+                'Payment completed, but the subscription activation has not finished yet. The system may retry automatically. Please check the order list later or contact the administrator.',
+            };
+      }
       return locale === 'vi'
         ? {
             label: 'Thanh toán thành công',
@@ -152,6 +204,9 @@ export default function OrderStatus({
   onStateChange,
   dark = false,
   locale = 'en',
+  orderType,
+  homeUrl,
+  onGoHome,
 }: OrderStatusProps) {
   const [currentOrder, setCurrentOrder] = useState(order);
   const onStateChangeRef = useRef(onStateChange);
@@ -192,9 +247,35 @@ export default function OrderStatus({
     };
   }, [orderId, currentOrder.paymentSuccess, currentOrder.rechargeSuccess, statusAccessToken]);
 
-  const config = getStatusConfig(currentOrder, locale, dark);
+  const isSubscription = orderType === 'subscription';
+  const config = getStatusConfig(currentOrder, locale, dark, orderType);
   const doneLabel = locale === 'vi' ? 'Hoàn thành' : 'Done';
-  const backLabel = locale === 'vi' ? 'Quay lại nạp tiền' : 'Back to Recharge';
+  const homeLabel = locale === 'vi' ? 'Quay lại trang chủ' : 'Back to Home';
+  const backLabel = isSubscription
+    ? (locale === 'vi' ? 'Quay lại gói đăng ký' : 'Back to Subscriptions')
+    : (locale === 'vi' ? 'Quay lại nạp tiền' : 'Back to Recharge');
+
+  // For cancelled/expired/failed orders, redirect to home
+  const isCancelledOrFailed = currentOrder.status === 'CANCELLED' || currentOrder.status === 'EXPIRED' || currentOrder.status === 'FAILED';
+  const shouldGoHome = isCancelledOrFailed && (homeUrl || onGoHome);
+
+  const handleButtonClick = () => {
+    if (shouldGoHome) {
+      if (onGoHome) {
+        onGoHome();
+      } else if (homeUrl) {
+        window.location.href = homeUrl;
+      }
+    } else {
+      onBack();
+    }
+  };
+
+  const buttonLabel = currentOrder.rechargeSuccess
+    ? doneLabel
+    : shouldGoHome
+      ? homeLabel
+      : backLabel;
 
   return (
     <div className="flex flex-col items-center space-y-4 py-8">
@@ -202,13 +283,13 @@ export default function OrderStatus({
       <h2 className={`text-xl font-bold ${config.color}`}>{config.label}</h2>
       <p className={['text-center', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>{config.message}</p>
       <button
-        onClick={onBack}
+        onClick={handleButtonClick}
         className={[
           'mt-4 w-full rounded-lg py-3 font-medium text-white',
           dark ? 'bg-blue-600 hover:bg-blue-500' : 'bg-blue-600 hover:bg-blue-700',
         ].join(' ')}
       >
-        {currentOrder.rechargeSuccess ? doneLabel : backLabel}
+        {buttonLabel}
       </button>
     </div>
   );

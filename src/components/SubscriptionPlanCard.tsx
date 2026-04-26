@@ -80,10 +80,10 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
         <div className="flex items-baseline gap-2">
           {plan.originalPrice !== null && (
             <span className={['text-sm line-through', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-              ¥{plan.originalPrice}
+              {Math.round(plan.originalPrice).toLocaleString('vi-VN')} VND
             </span>
           )}
-          <span className={['text-3xl font-bold', accentCls].join(' ')}>¥{plan.price}</span>
+          <span className={['text-3xl font-bold', accentCls].join(' ')}>{Math.round(plan.price).toLocaleString('vi-VN')} VND</span>
           <span className={['text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>{periodSuffix}</span>
         </div>
       </div>
@@ -116,7 +116,7 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
                 {pickLocaleText(locale, 'Hạn hàng ngày', 'Daily Limit')}
               </span>
               <div className={['text-lg font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
-                ${plan.limits.daily_limit_usd}
+                {plan.limits.daily_limit_usd === 0 ? '∞' : `$${plan.limits.daily_limit_usd}`}
               </div>
             </div>
           )}
@@ -126,7 +126,7 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
                 {pickLocaleText(locale, 'Hạn hàng tuần', 'Weekly Limit')}
               </span>
               <div className={['text-lg font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
-                ${plan.limits.weekly_limit_usd}
+                {plan.limits.weekly_limit_usd === 0 ? '∞' : `$${plan.limits.weekly_limit_usd}`}
               </div>
             </div>
           )}
@@ -136,7 +136,7 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
                 {pickLocaleText(locale, 'Hạn hàng tháng', 'Monthly Limit')}
               </span>
               <div className={['text-lg font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
-                ${plan.limits.monthly_limit_usd}
+                {plan.limits.monthly_limit_usd === 0 ? '∞' : `$${plan.limits.monthly_limit_usd}`}
               </div>
             </div>
           )}
@@ -173,15 +173,17 @@ interface SubscriptionPlanCardProps {
   onSubscribe: (planId: string) => void;
   isDark: boolean;
   locale: Locale;
+  disabled?: boolean;
 }
 
-export default function SubscriptionPlanCard({ plan, onSubscribe, isDark, locale }: SubscriptionPlanCardProps) {
+export default function SubscriptionPlanCard({ plan, onSubscribe, isDark, locale, disabled }: SubscriptionPlanCardProps) {
   const ps = getPlatformStyle(plan.platform ?? '');
 
   return (
     <div
       className={[
-        'flex flex-col rounded-2xl border p-6 transition-shadow hover:shadow-lg',
+        'flex flex-col rounded-2xl border p-6 transition-shadow',
+        disabled ? 'opacity-60' : 'hover:shadow-lg',
         isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-white',
       ].join(' ')}
     >
@@ -193,16 +195,32 @@ export default function SubscriptionPlanCard({ plan, onSubscribe, isDark, locale
       {/* Subscribe button */}
       <button
         type="button"
-        onClick={() => onSubscribe(plan.id)}
+        onClick={() => !disabled && onSubscribe(plan.id)}
+        disabled={disabled}
         className={[
-          'mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-colors',
-          isDark ? ps.button.dark : ps.button.light,
+          'mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-colors',
+          disabled
+            ? isDark
+              ? 'cursor-not-allowed bg-slate-700 text-slate-500'
+              : 'cursor-not-allowed bg-slate-200 text-slate-400'
+            : `text-white ${isDark ? ps.button.dark : ps.button.light}`,
         ].join(' ')}
       >
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-        </svg>
-        {pickLocaleText(locale, 'Kích hoạt ngay', 'Subscribe Now')}
+        {disabled ? (
+          <>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            {pickLocaleText(locale, 'Đã kích hoạt', 'Already Active')}
+          </>
+        ) : (
+          <>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+            {pickLocaleText(locale, 'Kích hoạt ngay', 'Subscribe Now')}
+          </>
+        )}
       </button>
     </div>
   );

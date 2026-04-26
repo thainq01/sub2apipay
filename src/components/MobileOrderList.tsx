@@ -102,30 +102,42 @@ export default function MobileOrderList({
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredOrders.map((order) => (
-            <div
-              key={order.id}
-              className={[
-                'rounded-xl border px-3 py-3',
-                isDark ? 'border-slate-700 bg-slate-900/70' : 'border-slate-200 bg-white',
-              ].join(' ')}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-semibold">¥{order.amount.toFixed(2)}</span>
-                <span
-                  className={['rounded-full px-2 py-0.5 text-xs', getStatusBadgeClass(order.status, isDark)].join(' ')}
-                >
-                  {formatStatus(order.status, locale)}
-                </span>
+          {filteredOrders.map((order) => {
+            const isSubscription = order.orderType === 'subscription';
+            return (
+              <div
+                key={order.id}
+                className={[
+                  'rounded-xl border px-3 py-3',
+                  isDark ? 'border-slate-700 bg-slate-900/70' : 'border-slate-200 bg-white',
+                ].join(' ')}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-semibold">
+                    {isSubscription
+                      ? (order.subscriptionPlanName || (locale === 'vi' ? 'Gói đăng ký' : 'Subscription'))
+                      : `${Math.round(order.amount).toLocaleString('vi-VN')} ☕`}
+                  </span>
+                  <span
+                    className={['rounded-full px-2 py-0.5 text-xs', getStatusBadgeClass(order.status, isDark)].join(' ')}
+                  >
+                    {formatStatus(order.status, locale)}
+                  </span>
+                </div>
+                {isSubscription && (
+                  <div className={['mt-1 text-sm', isDark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
+                    {Math.round(order.amount).toLocaleString('vi-VN')} VND
+                  </div>
+                )}
+                <div className={['mt-1 text-sm', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
+                  {getPaymentDisplayInfo(order.paymentType, locale).channel}
+                </div>
+                <div className={['mt-0.5 text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+                  {formatCreatedAt(order.createdAt, locale)}
+                </div>
               </div>
-              <div className={['mt-1 text-sm', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
-                {getPaymentDisplayInfo(order.paymentType, locale).channel}
-              </div>
-              <div className={['mt-0.5 text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                {formatCreatedAt(order.createdAt, locale)}
-              </div>
-            </div>
-          ))}
+            );
+          })}
 
           {hasMore && (
             <div ref={sentinelRef} className="py-3 text-center">

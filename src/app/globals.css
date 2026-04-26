@@ -17,52 +17,147 @@ body {
     sans-serif;
 }
 
-/* Scrollbar - Light theme (default) */
+/* Dark mode body */
+[data-theme='dark'] body {
+  background: #0D1427;
+  color: #f1f5f9;
+}
+
+/* Dark mode embedded iframe - match parent dashboard bg (#0D1427) to avoid flicker */
+[data-theme='dark'] body.embedded-iframe {
+  background: #0D1427 !important;
+}
+
+/* ── PayPageLayout CSS theme (driven by html[data-theme], no JS flicker) ── */
+
+/* Light (default) */
+.pay-layout {
+  background: linear-gradient(to bottom right, #f8fafc, #ffffff, #f1f5f9);
+  color: #0f172a;
+  transition: background 0.15s ease-out, color 0.15s ease-out;
+}
+.pay-layout-blur-1 { background: rgba(96, 165, 250, 0.2); }
+.pay-layout-blur-2 { background: rgba(167, 139, 250, 0.2); }
+.pay-layout-card {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 20px 25px -5px rgba(148, 163, 184, 0.15), 0 0 0 1px rgba(226, 232, 240, 0.5);
+}
+.pay-layout-back { background: #f1f5f9; color: #475569; }
+.pay-layout-back:hover { background: #e2e8f0; }
+.pay-layout-icon { background: linear-gradient(to bottom right, #6366f1, #8b5cf6); color: #fff; }
+.pay-layout-title { color: #0f172a; }
+.pay-layout-subtitle { color: #94a3b8; }
+.pay-layout-divider { border-color: #f1f5f9; }
+
+/* Dark */
+[data-theme='dark'] .pay-layout {
+  background: #0D1427;
+  color: #f1f5f9;
+}
+[data-theme='dark'] .pay-layout-blur-1 { background: rgba(99, 102, 241, 0.15); }
+[data-theme='dark'] .pay-layout-blur-2 { background: rgba(34, 211, 238, 0.1); }
+[data-theme='dark'] .pay-layout-card {
+  border-color: #1e293b;
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+}
+[data-theme='dark'] .pay-layout-back { background: #1e293b; color: #cbd5e1; }
+[data-theme='dark'] .pay-layout-back:hover { background: #334155; }
+[data-theme='dark'] .pay-layout-icon { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
+[data-theme='dark'] .pay-layout-title { color: #f1f5f9; }
+[data-theme='dark'] .pay-layout-subtitle { color: #64748b; }
+[data-theme='dark'] .pay-layout-divider { border-color: #1e293b; }
+
+/* ── Embedded/Iframe mode (transparent backgrounds) ── */
+
+/* When body has embedded-iframe class (set by script on load), make all pay-layout transparent */
+body.embedded-iframe .pay-layout {
+  background: transparent !important;
+}
+/* Dark embedded - match parent dashboard bg */
+[data-theme='dark'] body.embedded-iframe .pay-layout {
+  background: #0D1427 !important;
+}
+body.embedded-iframe .pay-layout .pay-layout-blur-1,
+body.embedded-iframe .pay-layout .pay-layout-blur-2 {
+  display: none !important;
+}
+body.embedded-iframe .pay-layout .pay-layout-card {
+  background: transparent !important;
+  border-color: transparent !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Light embedded */
+.pay-layout.embedded {
+  background: transparent;
+}
+.pay-layout.embedded .pay-layout-blur-1,
+.pay-layout.embedded .pay-layout-blur-2 {
+  display: none;
+}
+.pay-layout.embedded .pay-layout-card {
+  background: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* Dark embedded */
+[data-theme='dark'] .pay-layout.embedded {
+  background: transparent;
+}
+[data-theme='dark'] .pay-layout.embedded .pay-layout-card {
+  background: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* Body transparent when embedded */
+body:has(.pay-layout.embedded) {
+  background: transparent !important;
+}
+
+/* Hide scrollbar in embedded mode */
+.pay-layout.embedded {
+  scrollbar-width: none;
+}
+.pay-layout.embedded::-webkit-scrollbar {
+  display: none;
+}
+.pay-layout.embedded *::-webkit-scrollbar {
+  display: none;
+}
+.pay-layout.embedded * {
+  scrollbar-width: none;
+}
+
+/* Embedded mode: make nested content transparent (exclude dropdowns/modals with z-50) */
+.pay-layout.embedded [class*="bg-slate-800"]:not(.z-50):not([class*="z-50"] *),
+.pay-layout.embedded [class*="bg-slate-900"]:not(.z-50):not([class*="z-50"] *),
+.pay-layout.embedded [class*="bg-slate-50"]:not(.z-50):not([class*="z-50"] *),
+.pay-layout.embedded [class*="bg-white"]:not(.z-50):not([class*="z-50"] *) {
+  background: transparent !important;
+}
+
+/* ── Scrollbar ── */
 * {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: #f1f5f9; }
+*::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+*::-webkit-scrollbar-corner { background: #f1f5f9; }
 
-*::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-*::-webkit-scrollbar-corner {
-  background: #f1f5f9;
-}
-
-/* Scrollbar - Dark theme */
 [data-theme='dark'],
-[data-theme='dark'] * {
-  scrollbar-color: #475569 #1e293b;
-}
-
-[data-theme='dark'] *::-webkit-scrollbar-track {
-  background: #1e293b;
-}
-
-[data-theme='dark'] *::-webkit-scrollbar-thumb {
-  background: #475569;
-}
-
-[data-theme='dark'] *::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
-}
-
-[data-theme='dark'] *::-webkit-scrollbar-corner {
-  background: #1e293b;
-}
+[data-theme='dark'] * { scrollbar-color: #475569 #1e293b; }
+[data-theme='dark'] *::-webkit-scrollbar-track { background: #1e293b; }
+[data-theme='dark'] *::-webkit-scrollbar-thumb { background: #475569; }
+[data-theme='dark'] *::-webkit-scrollbar-thumb:hover { background: #64748b; }
+[data-theme='dark'] *::-webkit-scrollbar-corner { background: #1e293b; }

@@ -37,12 +37,12 @@ export default function RefundDialog({
   locale = 'en',
 }: RefundDialogProps) {
   const [reason, setReason] = useState('');
-  const [refundAmount, setRefundAmount] = useState((requestedAmount ?? amount).toFixed(2));
+  const [refundAmount, setRefundAmount] = useState(Math.round(requestedAmount ?? amount).toString());
   const [force, setForce] = useState(false);
   const [deductBalance, setDeductBalance] = useState(defaultDeductBalance);
   const [loading, setLoading] = useState(false);
 
-  const currency = '¥';
+  const currencySymbol = 'VND';
   const isSub = orderType === 'subscription';
   const text =
     locale === 'vi'
@@ -63,7 +63,7 @@ export default function RefundDialog({
           rechargeAmount: 'Số tiền nạp',
           subDays: 'Ngày đơn hàng',
           subRemaining: 'Ngày còn lại',
-          insufficientBalance: `Số dư không đủ — sẽ trừ đến ${currency}0`,
+          insufficientBalance: `Số dư không đủ — sẽ trừ đến 0 VND`,
           insufficientDays: 'Ngày không đủ — sẽ trừ đến 0 ngày',
           noDeduction: 'SẼ KHÔNG trừ số dư người dùng / đăng ký',
           amountInvalid: 'Số tiền hoàn phải lớn hơn 0',
@@ -89,7 +89,7 @@ export default function RefundDialog({
           rechargeAmount: 'Recharge Amount',
           subDays: 'Order Days',
           subRemaining: 'Remaining Days',
-          insufficientBalance: `Insufficient balance — will deduct to ${currency}0`,
+          insufficientBalance: `Insufficient balance — will deduct to ${currencySymbol}0`,
           insufficientDays: 'Insufficient days — will deduct to 0 days',
           noDeduction: 'Will NOT deduct user balance / subscription',
           amountInvalid: 'Refund amount must be greater than 0',
@@ -146,12 +146,11 @@ export default function RefundDialog({
           <div className={['rounded-lg p-3', dark ? 'bg-slate-800' : 'bg-gray-50'].join(' ')}>
             <div className={['text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>{text.maxAmount}</div>
             <div className={['text-lg font-bold', dark ? 'text-red-400' : 'text-red-600'].join(' ')}>
-              {currency}
-              {amount.toFixed(2)}
+              {Math.round(amount).toLocaleString('vi-VN')} VND
             </div>
           </div>
 
-          {/* 扣除余额/订阅开关 */}
+          {/* Deduct balance/subscription toggle */}
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -165,21 +164,19 @@ export default function RefundDialog({
             </div>
           </label>
 
-          {/* 余额/订阅信息 */}
+          {/* Balance/subscription info */}
           {deductBalance && !isSub && userBalance != null && (
             <div className={['grid grid-cols-2 gap-3', dark ? 'text-slate-300' : 'text-gray-700'].join(' ')}>
               <div className={['rounded-lg p-3 text-sm', dark ? 'bg-slate-800' : 'bg-gray-50'].join(' ')}>
                 <div className={dark ? 'text-slate-400' : 'text-gray-500'}>{text.userBalance}</div>
                 <div className="mt-1 font-semibold">
-                  {currency}
-                  {userBalance.toFixed(2)}
+                  {Math.round(userBalance).toLocaleString('vi-VN')} VND
                 </div>
               </div>
               <div className={['rounded-lg p-3 text-sm', dark ? 'bg-slate-800' : 'bg-gray-50'].join(' ')}>
                 <div className={dark ? 'text-slate-400' : 'text-gray-500'}>{text.rechargeAmount}</div>
                 <div className="mt-1 font-semibold">
-                  {currency}
-                  {amount.toFixed(2)}
+                  {Math.round(amount).toLocaleString('vi-VN')} VND
                 </div>
               </div>
             </div>
@@ -198,7 +195,7 @@ export default function RefundDialog({
             </div>
           )}
 
-          {/* 不足提示 */}
+          {/* Insufficient warning */}
           {deductBalance && balanceInsufficient && (
             <div
               className={[
@@ -248,9 +245,9 @@ export default function RefundDialog({
             </label>
             <input
               type="number"
-              min="0.01"
-              max={amount.toFixed(2)}
-              step="0.01"
+              min="1"
+              max={amount.toString()}
+              step="1"
               value={refundAmount}
               onChange={(e) => setRefundAmount(e.target.value)}
               placeholder={text.refundAmountPlaceholder}

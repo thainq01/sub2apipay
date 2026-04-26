@@ -139,27 +139,16 @@ function getTexts(locale: Locale) {
 
 // ── Constants ──
 
-const ALL_PROVIDER_KEYS = ['easypay', 'alipay', 'wxpay', 'stripe'] as const;
+const ALL_PROVIDER_KEYS = ['sepay'] as const;
 
 const PAYMENT_TYPE_LABELS: Record<string, { vi: string; en: string }> = {
-  alipay: { vi: 'Alipay', en: 'Alipay' },
-  wxpay: { vi: 'WeChat Pay', en: 'WeChat Pay' },
-  stripe: { vi: 'Stripe', en: 'Stripe' },
 };
 
 const PROVIDER_LABELS: Record<string, { vi: string; en: string }> = {
-  easypay: { vi: 'EasyPay', en: 'EasyPay' },
-  alipay: { vi: 'Alipay Official', en: 'Alipay Official' },
-  wxpay: { vi: 'WeChat Official', en: 'WeChat Official' },
-  stripe: { vi: 'Stripe', en: 'Stripe' },
   sepay: { vi: 'SePay', en: 'SePay' },
 };
 
 const PROVIDER_SUPPORTED_TYPES: Record<string, string[]> = {
-  easypay: ['alipay', 'wxpay'],
-  alipay: ['alipay'],
-  wxpay: ['wxpay'],
-  stripe: ['stripe'],
 };
 
 interface ConfigFieldDef {
@@ -170,35 +159,6 @@ interface ConfigFieldDef {
 }
 
 const PROVIDER_CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
-  easypay: [
-    { key: 'pid', label: { en: 'PID', vi:'PID' }, sensitive: false },
-    { key: 'pkey', label: { en: 'PKey (Secret)', vi:'PKey (Secret)' }, sensitive: true },
-    { key: 'apiBase', label: { en: 'API Base URL', vi:'API Base URL' }, sensitive: false, optional: true },
-    { key: 'notifyUrl', label: { en: 'Notify URL', vi:'Notify URL' }, sensitive: false, optional: true },
-    { key: 'returnUrl', label: { en: 'Return URL', vi:'Return URL' }, sensitive: false, optional: true },
-  ],
-  alipay: [
-    { key: 'appId', label: { en: 'App ID', vi:'App ID' }, sensitive: false },
-    { key: 'privateKey', label: { en: 'Private Key', vi:'Private Key' }, sensitive: true },
-    { key: 'publicKey', label: { en: 'Alipay Public Key', vi:'Alipay Public Key' }, sensitive: true },
-    { key: 'notifyUrl', label: { en: 'Notify URL', vi:'Notify URL' }, sensitive: false, optional: true },
-    { key: 'returnUrl', label: { en: 'Return URL', vi:'Return URL' }, sensitive: false, optional: true },
-  ],
-  wxpay: [
-    { key: 'appId', label: { en: 'App ID', vi:'App ID' }, sensitive: false },
-    { key: 'mchId', label: { en: 'Merchant ID', vi:'Merchant ID' }, sensitive: false },
-    { key: 'privateKey', label: { en: 'Private Key', vi:'Private Key' }, sensitive: true },
-    { key: 'apiV3Key', label: { en: 'API v3 Key', vi:'API v3 Key' }, sensitive: true },
-    { key: 'publicKey', label: { en: 'Public Key', vi:'Public Key' }, sensitive: true },
-    { key: 'publicKeyId', label: { en: 'Public Key ID', vi:'Public Key ID' }, sensitive: false },
-    { key: 'certSerial', label: { en: 'Certificate Serial', vi:'Certificate Serial' }, sensitive: false },
-    { key: 'notifyUrl', label: { en: 'Notify URL', vi:'Notify URL' }, sensitive: false, optional: true },
-  ],
-  stripe: [
-    { key: 'secretKey', label: { en: 'Secret Key', vi:'Secret Key' }, sensitive: true },
-    { key: 'publishableKey', label: { en: 'Publishable Key', vi:'Publishable Key' }, sensitive: false },
-    { key: 'webhookSecret', label: { en: 'Webhook Secret', vi:'Webhook Secret' }, sensitive: true },
-  ],
 };
 
 interface ChannelLimits {
@@ -278,7 +238,7 @@ function PaymentConfigContent() {
   const [instanceModalOpen, setInstanceModalOpen] = useState(false);
   const [editingInstance, setEditingInstance] = useState<ProviderInstanceData | null>(null);
   const [instanceForm, setInstanceForm] = useState<InstanceFormData>({
-    providerKey: 'easypay',
+    providerKey: 'sepay',
     name: '',
     enabled: true,
     sortOrder: 0,
@@ -506,7 +466,7 @@ function PaymentConfigContent() {
   };
 
   const openCreateInstance = () => {
-    const key = enabledProviderKeys[0] || 'easypay';
+    const key = enabledProviderKeys[0] || 'sepay';
     setEditingInstance(null);
     setInstanceForm({
       providerKey: key,
@@ -723,7 +683,7 @@ function PaymentConfigContent() {
         </div>
       )}
 
-      {/* ══ 基础配置 ══ */}
+      {/* Basic configuration */}
       <div className={cardCls}>
         <h2 className={`text-base font-semibold mb-1 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
           {t.basicConfig}
@@ -755,7 +715,7 @@ function PaymentConfigContent() {
               value={rcSuffix}
               onChange={(e) => setRcSuffix(e.target.value)}
               className={inputCls}
-              placeholder="CNY"
+              placeholder="VND"
             />
           </div>
           <div>
@@ -763,7 +723,7 @@ function PaymentConfigContent() {
             <div
               className={`rounded-lg border px-3 py-2 text-sm ${isDark ? 'border-slate-600 bg-slate-700 text-slate-300' : 'border-slate-300 bg-slate-50 text-slate-600'}`}
             >
-              {`${rcPrefix.trim() || 'Sub2API'} 100 ${rcSuffix.trim() || 'CNY'}`.trim()}
+              {`${rcPrefix.trim() || 'Sub2API'} 100 ${rcSuffix.trim() || 'VND'}`.trim()}
             </div>
           </div>
         </div>
@@ -857,7 +817,7 @@ function PaymentConfigContent() {
           )}
         </div>
 
-        {/* ── 覆盖环境变量配置 ── */}
+        {/* Override environment variable config */}
         <div className={subCardCls}>
           <div className="flex items-center gap-3 mb-2">
             <Toggle value={rcOverrideEnv} onChange={handleOverrideEnvToggle} disabled={rcOverrideSaved} />
@@ -975,7 +935,7 @@ function PaymentConfigContent() {
                   </div>
                 </div>
 
-                {/* ── 服务商管理 ── */}
+                {/* Provider management */}
                 {enabledProviderKeys.length > 0 && (
                   <div className="pt-4 border-t border-dashed" style={{ borderColor: isDark ? '#475569' : '#e2e8f0' }}>
                     <div className="flex items-center justify-between mb-3">
@@ -1063,7 +1023,7 @@ function PaymentConfigContent() {
                                       )}
                                       {inst.todayAmount !== undefined && inst.todayAmount > 0 && (
                                         <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                          {t.todayAmount}: ¥{inst.todayAmount}
+                                          {t.todayAmount}: {Math.round(inst.todayAmount).toLocaleString('vi-VN')} VND
                                         </span>
                                       )}
                                       <div className="flex items-center gap-1">
@@ -1265,7 +1225,7 @@ function PaymentConfigContent() {
                             {isActive ? '✓ ' : ''}
                             {PAYMENT_TYPE_LABELS[type]?.[locale] || type}
                           </button>
-                          {isActive && cidKey && instanceForm.providerKey === 'easypay' && (
+                          {isActive && cidKey && (
                             <input
                               type="text"
                               value={instanceForm.config[cidKey] ?? ''}
@@ -1321,7 +1281,7 @@ function PaymentConfigContent() {
                 </div>
               </div>
 
-              {/* ── 限额配置 (collapsible) ── */}
+              {/* Limit configuration (collapsible) */}
               <div>
                 <button
                   type="button"
