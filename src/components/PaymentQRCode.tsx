@@ -28,6 +28,12 @@ interface PaymentQRCodeProps {
     accountName: string;
     transferCode: string;
   } | null;
+  bscPaymentInfo?: {
+    walletAddress: string;
+    network: string;
+    tokenName: string;
+    usdtAmount: string;
+  } | null;
 }
 
 function isVisibleOrderOutcome(data: PublicOrderStatusSnapshot): boolean {
@@ -208,10 +214,137 @@ function BankTransferCard({
   );
 }
 
+function CryptoTransferCard({
+  info,
+  dark,
+  t,
+  qrCodeUrl,
+}: {
+  info: { walletAddress: string; network: string; tokenName: string; usdtAmount: string };
+  dark: boolean;
+  t: Record<string, string>;
+  qrCodeUrl?: string;
+}) {
+  const [qrLoaded, setQrLoaded] = useState(false);
+
+  const rows = [
+    { label: t.cryptoNetwork, value: info.network, copyable: false },
+    { label: t.cryptoToken, value: info.tokenName, copyable: false },
+    { label: t.cryptoWallet, value: info.walletAddress, copyable: true, mono: true },
+    {
+      label: t.cryptoAmount,
+      value: `${info.usdtAmount} USDT`,
+      copyable: true,
+      copyText: info.usdtAmount,
+      highlight: true,
+    },
+  ];
+
+  return (
+    <div className="w-full space-y-4">
+      {/* QR Code (wallet address) */}
+      {qrCodeUrl && (
+        <div className="flex justify-center">
+          <div
+            className={[
+              'relative overflow-hidden rounded-xl border p-3',
+              dark ? 'border-slate-700 bg-white' : 'border-gray-200 bg-white',
+            ].join(' ')}
+          >
+            {!qrLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white">
+                <div className="h-8 w-8 animate-spin rounded-full border-3 border-green-500 border-t-transparent" />
+              </div>
+            )}
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=208x208&data=${encodeURIComponent(info.walletAddress)}`}
+              alt="Wallet QR"
+              className={[
+                'h-52 w-52 rounded transition-opacity duration-200',
+                qrLoaded ? 'opacity-100' : 'opacity-0',
+              ].join(' ')}
+              onLoad={() => setQrLoaded(true)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Crypto info */}
+      <div
+        className={[
+          'rounded-xl border p-4 space-y-3',
+          dark ? 'border-green-800 bg-green-950/50' : 'border-green-200 bg-green-50',
+        ].join(' ')}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <div className="rounded-full bg-green-600 p-1.5">
+            <svg
+              className="h-4 w-4 text-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v12M6 12h12" />
+            </svg>
+          </div>
+          <span className={['font-medium', dark ? 'text-green-300' : 'text-green-700'].join(' ')}>
+            {t.cryptoTransferTitle}
+          </span>
+        </div>
+        {rows.map((row) => (
+          <div key={row.label} className="flex items-center justify-between">
+            <span className={['text-sm shrink-0', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
+              {row.label}
+            </span>
+            <div className="flex items-center min-w-0 ml-3">
+              <span
+                className={[
+                  'text-sm truncate',
+                  row.mono ? 'font-mono' : '',
+                  row.highlight
+                    ? dark
+                      ? 'font-bold text-yellow-300'
+                      : 'font-bold text-green-700'
+                    : dark
+                      ? 'text-slate-200'
+                      : 'text-gray-900',
+                ].join(' ')}
+              >
+                {row.value}
+              </span>
+              {row.copyable && <CopyButton text={row.copyText ?? row.value} dark={dark} />}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Warning */}
+      <div
+        className={[
+          'rounded-lg border p-3 text-center text-xs',
+          dark ? 'border-amber-700 bg-amber-950/50 text-amber-300' : 'border-amber-300 bg-amber-50 text-amber-700',
+        ].join(' ')}
+      >
+        {t.cryptoWarning.replace('{amount}', info.usdtAmount)}
+      </div>
+
+      <div className="flex items-center justify-center gap-2">
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
+        <span className={['text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>{t.waitingCrypto}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function PaymentQRCode({
   orderId,
   token,
   qrCode,
+  paymentType,
   amount,
   payAmount: payAmountProp,
   expiresAt,
@@ -223,6 +356,7 @@ export default function PaymentQRCode({
   locale = 'vi',
   orderType = 'balance',
   sepayBankInfo,
+  bscPaymentInfo,
 }: PaymentQRCodeProps) {
   const displayAmount = payAmountProp ?? amount;
   const hasFeeDiff = payAmountProp !== undefined && payAmountProp !== amount && orderType === 'balance';
@@ -257,6 +391,17 @@ export default function PaymentQRCode({
       lang === 'vi'
         ? 'Vui lòng chuyển khoản chính xác số tiền và nội dung bên trên.'
         : 'Please transfer the exact amount with the memo code above.',
+    cryptoTransferTitle: lang === 'vi' ? 'Thông tin chuyển USDT' : 'USDT Transfer Info',
+    cryptoNetwork: lang === 'vi' ? 'Mạng' : 'Network',
+    cryptoToken: 'Token',
+    cryptoWallet: lang === 'vi' ? 'Địa chỉ ví' : 'Wallet',
+    cryptoAmount: lang === 'vi' ? 'Số tiền' : 'Amount',
+    cryptoWarning:
+      lang === 'vi'
+        ? 'Gửi chính xác {amount} USDT trên mạng BSC. Token hoặc mạng khác sẽ gây mất tiền.'
+        : 'Send exactly {amount} USDT on BSC network. Other tokens or networks will result in lost funds.',
+    waitingCrypto:
+      lang === 'vi' ? 'Đang chờ xác nhận trên blockchain...' : 'Waiting for blockchain confirmation...',
   };
 
   useEffect(() => {
@@ -361,14 +506,18 @@ export default function PaymentQRCode({
     );
   }
 
+  const isCrypto = paymentType === 'bsc-usdt';
+
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center space-y-5">
       {/* Amount + Timer */}
       <div className="text-center">
-        <div className={['text-4xl font-bold', dark ? 'text-blue-400' : 'text-blue-600'].join(' ')}>
-          {displayAmount.toLocaleString('vi-VN')} VND
+        <div className={['text-4xl font-bold', isCrypto ? (dark ? 'text-green-400' : 'text-green-600') : (dark ? 'text-blue-400' : 'text-blue-600')].join(' ')}>
+          {isCrypto && bscPaymentInfo
+            ? `${bscPaymentInfo.usdtAmount} USDT`
+            : `${displayAmount.toLocaleString('vi-VN')} VND`}
         </div>
-        {hasFeeDiff && (
+        {hasFeeDiff && !isCrypto && (
           <div className={['mt-1 text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
             {t.credited} {Math.round(amount)} ☕
           </div>
@@ -381,10 +530,20 @@ export default function PaymentQRCode({
       </div>
 
       {/* Bank Transfer Card with QR */}
-      {!expired && sepayBankInfo && (
+      {!expired && sepayBankInfo && !isCrypto && (
         <BankTransferCard
           bankInfo={sepayBankInfo}
           displayAmount={displayAmount}
+          dark={dark}
+          t={t}
+          qrCodeUrl={qrCode || undefined}
+        />
+      )}
+
+      {/* Crypto Transfer Card */}
+      {!expired && bscPaymentInfo && isCrypto && (
+        <CryptoTransferCard
+          info={bscPaymentInfo}
           dark={dark}
           t={t}
           qrCodeUrl={qrCode || undefined}

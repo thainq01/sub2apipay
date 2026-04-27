@@ -64,6 +64,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (body.description !== undefined) data.description = body.description;
     if (body.price !== undefined) data.price = body.price;
     if (body.original_price !== undefined) data.originalPrice = body.original_price;
+    if (body.price_usdt !== undefined) data.priceUsdt = body.price_usdt;
+    if (body.original_price_usdt !== undefined) data.originalPriceUsdt = body.original_price_usdt;
     if (body.validity_days !== undefined) data.validityDays = body.validity_days;
     if (body.validity_unit !== undefined && ['day', 'week', 'month'].includes(body.validity_unit)) {
       data.validityUnit = body.validity_unit;
@@ -86,6 +88,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       description: plan.description,
       price: Number(plan.price),
       originalPrice: plan.originalPrice ? Number(plan.originalPrice) : null,
+      priceUsdt: plan.priceUsdt ? Number(plan.priceUsdt) : null,
+      originalPriceUsdt: plan.originalPriceUsdt ? Number(plan.originalPriceUsdt) : null,
       validDays: plan.validityDays,
       validityUnit: plan.validityUnit,
       features: plan.features ? JSON.parse(plan.features) : [],

@@ -1,5 +1,6 @@
 import { paymentRegistry } from './registry';
 import { SepayProvider } from '@/lib/providers/sepay';
+import { BscUsdtProvider } from '@/lib/providers/bsc-usdt';
 import { getEnv } from '@/lib/config';
 import { getSystemConfig } from '@/lib/system-config';
 import { prisma } from '@/lib/db';
@@ -30,6 +31,16 @@ function registerFromList(providers: string[], env: Env, strict: boolean): void 
     } else {
       paymentRegistry.register(new SepayProvider());
       registeredKeys.add('sepay');
+    }
+  }
+
+  if (providers.includes('bsc-usdt') && !registeredKeys.has('bsc-usdt')) {
+    if (!env.BSC_WALLET_ADDRESS) {
+      if (strict) throw new Error('PAYMENT_PROVIDERS includes bsc-usdt, but BSC_WALLET_ADDRESS is missing');
+      console.warn('[payment] bsc-usdt enabled but BSC_WALLET_ADDRESS not set, skipping');
+    } else {
+      paymentRegistry.register(new BscUsdtProvider());
+      registeredKeys.add('bsc-usdt');
     }
   }
 }
@@ -86,6 +97,12 @@ export async function ensureDBProviders(): Promise<void> {
       case 'sepay':
         if (config.apiKey) {
           paymentRegistry.register(new SepayProvider(instance.id, config));
+          registeredKeys.add(key);
+        }
+        break;
+      case 'bsc-usdt':
+        if (env.BSC_WALLET_ADDRESS) {
+          paymentRegistry.register(new BscUsdtProvider(instance.id));
           registeredKeys.add(key);
         }
         break;

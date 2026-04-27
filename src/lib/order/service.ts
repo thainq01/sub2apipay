@@ -67,6 +67,13 @@ export interface CreateOrderResult {
     accountName: string;
     transferCode: string;
   } | null;
+  // BSC USDT blockchain payment info
+  bscPaymentInfo?: {
+    walletAddress: string;
+    network: string;
+    tokenName: string;
+    usdtAmount: string;
+  } | null;
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<CreateOrderResult> {
@@ -80,6 +87,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     id: string;
     groupId: number | null;
     price: Prisma.Decimal;
+    priceUsdt: Prisma.Decimal | null;
     validityDays: number;
     validityUnit: string;
     name: string;
@@ -243,8 +251,9 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
 
   const feeRate = getMethodFeeRate(input.paymentType);
 
-  // SePay: input.amount is VND. Convert to credits for Sub2API.
-  // amount = credits (what Sub2API receives), payAmount = VND (what user pays)
+  // input.amount is always VND from frontend.
+  // Convert to credits for Sub2API and to payment currency.
+  // amount = credits (what Sub2API receives), payAmount = what user pays (VND or USDT)
   let creditAmount = input.amount;
   let payAmountVND = input.amount;
   if (input.paymentType === 'sepay') {
@@ -255,12 +264,47 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     creditAmount = input.amount / vndPerCredit;
     payAmountVND = input.amount; // VND amount (no fee for bank transfer)
   }
+  if (input.paymentType === 'bsc-usdt') {
+    if (subscriptionPlan?.priceUsdt) {
+      // Subscription: use the plan's USDT price directly
+      creditAmount = Number(subscriptionPlan.priceUsdt);
+    } else {
+      // Balance recharge: convert VND → credits → USDT
+      const vndPerCreditConfig = await getSystemConfig('SEPAY_VND_PER_CREDIT');
+      const vndPerCredit = vndPerCreditConfig
+        ? parseFloat(vndPerCreditConfig) || 2000
+        : env.SEPAY_VND_PER_CREDIT ?? 2000;
+      creditAmount = input.amount / vndPerCredit;
+    }
+  }
 
-  const payAmountStr = input.paymentType === 'sepay'
-    ? payAmountVND.toFixed(2)
-    : calculatePayAmount(input.amount, feeRate);
+  // Calculate payAmount in the payment currency
+  let payAmountStr: string;
+  if (input.paymentType === 'sepay') {
+    payAmountStr = payAmountVND.toFixed(2);
+  } else if (input.paymentType === 'bsc-usdt') {
+    if (subscriptionPlan?.priceUsdt) {
+      // Subscription: payAmount IS the USDT price
+      payAmountStr = Number(subscriptionPlan.priceUsdt).toFixed(2);
+    } else {
+      // Balance: creditAmount (coffee cups) * RATE_USDT
+      const rateUsdt = env.RATE_USDT ?? 0.1;
+      const usdtAmount = Math.round(creditAmount * rateUsdt * 100) / 100;
+      payAmountStr = usdtAmount.toFixed(2);
+    }
+  } else {
+    payAmountStr = calculatePayAmount(input.amount, feeRate);
+  }
   const payAmountNum = Number(payAmountStr);
-  const orderAmount = input.paymentType === 'sepay' ? creditAmount : input.amount;
+  // order.amount = what Sub2API receives (credits for balance, plan price for subscription)
+  let orderAmount: number;
+  if (subscriptionPlan) {
+    orderAmount = Number(subscriptionPlan.price);
+  } else if (input.paymentType === 'sepay' || input.paymentType === 'bsc-usdt') {
+    orderAmount = creditAmount;
+  } else {
+    orderAmount = input.amount;
+  }
 
   const orderTimeoutConfig = await getSystemConfig('ORDER_TIMEOUT_MINUTES');
   const defaultTimeoutMinutes = orderTimeoutConfig
@@ -274,6 +318,13 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     orderTimeoutMinutes = sepayTimeoutConfig
       ? parseInt(sepayTimeoutConfig, 10) || 30
       : env.SEPAY_ORDER_TIMEOUT_MINUTES ?? 30;
+  }
+  // BSC USDT uses a longer timeout for blockchain confirmations + wallet interaction
+  if (input.paymentType === 'bsc-usdt') {
+    const bscTimeoutConfig = await getSystemConfig('ORDER_TIMEOUT_BSC_USDT');
+    orderTimeoutMinutes = bscTimeoutConfig
+      ? parseInt(bscTimeoutConfig, 10) || 30
+      : 30;
   }
   const expiresAt = new Date(Date.now() + orderTimeoutMinutes * 60 * 1000);
 
@@ -393,6 +444,10 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
         const { SepayProvider } = await import('@/lib/providers/sepay');
         actualProvider = new SepayProvider(instanceResult.instanceId, instanceResult.config);
       }
+      if (provider.providerKey === 'bsc-usdt') {
+        const { BscUsdtProvider } = await import('@/lib/providers/bsc-usdt');
+        actualProvider = new BscUsdtProvider(instanceResult.instanceId);
+      }
       selectedInstanceId = instanceResult.instanceId;
     } else {
       // Check if configured instances exist but all filtered out by limits
@@ -492,10 +547,24 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       };
     }
 
+    // Build BSC USDT payment info for the frontend
+    let bscPaymentInfo: CreateOrderResult['bscPaymentInfo'] = null;
+    let finalPayAmount = payAmountNum;
+    if (input.paymentType === 'bsc-usdt') {
+      const walletAddress = env.BSC_WALLET_ADDRESS || '';
+      finalPayAmount = payAmountNum;
+      bscPaymentInfo = {
+        walletAddress,
+        network: 'BNB Smart Chain (BEP-20)',
+        tokenName: 'USDT',
+        usdtAmount: payAmountStr,
+      };
+    }
+
     return {
       orderId: order.id,
       amount: orderAmount,
-      payAmount: payAmountNum,
+      payAmount: finalPayAmount,
       feeRate,
       status: ORDER_STATUS.PENDING,
       paymentType: input.paymentType,
@@ -506,6 +575,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       expiresAt,
       statusAccessToken,
       sepayBankInfo,
+      bscPaymentInfo,
       orderType: input.orderType || 'balance',
     };
   } catch (error) {

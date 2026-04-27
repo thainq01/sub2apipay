@@ -127,6 +127,10 @@ export function formatVND(amount: number): string {
   return amount.toLocaleString('vi-VN') + ' ☕';
 }
 
+export function formatUSDT(amount: number): string {
+  return amount.toFixed(2) + ' USDT';
+}
+
 export interface PaymentTypeMeta {
   label: string;
   sublabel?: string;
@@ -154,14 +158,29 @@ export const PAYMENT_TYPE_META: Record<string, PaymentTypeMeta> = {
     chartBar: { light: 'bg-blue-500', dark: 'bg-blue-400' },
     buttonClass: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800',
   },
+  [PAYMENT_TYPE.BSC_USDT]: {
+    label: 'Transfer USDT',
+    sublabel: 'BEP-20',
+    provider: 'BSC',
+    color: '#16a34a',
+    selectedBorder: 'border-green-600',
+    selectedBg: 'bg-green-50',
+    selectedBgDark: 'bg-green-950',
+    iconBg: 'bg-green-600',
+    iconSrc: '/icons/usdt.svg',
+    chartBar: { light: 'bg-green-500', dark: 'bg-green-400' },
+    buttonClass: 'bg-green-600 hover:bg-green-700 active:bg-green-800',
+  },
 };
 
 const PAYMENT_TEXT_MAP: Record<Locale, Record<string, { label: string; provider: string; sublabel?: string }>> = {
   vi: {
     [PAYMENT_TYPE.SEPAY]: { label: 'Chuyển khoản', provider: 'SePay' },
+    [PAYMENT_TYPE.BSC_USDT]: { label: 'Chuyển USDT', provider: 'BSC', sublabel: 'BEP-20' },
   },
   en: {
     [PAYMENT_TYPE.SEPAY]: { label: 'Bank Transfer', provider: 'SePay' },
+    [PAYMENT_TYPE.BSC_USDT]: { label: 'Transfer USDT', provider: 'BSC', sublabel: 'BEP-20' },
   },
 };
 
@@ -206,6 +225,10 @@ export function getPaymentChannelLabel(type: string, locale: Locale = 'vi'): str
 
 export function isSepayType(type: string | undefined | null): boolean {
   return !!type?.startsWith(PAYMENT_PREFIX.SEPAY);
+}
+
+export function isBscUsdtType(type: string | undefined | null): boolean {
+  return !!type?.startsWith(PAYMENT_PREFIX.BSC_USDT);
 }
 
 export function applySublabelOverrides(overrides: Record<string, string>): void {

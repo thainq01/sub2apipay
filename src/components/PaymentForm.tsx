@@ -21,6 +21,7 @@ interface PaymentFormProps {
   minAmount: number;
   maxAmount: number;
   rate: number;
+  rateUsdt?: number | null;
   onSubmit: (amount: number, paymentType: string) => Promise<void>;
   loading?: boolean;
   dark?: boolean;
@@ -40,6 +41,7 @@ export default function PaymentForm({
   minAmount,
   maxAmount,
   rate,
+  rateUsdt,
   onSubmit,
   loading,
   dark = false,
@@ -99,6 +101,15 @@ export default function PaymentForm({
   };
 
   const renderPaymentIcon = (type: string) => {
+    const meta = PAYMENT_TYPE_META[type];
+    const iconSrc = meta?.iconSrc;
+    if (iconSrc) {
+      return (
+        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${meta.iconBg} p-1.5`}>
+          <img src={iconSrc} alt="" className="h-5 w-5" />
+        </span>
+      );
+    }
     return (
       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -205,23 +216,40 @@ export default function PaymentForm({
             ))}
           </div>
 
-          {/* VND conversion display */}
-          {vndAmount > 0 && (
-            <div className={[
-              'flex items-center gap-2.5 rounded-xl px-4 py-3',
-              dark ? 'bg-amber-500/10' : 'bg-amber-50',
-            ].join(' ')}>
-              <span className="text-xl">💰</span>
-              <div className="flex-1">
-                <span className={['text-sm font-semibold', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>
-                  = {formatVND(vndAmount)}
-                </span>
-                <span className={['ml-1.5 text-xs', dark ? 'text-amber-400/60' : 'text-amber-600/60'].join(' ')}>
-                  ({formatAmount(selectedAmount)} × {rate.toLocaleString('vi-VN')})
-                </span>
+          {/* Conversion display */}
+          {vndAmount > 0 && (() => {
+            const isCrypto = effectivePaymentType === 'bsc-usdt';
+            const usdtAmount = isCrypto && rateUsdt ? (selectedAmount * rateUsdt).toFixed(2) : 0;
+
+            return isCrypto && rateUsdt ? (
+              <div className={[
+                'flex items-center gap-2.5 rounded-xl px-4 py-3',
+                dark ? 'bg-green-500/10' : 'bg-green-50',
+              ].join(' ')}>
+                <span className="text-xl">💲</span>
+                <div className="flex-1">
+                  <span className={['text-sm font-semibold', dark ? 'text-green-300' : 'text-green-700'].join(' ')}>
+                    = {usdtAmount} USDT
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className={[
+                'flex items-center gap-2.5 rounded-xl px-4 py-3',
+                dark ? 'bg-amber-500/10' : 'bg-amber-50',
+              ].join(' ')}>
+                <span className="text-xl">💰</span>
+                <div className="flex-1">
+                  <span className={['text-sm font-semibold', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>
+                    = {formatVND(vndAmount)}
+                  </span>
+                  <span className={['ml-1.5 text-xs', dark ? 'text-amber-400/60' : 'text-amber-600/60'].join(' ')}>
+                    ({formatAmount(selectedAmount)} × {rate.toLocaleString('vi-VN')})
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Validation message */}
           {customAmount !== '' && !isValid && (() => {

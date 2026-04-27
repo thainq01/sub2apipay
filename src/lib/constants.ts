@@ -42,9 +42,11 @@ export const REFUND_STATUSES = new Set<string>([
 /** Payment method identifier */
 export const PAYMENT_TYPE = {
   SEPAY: 'sepay',
+  BSC_USDT: 'bsc-usdt',
 } as const;
 
 /** Payment method prefix (used for startsWith check) */
 export const PAYMENT_PREFIX = {
   SEPAY: 'sepay',
+  BSC_USDT: 'bsc-usdt',
 } as const;

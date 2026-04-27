@@ -13,7 +13,7 @@ model Order {
   userName      String?     @map("user_name")
   userNotes     String?     @map("user_notes")
   amount        Decimal     @db.Decimal(10, 2)
-  payAmount     Decimal?    @db.Decimal(10, 2) @map("pay_amount")
+  payAmount     Decimal?    @db.Decimal(10, 3) @map("pay_amount")
   feeRate       Decimal?    @db.Decimal(5, 4)  @map("fee_rate")
   rechargeCode  String      @unique @map("recharge_code")
   status        OrderStatus @default(PENDING)
@@ -119,6 +119,8 @@ model SubscriptionPlan {
   description   String?  @db.Text
   price         Decimal  @db.Decimal(10, 2)
   originalPrice Decimal? @db.Decimal(10, 2) @map("original_price")
+  priceUsdt         Decimal? @db.Decimal(10, 2) @map("price_usdt")
+  originalPriceUsdt Decimal? @db.Decimal(10, 2) @map("original_price_usdt")
   validityDays  Int      @default(30) @map("validity_days")
   validityUnit  String   @default("day") @map("validity_unit") // day | week | month
   features      String?  @db.Text
@@ -185,4 +187,21 @@ model SepayTransaction {
   createdAt       DateTime @default(now()) @map("created_at")
 
   @@map("sepay_transactions")
+}
+
+// ── BSC USDT 交易记录（链上扫描事件） ──
+model BscTransaction {
+  id            String   @id @default(cuid())
+  txHash        String   @unique @map("tx_hash")
+  blockNumber   Int      @map("block_number")
+  fromAddress   String   @map("from_address")
+  toAddress     String   @map("to_address")
+  amount        Decimal  @db.Decimal(20, 6)
+  confirmations Int
+  tokenAddress  String   @map("token_address")
+  orderId       String?  @map("order_id")
+  matched       Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("bsc_transactions")
 }

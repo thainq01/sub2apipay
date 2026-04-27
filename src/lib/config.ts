@@ -63,6 +63,17 @@ const envSchema = z.object({
 
   // Payment method frontend description (sublabel) override
   PAYMENT_SUBLABEL_SEPAY: optionalTrimmedString,
+
+  // BSC USDT (blockchain payment)
+  BSC_WALLET_ADDRESS: optionalTrimmedString,
+  BSC_RPC_URL: z.string().default('https://bsc-dataseed.binance.org'),
+  BSC_USDT_CONTRACT: z.string().default('0x55d398326f99059fF775485246999027B3197955'),
+  BSC_REQUIRED_CONFIRMATIONS: z.string().default('15').transform(Number).pipe(z.number().int().positive()),
+  BSC_SCAN_INTERVAL_MS: z.string().default('15000').transform(Number).pipe(z.number().int().positive()),
+  // USDT per 1 coffee (e.g., 0.1 means 1 coffee = 0.1 USDT)
+  RATE_USDT: z.string().optional().transform((v) => (v ? Number(v) : undefined)).pipe(z.number().positive().optional()),
+  MIN_RECHARGE_AMOUNT_USDT: z.string().optional().transform((v) => (v ? Number(v) : undefined)).pipe(z.number().positive().optional()),
+  MAX_RECHARGE_AMOUNT_USDT: z.string().optional().transform((v) => (v ? Number(v) : undefined)).pipe(z.number().positive().optional()),
 });
 
 export type Env = z.infer<typeof envSchema>;

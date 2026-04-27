@@ -64,6 +64,8 @@ export async function GET(request: NextRequest) {
         let enabledTypes = resolveEnabledPaymentTypes(supportedTypes, configuredPaymentTypesRaw);
 
         // Override mode: filter out payment types without active instances
+        // Skip instance check for providers configured purely via env vars (e.g. bsc-usdt)
+        const ENV_ONLY_PROVIDERS = new Set(['bsc-usdt']);
         const overrideEnabled = await getSystemConfig('OVERRIDE_ENV_ENABLED');
         if (overrideEnabled === 'true' && enabledTypes.length > 0) {
           const providerKeys = [
@@ -77,6 +79,7 @@ export async function GET(request: NextRequest) {
             enabledTypes = enabledTypes.filter((type) => {
               const pk = paymentRegistry.getProviderKey(type);
               if (!pk) return false;
+              if (ENV_ONLY_PROVIDERS.has(pk)) return true;
               return activeInstances.some((inst) => {
                 if (inst.providerKey !== pk) return false;
                 if (!inst.supportedTypes) return true;
@@ -143,6 +146,7 @@ export async function GET(request: NextRequest) {
         maxPendingOrders,
         sublabelOverrides: Object.keys(sublabelOverrides).length > 0 ? sublabelOverrides : null,
         rate: env.RATE ?? env.SEPAY_VND_PER_CREDIT ?? 2000,
+        rateUsdt: env.RATE_USDT ?? null,
       },
     });
   } catch (error) {

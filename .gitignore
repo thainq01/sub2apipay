@@ -45,9 +45,10 @@ next-env.d.ts
 
 # Claude Code project instructions (contains sensitive deployment info)
 CLAUDE.md
-
+AGENTS.md
 
 openspec
 .claude
 .github
 .idea
+.gitnexus

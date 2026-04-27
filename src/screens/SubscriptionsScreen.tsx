@@ -20,11 +20,18 @@ interface OrderResult {
   expiresAt: string;
   qrCode?: string;
   statusAccessToken?: string;
+  paymentType?: string;
   sepayBankInfo?: {
     bankName: string;
     accountNumber: string;
     accountName: string;
     transferCode: string;
+  } | null;
+  bscPaymentInfo?: {
+    walletAddress: string;
+    network: string;
+    tokenName: string;
+    usdtAmount: string;
   } | null;
 }
 
@@ -73,7 +80,15 @@ export default function SubscriptionsScreen({ token, isIframe, navParams }: Subs
       const [plansRes, subsRes, userRes] = await Promise.all([
         fetch(`/api/subscription-plans?token=${encodeURIComponent(token)}`),
         fetch(`/api/user/subscriptions?token=${encodeURIComponent(token)}`),
-        fetch(`/api/user?token=${encodeURIComponent(token)}`),
+        (() => {
+          // Extract user_id from JWT payload for the /api/user call
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return fetch(`/api/user?user_id=${payload.user_id}&token=${encodeURIComponent(token)}`);
+          } catch {
+            return fetch(`/api/user?token=${encodeURIComponent(token)}`);
+          }
+        })(),
       ]);
 
       if (plansRes.ok) {
@@ -115,7 +130,9 @@ export default function SubscriptionsScreen({ token, isIframe, navParams }: Subs
 
     const resumeOrder = async () => {
       try {
-        const res = await fetch(`/api/orders/resume?token=${encodeURIComponent(token)}&order_id=${encodeURIComponent(resumeOrderId)}`);
+        const res = await fetch(
+          `/api/orders/resume?token=${encodeURIComponent(token)}&order_id=${encodeURIComponent(resumeOrderId)}`,
+        );
         if (res.ok) {
           const data = await res.json();
           setOrderResult({
@@ -125,7 +142,9 @@ export default function SubscriptionsScreen({ token, isIframe, navParams }: Subs
             expiresAt: data.expiresAt,
             qrCode: data.qrCode,
             statusAccessToken: data.statusAccessToken,
+            paymentType: data.paymentType,
             sepayBankInfo: data.sepayBankInfo,
+            bscPaymentInfo: data.bscPaymentInfo,
           });
           setPaymentStep('paying');
           setLoading(false);
@@ -153,13 +172,17 @@ export default function SubscriptionsScreen({ token, isIframe, navParams }: Subs
     setSubmitting(true);
     setError('');
 
+    // For bsc-usdt: send the plan's USDT price directly
+    const orderAmount =
+      paymentType === 'bsc-usdt' && selectedPlan.priceUsdt !== null ? selectedPlan.priceUsdt : selectedPlan.price;
+
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token,
-          amount: selectedPlan.price,
+          amount: orderAmount,
           payment_type: paymentType,
           order_type: 'subscription',
           plan_id: selectedPlan.id,
@@ -179,7 +202,9 @@ export default function SubscriptionsScreen({ token, isIframe, navParams }: Subs
         expiresAt: data.expiresAt,
         qrCode: data.qrCode,
         statusAccessToken: data.statusAccessToken,
+        paymentType: data.paymentType,
         sepayBankInfo: data.sepayBankInfo,
+        bscPaymentInfo: data.bscPaymentInfo,
       });
       setPaymentStep('paying');
       setSubmitting(false);
@@ -230,7 +255,11 @@ export default function SubscriptionsScreen({ token, isIframe, navParams }: Subs
 
   if (!token) {
     return (
-      <div className={['flex min-h-screen items-center justify-center p-4', isDark ? 'bg-slate-950' : 'bg-slate-50'].join(' ')}>
+      <div
+        className={['flex min-h-screen items-center justify-center p-4', isDark ? 'bg-slate-950' : 'bg-slate-50'].join(
+          ' ',
+        )}
+      >
         <div className="text-center text-red-500">
           <p className="text-lg font-medium">{t.missingToken}</p>
         </div>
@@ -255,7 +284,15 @@ export default function SubscriptionsScreen({ token, isIframe, navParams }: Subs
             isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200',
           ].join(' ')}
         >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
@@ -294,6 +331,7 @@ export default function SubscriptionsScreen({ token, isIframe, navParams }: Subs
           orderId={orderResult.orderId}
           token={token}
           qrCode={orderResult.qrCode}
+          paymentType={orderResult.paymentType}
           amount={orderResult.amount}
           payAmount={orderResult.payAmount}
           expiresAt={orderResult.expiresAt}
@@ -305,6 +343,7 @@ export default function SubscriptionsScreen({ token, isIframe, navParams }: Subs
           locale={locale}
           orderType="subscription"
           sepayBankInfo={orderResult.sepayBankInfo}
+          bscPaymentInfo={orderResult.bscPaymentInfo}
         />
       ) : selectedPlan ? (
         <SubscriptionConfirm

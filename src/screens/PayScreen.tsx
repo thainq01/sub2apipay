@@ -32,6 +32,12 @@ interface OrderResult {
     accountName: string;
     transferCode: string;
   } | null;
+  bscPaymentInfo?: {
+    walletAddress: string;
+    network: string;
+    tokenName: string;
+    usdtAmount: string;
+  } | null;
 }
 
 interface AppConfig {
@@ -46,6 +52,7 @@ interface AppConfig {
   balanceDisabled?: boolean;
   maxPendingOrders?: number;
   rate?: number;
+  rateUsdt?: number | null;
 }
 
 interface PayScreenProps {
@@ -180,6 +187,7 @@ export default function PayScreen({ token, isIframe, navParams }: PayScreenProps
             balanceDisabled: cfgData.config.balanceDisabled ?? false,
             maxPendingOrders: cfgData.config.maxPendingOrders ?? 3,
             rate: cfgData.config.rate ?? 2000,
+            rateUsdt: cfgData.config.rateUsdt ?? null,
           });
           if (cfgData.config.sublabelOverrides) {
             applySublabelOverrides(cfgData.config.sublabelOverrides);
@@ -242,6 +250,7 @@ export default function PayScreen({ token, isIframe, navParams }: PayScreenProps
           statusAccessToken: data.statusAccessToken,
           qrCode: data.qrCode,
           sepayBankInfo: data.sepayBankInfo,
+          bscPaymentInfo: data.bscPaymentInfo,
           orderType: data.orderType,
         });
         setStep('paying');
@@ -302,7 +311,7 @@ export default function PayScreen({ token, isIframe, navParams }: PayScreenProps
     setLoading(true);
     setError('');
 
-    // Convert coffee amount to VND for the API (backend expects VND for sepay)
+    // Convert coffee amount to VND — backend handles conversion to USDT if needed
     const rate = config.rate ?? 2000;
     const vndAmount = amount * rate;
 
@@ -385,6 +394,7 @@ export default function PayScreen({ token, isIframe, navParams }: PayScreenProps
         expiresAt: data.expiresAt,
         statusAccessToken: data.statusAccessToken,
         sepayBankInfo: data.sepayBankInfo,
+        bscPaymentInfo: data.bscPaymentInfo,
         orderType: data.orderType,
       });
       setStep('paying');
@@ -571,6 +581,7 @@ export default function PayScreen({ token, isIframe, navParams }: PayScreenProps
                 minAmount={config.minAmount}
                 maxAmount={config.maxAmount}
                 rate={config.rate ?? 2000}
+                rateUsdt={config.rateUsdt}
                 onSubmit={handleSubmit}
                 loading={loading}
                 dark={isDark}
@@ -606,6 +617,7 @@ export default function PayScreen({ token, isIframe, navParams }: PayScreenProps
             locale={locale}
             isIframe={isIframe}
             sepayBankInfo={orderResult.sepayBankInfo}
+            bscPaymentInfo={orderResult.bscPaymentInfo}
             orderType={orderResult.orderType}
           />
           {renderHelpSection()}
