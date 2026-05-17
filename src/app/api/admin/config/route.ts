@@ -76,8 +76,12 @@ export async function GET(request: NextRequest) {
 
 const ALLOWED_CONFIG_KEYS = new Set([
   'ENABLED_PAYMENT_TYPES',
-  'RECHARGE_MIN_AMOUNT',
-  'RECHARGE_MAX_AMOUNT',
+  'MIN_RECHARGE_AMOUNT',
+  'MAX_RECHARGE_AMOUNT',
+  'MIN_RECHARGE_AMOUNT_USDT',
+  'MAX_RECHARGE_AMOUNT_USDT',
+  'RATE_VND',
+  'RATE_USDT',
   'DAILY_RECHARGE_LIMIT',
   'ORDER_TIMEOUT_MINUTES',
   'IFRAME_ALLOW_ORIGINS',
@@ -97,6 +101,15 @@ const ALLOWED_CONFIG_KEYS = new Set([
   'DEFAULT_DEDUCT_BALANCE',
 ]);
 
+const NUMERIC_POSITIVE_KEYS = new Set([
+  'RATE_VND',
+  'RATE_USDT',
+  'MIN_RECHARGE_AMOUNT',
+  'MAX_RECHARGE_AMOUNT',
+  'MIN_RECHARGE_AMOUNT_USDT',
+  'MAX_RECHARGE_AMOUNT_USDT',
+]);
+
 export async function PUT(request: NextRequest) {
   if (!(await verifyAdminToken(request))) return unauthorizedResponse(request);
 
@@ -114,6 +127,12 @@ export async function PUT(request: NextRequest) {
       }
       if (!ALLOWED_CONFIG_KEYS.has(config.key)) {
         return NextResponse.json({ error: `不允许修改配置项: ${config.key}` }, { status: 400 });
+      }
+      if (NUMERIC_POSITIVE_KEYS.has(config.key)) {
+        const n = parseFloat(config.value);
+        if (!Number.isFinite(n) || n <= 0) {
+          return NextResponse.json({ error: `配置项 ${config.key} 必须为正数` }, { status: 400 });
+        }
       }
     }
 

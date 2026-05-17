@@ -21,7 +21,7 @@ import { deriveOrderState, isRefundStatus } from './status';
 import { pickLocaleText, type Locale } from '@/lib/locale';
 import { getBizDayStartUTC } from '@/lib/time/biz-day';
 import { buildOrderResultUrl, createOrderStatusAccessToken } from '@/lib/order/status-access';
-import { getSystemConfig, getSystemConfigs } from '@/lib/system-config';
+import { getSystemConfig, getSystemConfigs, getRequiredNumericConfig } from '@/lib/system-config';
 import { selectInstance, getInstanceConfig, type LoadBalanceStrategy } from '@/lib/payment/load-balancer';
 
 /** Maximum amount allowed by Decimal(10,2) */
@@ -257,12 +257,9 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
   let creditAmount = input.amount;
   let payAmountVND = input.amount;
   if (input.paymentType === 'sepay') {
-    const vndPerCreditConfig = await getSystemConfig('SEPAY_VND_PER_CREDIT');
-    const vndPerCredit = vndPerCreditConfig
-      ? parseFloat(vndPerCreditConfig) || 2000
-      : env.SEPAY_VND_PER_CREDIT ?? 2000;
+    const vndPerCredit = await getRequiredNumericConfig('RATE_VND');
     creditAmount = input.amount / vndPerCredit;
-    payAmountVND = input.amount; // VND amount (no fee for bank transfer)
+    payAmountVND = input.amount;
   }
   if (input.paymentType === 'bsc-usdt') {
     if (subscriptionPlan?.priceUsdt) {
@@ -270,10 +267,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       creditAmount = Number(subscriptionPlan.priceUsdt);
     } else {
       // Balance recharge: convert VND → credits → USDT
-      const vndPerCreditConfig = await getSystemConfig('SEPAY_VND_PER_CREDIT');
-      const vndPerCredit = vndPerCreditConfig
-        ? parseFloat(vndPerCreditConfig) || 2000
-        : env.SEPAY_VND_PER_CREDIT ?? 2000;
+      const vndPerCredit = await getRequiredNumericConfig('RATE_VND');
       creditAmount = input.amount / vndPerCredit;
     }
   }
@@ -288,7 +282,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       payAmountStr = Number(subscriptionPlan.priceUsdt).toFixed(2);
     } else {
       // Balance: creditAmount (coffee cups) * RATE_USDT
-      const rateUsdt = env.RATE_USDT ?? 0.1;
+      const rateUsdt = await getRequiredNumericConfig('RATE_USDT');
       const usdtAmount = Math.round(creditAmount * rateUsdt * 100) / 100;
       payAmountStr = usdtAmount.toFixed(2);
     }
@@ -472,7 +466,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
 
     // Only easypay from external notifyUrl, return_url unified back to result page with access token
     let notifyUrl: string | undefined;
-    let returnUrl: string | undefined = orderResultUrl;
+    const returnUrl: string | undefined = orderResultUrl;
 
     // R3+R5: Build payment product name
     let paymentSubject: string;

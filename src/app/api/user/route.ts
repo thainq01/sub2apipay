@@ -5,7 +5,7 @@ import { queryMethodLimits } from '@/lib/order/limits';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
 import { getPaymentDisplayInfo } from '@/lib/pay-utils';
 import { resolveLocale } from '@/lib/locale';
-import { getSystemConfig } from '@/lib/system-config';
+import { getSystemConfig, getRequiredNumericConfig } from '@/lib/system-config';
 import { resolveEnabledPaymentTypes } from '@/lib/payment/resolve-enabled-types';
 import { prisma } from '@/lib/db';
 
@@ -49,17 +49,25 @@ export async function GET(request: NextRequest) {
       getSystemConfig('ENABLED_PAYMENT_TYPES'),
       getSystemConfig('BALANCE_PAYMENT_DISABLED'),
       getSystemConfig('MAX_PENDING_ORDERS'),
-      getSystemConfig('RECHARGE_MIN_AMOUNT'),
-      getSystemConfig('RECHARGE_MAX_AMOUNT'),
       getSystemConfig('DAILY_RECHARGE_LIMIT'),
+      getRequiredNumericConfig('MIN_RECHARGE_AMOUNT'),
+      getRequiredNumericConfig('MAX_RECHARGE_AMOUNT'),
+      getRequiredNumericConfig('RATE_VND'),
+      getRequiredNumericConfig('RATE_USDT'),
+      getRequiredNumericConfig('MIN_RECHARGE_AMOUNT_USDT'),
+      getRequiredNumericConfig('MAX_RECHARGE_AMOUNT_USDT'),
     ]).then(
       async ([
         configuredPaymentTypesRaw,
         balanceDisabledVal,
         maxPendingVal,
-        minAmountVal,
-        maxAmountVal,
         dailyLimitVal,
+        minAmount,
+        maxAmount,
+        rate,
+        rateUsdt,
+        minAmountUsdt,
+        maxAmountUsdt,
       ]) => {
         let enabledTypes = resolveEnabledPaymentTypes(supportedTypes, configuredPaymentTypesRaw);
 
@@ -96,14 +104,18 @@ export async function GET(request: NextRequest) {
           methodLimits,
           balanceDisabled: balanceDisabledVal === 'true',
           maxPendingOrders: maxPendingVal ? parseInt(maxPendingVal, 10) || 3 : 3,
-          minAmount: minAmountVal ? parseFloat(minAmountVal) || env.MIN_RECHARGE_AMOUNT : env.MIN_RECHARGE_AMOUNT,
-          maxAmount: maxAmountVal ? parseFloat(maxAmountVal) || env.MAX_RECHARGE_AMOUNT : env.MAX_RECHARGE_AMOUNT,
+          minAmount,
+          maxAmount,
           maxDailyAmount: dailyLimitVal ? parseFloat(dailyLimitVal) : env.MAX_DAILY_RECHARGE_AMOUNT,
+          rate,
+          rateUsdt,
+          minAmountUsdt,
+          maxAmountUsdt,
         };
       },
     );
 
-    const { enabledTypes, methodLimits, balanceDisabled, maxPendingOrders, minAmount, maxAmount, maxDailyAmount } =
+    const { enabledTypes, methodLimits, balanceDisabled, maxPendingOrders, minAmount, maxAmount, maxDailyAmount, rate, rateUsdt, minAmountUsdt, maxAmountUsdt } =
       await configPromise;
 
     // Collect sublabel overrides
@@ -145,8 +157,10 @@ export async function GET(request: NextRequest) {
         balanceDisabled,
         maxPendingOrders,
         sublabelOverrides: Object.keys(sublabelOverrides).length > 0 ? sublabelOverrides : null,
-        rate: env.RATE ?? env.SEPAY_VND_PER_CREDIT ?? 2000,
-        rateUsdt: env.RATE_USDT ?? null,
+        rate,
+        rateUsdt,
+        minAmountUsdt,
+        maxAmountUsdt,
       },
     });
   } catch (error) {

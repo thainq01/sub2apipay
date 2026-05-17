@@ -53,7 +53,7 @@ describe('GET /api/admin/config', () => {
   it('returns configs with sensitive values masked', async () => {
     mockGetAllSystemConfigs.mockResolvedValue([
       { key: 'SUB2API_ADMIN_API_KEY', value: 'my-super-secret-key-12345', group: 'general', label: null },
-      { key: 'RECHARGE_MIN_AMOUNT', value: '10', group: 'general', label: null },
+      { key: 'MIN_RECHARGE_AMOUNT', value: '10', group: 'general', label: null },
     ]);
 
     const res = await GET(createRequest());
@@ -63,7 +63,7 @@ describe('GET /api/admin/config', () => {
     // SUB2API_ADMIN_API_KEY contains "KEY" → sensitive → masked
     expect(data.configs[0].value).toBe('*********************2345');
     expect(data.configs[0].value).not.toBe('my-super-secret-key-12345');
-    // RECHARGE_MIN_AMOUNT → not sensitive → not masked
+    // MIN_RECHARGE_AMOUNT → not sensitive → not masked
     expect(data.configs[1].value).toBe('10');
   });
 
@@ -109,7 +109,7 @@ describe('PUT /api/admin/config', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockVerifyAdminToken.mockResolvedValue(false);
-    const res = await PUT(createRequest('PUT', { configs: [{ key: 'RECHARGE_MIN_AMOUNT', value: '5' }] }));
+    const res = await PUT(createRequest('PUT', { configs: [{ key: 'MIN_RECHARGE_AMOUNT', value: '5' }] }));
     expect(res.status).toBe(401);
   });
 
@@ -126,7 +126,7 @@ describe('PUT /api/admin/config', () => {
   });
 
   it('returns 400 when config entry missing key or value', async () => {
-    const res = await PUT(createRequest('PUT', { configs: [{ key: 'RECHARGE_MIN_AMOUNT' }] }));
+    const res = await PUT(createRequest('PUT', { configs: [{ key: 'MIN_RECHARGE_AMOUNT' }] }));
     expect(res.status).toBe(400);
     const data = await res.json();
     expect(data.error).toContain('key');
@@ -143,8 +143,8 @@ describe('PUT /api/admin/config', () => {
     const res = await PUT(
       createRequest('PUT', {
         configs: [
-          { key: 'RECHARGE_MIN_AMOUNT', value: '5' },
-          { key: 'RECHARGE_MAX_AMOUNT', value: '500' },
+          { key: 'MIN_RECHARGE_AMOUNT', value: '5' },
+          { key: 'MAX_RECHARGE_AMOUNT', value: '500' },
         ],
       }),
     );
@@ -154,8 +154,8 @@ describe('PUT /api/admin/config', () => {
     expect(data.success).toBe(true);
     expect(mockSetSystemConfigs).toHaveBeenCalledWith(
       expect.arrayContaining([
-        expect.objectContaining({ key: 'RECHARGE_MIN_AMOUNT', value: '5' }),
-        expect.objectContaining({ key: 'RECHARGE_MAX_AMOUNT', value: '500' }),
+        expect.objectContaining({ key: 'MIN_RECHARGE_AMOUNT', value: '5' }),
+        expect.objectContaining({ key: 'MAX_RECHARGE_AMOUNT', value: '500' }),
       ]),
     );
   });
@@ -165,7 +165,7 @@ describe('PUT /api/admin/config', () => {
       createRequest('PUT', {
         configs: [
           { key: 'SUB2API_ADMIN_API_KEY', value: '********************2345' },
-          { key: 'RECHARGE_MIN_AMOUNT', value: '10' },
+          { key: 'MIN_RECHARGE_AMOUNT', value: '10' },
         ],
       }),
     );
@@ -173,7 +173,7 @@ describe('PUT /api/admin/config', () => {
     expect(res.status).toBe(200);
     // Only the non-masked config should be passed to setSystemConfigs
     expect(mockSetSystemConfigs).toHaveBeenCalledWith([
-      expect.objectContaining({ key: 'RECHARGE_MIN_AMOUNT', value: '10' }),
+      expect.objectContaining({ key: 'MIN_RECHARGE_AMOUNT', value: '10' }),
     ]);
   });
 
@@ -235,7 +235,7 @@ describe('PUT /api/admin/config', () => {
   it('skips provider validation when ENABLED_PROVIDERS is not being updated', async () => {
     const res = await PUT(
       createRequest('PUT', {
-        configs: [{ key: 'RECHARGE_MIN_AMOUNT', value: '5' }],
+        configs: [{ key: 'MIN_RECHARGE_AMOUNT', value: '5' }],
       }),
     );
 
@@ -258,7 +258,38 @@ describe('PUT /api/admin/config', () => {
 
   it('returns 500 on error', async () => {
     mockSetSystemConfigs.mockRejectedValue(new Error('DB error'));
-    const res = await PUT(createRequest('PUT', { configs: [{ key: 'RECHARGE_MIN_AMOUNT', value: '5' }] }));
+    const res = await PUT(createRequest('PUT', { configs: [{ key: 'MIN_RECHARGE_AMOUNT', value: '5' }] }));
     expect(res.status).toBe(500);
+  });
+
+  it('returns 400 for RATE_VND with negative value', async () => {
+    const res = await PUT(createRequest('PUT', { configs: [{ key: 'RATE_VND', value: '-5' }] }));
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain('RATE_VND');
+  });
+
+  it('returns 400 for RATE_VND with non-numeric value', async () => {
+    const res = await PUT(createRequest('PUT', { configs: [{ key: 'RATE_VND', value: 'abc' }] }));
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain('RATE_VND');
+  });
+
+  it('returns 200 for RATE_USDT with valid positive value', async () => {
+    const res = await PUT(createRequest('PUT', { configs: [{ key: 'RATE_USDT', value: '0.1' }] }));
+    expect(res.status).toBe(200);
+  });
+
+  it('returns 400 for old key RECHARGE_MIN_AMOUNT (not allowed)', async () => {
+    const res = await PUT(createRequest('PUT', { configs: [{ key: 'RECHARGE_MIN_AMOUNT', value: '5' }] }));
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain('RECHARGE_MIN_AMOUNT');
+  });
+
+  it('returns 200 for MIN_RECHARGE_AMOUNT_USDT with valid positive value', async () => {
+    const res = await PUT(createRequest('PUT', { configs: [{ key: 'MIN_RECHARGE_AMOUNT_USDT', value: '0.1' }] }));
+    expect(res.status).toBe(200);
   });
 });

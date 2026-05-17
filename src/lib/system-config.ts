@@ -123,6 +123,18 @@ export async function getAllSystemConfigs(): Promise<
   });
 }
 
+export async function getRequiredNumericConfig(key: string): Promise<number> {
+  const raw = await getSystemConfig(key); // already DB → process.env
+  if (raw === undefined || raw === null || raw === '') {
+    throw new Error(`Missing required config: ${key}. Set it via admin UI or .env.`);
+  }
+  const n = parseFloat(raw);
+  if (!Number.isFinite(n) || n <= 0) {
+    throw new Error(`Missing required config: ${key}. Set it via admin UI or .env.`);
+  }
+  return n;
+}
+
 export async function deleteSystemConfig(key: string): Promise<void> {
   await prisma.systemConfig.delete({ where: { key } }).catch(() => {});
   invalidateConfigCache(key);

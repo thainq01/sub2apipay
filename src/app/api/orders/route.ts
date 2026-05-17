@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createOrder } from '@/lib/order/service';
-import { getEnv } from '@/lib/config';
-import { paymentRegistry } from '@/lib/payment';
 import { getEnabledPaymentTypes } from '@/lib/payment/resolve-enabled-types';
 import { getCurrentUserByToken } from '@/lib/sub2api/client';
 import { handleApiError } from '@/lib/utils/api';
-import { getSystemConfigs } from '@/lib/system-config';
+import { getRequiredNumericConfig } from '@/lib/system-config';
 
 const createOrderSchema = z.object({
   token: z.string().min(1),
@@ -32,7 +30,6 @@ const createOrderSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const env = getEnv();
     const body = await request.json();
     const parsed = createOrderSchema.safeParse(body);
 
@@ -53,16 +50,23 @@ export async function POST(request: NextRequest) {
 
     // Subscription orders skip amount range validation (price determined by server plan)
     if (order_type !== 'subscription') {
-      // Prioritize DB config (online configuration in admin), fallback to environment variables
-      const amountConfigs = await getSystemConfigs(['RECHARGE_MIN_AMOUNT', 'RECHARGE_MAX_AMOUNT']);
-      const effectiveMin = amountConfigs['RECHARGE_MIN_AMOUNT']
-        ? parseFloat(amountConfigs['RECHARGE_MIN_AMOUNT']) || env.MIN_RECHARGE_AMOUNT
-        : env.MIN_RECHARGE_AMOUNT;
-      const effectiveMax = amountConfigs['RECHARGE_MAX_AMOUNT']
-        ? parseFloat(amountConfigs['RECHARGE_MAX_AMOUNT']) || env.MAX_RECHARGE_AMOUNT
-        : env.MAX_RECHARGE_AMOUNT;
-      if (amount < effectiveMin || amount > effectiveMax) {
-        return NextResponse.json({ error: `Recharge amount must be between ${effectiveMin} and ${effectiveMax}` }, { status: 400 });
+      if (payment_type === 'bsc-usdt') {
+        // For USDT payments: convert VND amount to USDT and validate against USDT limits
+        const rateVnd = await getRequiredNumericConfig('RATE_VND');
+        const rateUsdt = await getRequiredNumericConfig('RATE_USDT');
+        const usdtAmount = (amount / rateVnd) * rateUsdt;
+        const minUsdt = await getRequiredNumericConfig('MIN_RECHARGE_AMOUNT_USDT');
+        const maxUsdt = await getRequiredNumericConfig('MAX_RECHARGE_AMOUNT_USDT');
+        if (usdtAmount < minUsdt || usdtAmount > maxUsdt) {
+          return NextResponse.json({ error: `Recharge amount must be between ${minUsdt} and ${maxUsdt} USDT` }, { status: 400 });
+        }
+      } else {
+        // For VND payments: validate against VND limits
+        const effectiveMin = await getRequiredNumericConfig('MIN_RECHARGE_AMOUNT');
+        const effectiveMax = await getRequiredNumericConfig('MAX_RECHARGE_AMOUNT');
+        if (amount < effectiveMin || amount > effectiveMax) {
+          return NextResponse.json({ error: `Recharge amount must be between ${effectiveMin} and ${effectiveMax}` }, { status: 400 });
+        }
       }
     }
 
