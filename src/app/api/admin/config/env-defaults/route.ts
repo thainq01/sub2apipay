@@ -11,17 +11,23 @@ export async function GET(request: NextRequest) {
     await ensureDBProviders();
     const supportedTypes = paymentRegistry.getSupportedTypes();
 
+    const defaults: Record<string, string> = {
+      ENABLED_PAYMENT_TYPES: supportedTypes.join(','),
+      DAILY_RECHARGE_LIMIT: String(env.MAX_DAILY_RECHARGE_AMOUNT),
+      ORDER_TIMEOUT_MINUTES: String(env.ORDER_TIMEOUT_MINUTES),
+      IFRAME_ALLOW_ORIGINS: process.env.IFRAME_ALLOW_ORIGINS ?? '',
+      MAX_PENDING_ORDERS: '3',
+    };
+    if (env.MIN_RECHARGE_AMOUNT !== undefined) defaults.MIN_RECHARGE_AMOUNT = String(env.MIN_RECHARGE_AMOUNT);
+    if (env.MAX_RECHARGE_AMOUNT !== undefined) defaults.MAX_RECHARGE_AMOUNT = String(env.MAX_RECHARGE_AMOUNT);
+    if (env.RATE_VND !== undefined) defaults.RATE_VND = String(env.RATE_VND);
+    if (env.RATE_USDT !== undefined) defaults.RATE_USDT = String(env.RATE_USDT);
+    if (env.MIN_RECHARGE_AMOUNT_USDT !== undefined) defaults.MIN_RECHARGE_AMOUNT_USDT = String(env.MIN_RECHARGE_AMOUNT_USDT);
+    if (env.MAX_RECHARGE_AMOUNT_USDT !== undefined) defaults.MAX_RECHARGE_AMOUNT_USDT = String(env.MAX_RECHARGE_AMOUNT_USDT);
+
     return NextResponse.json({
       availablePaymentTypes: supportedTypes,
-      defaults: {
-        ENABLED_PAYMENT_TYPES: supportedTypes.join(','),
-        RECHARGE_MIN_AMOUNT: String(env.MIN_RECHARGE_AMOUNT),
-        RECHARGE_MAX_AMOUNT: String(env.MAX_RECHARGE_AMOUNT),
-        DAILY_RECHARGE_LIMIT: String(env.MAX_DAILY_RECHARGE_AMOUNT),
-        ORDER_TIMEOUT_MINUTES: String(env.ORDER_TIMEOUT_MINUTES),
-        IFRAME_ALLOW_ORIGINS: process.env.IFRAME_ALLOW_ORIGINS ?? '',
-        MAX_PENDING_ORDERS: '3',
-      },
+      defaults,
     });
   } catch (error) {
     console.error('Failed to get env defaults:', error instanceof Error ? error.message : String(error));

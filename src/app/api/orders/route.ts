@@ -50,22 +50,28 @@ export async function POST(request: NextRequest) {
 
     // Subscription orders skip amount range validation (price determined by server plan)
     if (order_type !== 'subscription') {
+      // Recharge limits are stored as coffee-cup counts (credits), not currency amounts.
+      // input.amount is VND from the frontend; divide by RATE_VND to get the cup count,
+      // then compare against the appropriate per-payment-type cup limit.
+      const rateVnd = await getRequiredNumericConfig('RATE_VND');
+      const cups = amount / rateVnd;
       if (payment_type === 'bsc-usdt') {
-        // For USDT payments: convert VND amount to USDT and validate against USDT limits
-        const rateVnd = await getRequiredNumericConfig('RATE_VND');
-        const rateUsdt = await getRequiredNumericConfig('RATE_USDT');
-        const usdtAmount = (amount / rateVnd) * rateUsdt;
-        const minUsdt = await getRequiredNumericConfig('MIN_RECHARGE_AMOUNT_USDT');
-        const maxUsdt = await getRequiredNumericConfig('MAX_RECHARGE_AMOUNT_USDT');
-        if (usdtAmount < minUsdt || usdtAmount > maxUsdt) {
-          return NextResponse.json({ error: `Recharge amount must be between ${minUsdt} and ${maxUsdt} USDT` }, { status: 400 });
+        const minCups = await getRequiredNumericConfig('MIN_RECHARGE_AMOUNT_USDT');
+        const maxCups = await getRequiredNumericConfig('MAX_RECHARGE_AMOUNT_USDT');
+        if (cups < minCups || cups > maxCups) {
+          return NextResponse.json(
+            { error: `Recharge must be between ${minCups} and ${maxCups} coffee cups (USDT payment)` },
+            { status: 400 },
+          );
         }
       } else {
-        // For VND payments: validate against VND limits
-        const effectiveMin = await getRequiredNumericConfig('MIN_RECHARGE_AMOUNT');
-        const effectiveMax = await getRequiredNumericConfig('MAX_RECHARGE_AMOUNT');
-        if (amount < effectiveMin || amount > effectiveMax) {
-          return NextResponse.json({ error: `Recharge amount must be between ${effectiveMin} and ${effectiveMax}` }, { status: 400 });
+        const minCups = await getRequiredNumericConfig('MIN_RECHARGE_AMOUNT');
+        const maxCups = await getRequiredNumericConfig('MAX_RECHARGE_AMOUNT');
+        if (cups < minCups || cups > maxCups) {
+          return NextResponse.json(
+            { error: `Recharge must be between ${minCups} and ${maxCups} coffee cups (VND payment)` },
+            { status: 400 },
+          );
         }
       }
     }

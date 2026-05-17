@@ -39,8 +39,8 @@ function getTexts(locale: Locale) {
         overrideEnvConfig: 'Override Env Config',
         overrideEnvHint: 'When enabled, database settings override environment variables',
         enabledProviders: 'Enabled Provider Types',
-        minRechargeAmount: 'Min Recharge Amount',
-        maxRechargeAmount: 'Max Recharge Amount',
+        minRechargeAmount: 'Min Recharge Amount (VND)',
+        maxRechargeAmount: 'Max Recharge Amount (VND)',
         dailyRechargeLimit: 'Daily Limit (0=unlimited)',
         orderTimeoutMinutes: 'Order Timeout (min)',
         loadingEnvDefaults: 'Loading defaults...',
@@ -102,8 +102,8 @@ function getTexts(locale: Locale) {
         overrideEnvConfig: 'Override Env Config',
         overrideEnvHint: 'When enabled, database settings override environment variables',
         enabledProviders: 'Enabled Provider Types',
-        minRechargeAmount: 'Min Recharge Amount',
-        maxRechargeAmount: 'Max Recharge Amount',
+        minRechargeAmount: 'Min Recharge Amount (VND)',
+        maxRechargeAmount: 'Max Recharge Amount (VND)',
         dailyRechargeLimit: 'Daily Limit (0=unlimited)',
         orderTimeoutMinutes: 'Order Timeout (min)',
         loadingEnvDefaults: 'Loading defaults...',
@@ -339,11 +339,15 @@ function PaymentConfigContent() {
           .map((p: { key: string }) => p.key);
         setRcEnabledProviders(configuredProviders.join(','));
         setRcEnabledPaymentTypes(d.ENABLED_PAYMENT_TYPES || '');
-        setRcMinAmount(d.MIN_RECHARGE_AMOUNT || d.RECHARGE_MIN_AMOUNT || '1');
-        setRcMaxAmount(d.MAX_RECHARGE_AMOUNT || d.RECHARGE_MAX_AMOUNT || '1000');
-        setRcDailyLimit(d.DAILY_RECHARGE_LIMIT || '10000');
-        setRcOrderTimeout(d.ORDER_TIMEOUT_MINUTES || '5');
+        if (d.MIN_RECHARGE_AMOUNT) setRcMinAmount(d.MIN_RECHARGE_AMOUNT);
+        if (d.MAX_RECHARGE_AMOUNT) setRcMaxAmount(d.MAX_RECHARGE_AMOUNT);
+        if (d.DAILY_RECHARGE_LIMIT) setRcDailyLimit(d.DAILY_RECHARGE_LIMIT);
+        if (d.ORDER_TIMEOUT_MINUTES) setRcOrderTimeout(d.ORDER_TIMEOUT_MINUTES);
         if (d.MAX_PENDING_ORDERS) setRcMaxPendingOrders(d.MAX_PENDING_ORDERS);
+        if (d.RATE_VND) setRcRateVnd(d.RATE_VND);
+        if (d.RATE_USDT) setRcRateUsdt(d.RATE_USDT);
+        if (d.MIN_RECHARGE_AMOUNT_USDT) setRcMinAmountUsdt(d.MIN_RECHARGE_AMOUNT_USDT);
+        if (d.MAX_RECHARGE_AMOUNT_USDT) setRcMaxAmountUsdt(d.MAX_RECHARGE_AMOUNT_USDT);
 
         // Auto-create provider instances (only when no instances exist)
         const instDefaults = data.instanceDefaults || {};
