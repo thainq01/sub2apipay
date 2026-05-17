@@ -139,8 +139,6 @@ function getTexts(locale: Locale) {
 
 // ── Constants ──
 
-const ALL_PROVIDER_KEYS = ['sepay'] as const;
-
 const PAYMENT_TYPE_LABELS: Record<string, { vi: string; en: string }> = {
 };
 
@@ -379,30 +377,6 @@ function PaymentConfigContent() {
     } finally {
       setLoadingEnvDefaults(false);
     }
-  };
-
-  const toggleProvider = (key: string) => {
-    const current = rcEnabledProviders
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    // Prevent disabling if instances exist
-    if (current.includes(key) && instances.some((inst) => inst.providerKey === key)) {
-      setError(
-        locale === 'en'
-          ? `Cannot disable "${PROVIDER_LABELS[key]?.en || key}": instances exist. Delete all instances first.`
-          : `Cannot disable "${PROVIDER_LABELS[key]?.en || key}": instances exist. Delete all instances first.`,
-      );
-      return;
-    }
-    const next = current.includes(key) ? current.filter((k) => k !== key) : [...current, key];
-    setRcEnabledProviders(next.join(','));
-    // Auto-derive enabled payment types
-    const derivedTypes = new Set<string>();
-    for (const pk of next) {
-      for (const pt of PROVIDER_SUPPORTED_TYPES[pk] || []) derivedTypes.add(pt);
-    }
-    setRcEnabledPaymentTypes(Array.from(derivedTypes).join(','));
   };
 
   // ── Instance CRUD ──
@@ -874,36 +848,6 @@ function PaymentConfigContent() {
                       onChange={(e) => setRcMaxPendingOrders(e.target.value)}
                       className={[inputCls, '!w-20'].join(' ')}
                     />
-                  </div>
-                </div>
-
-                {/* Provider type badges */}
-                <div className="mb-3">
-                  <label className={labelCls}>{t.enabledProviders}</label>
-                  <div className="flex flex-wrap gap-2">
-                    {ALL_PROVIDER_KEYS.map((key) => {
-                      const isActive = rcEnabledProviders
-                        .split(',')
-                        .map((s) => s.trim())
-                        .includes(key);
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => toggleProvider(key)}
-                          className={[
-                            'rounded-lg border px-4 py-2 text-sm font-medium transition-all',
-                            isActive
-                              ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
-                              : isDark
-                                ? 'border-slate-500 bg-slate-700 text-slate-300 hover:border-slate-400'
-                                : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:bg-slate-50',
-                          ].join(' ')}
-                        >
-                          {PROVIDER_LABELS[key]?.[locale] || key}
-                        </button>
-                      );
-                    })}
                   </div>
                 </div>
 
