@@ -71,7 +71,12 @@ export default function SubscriptionConfirm({
           isDark ? 'border-slate-700 bg-slate-800/80' : 'border-slate-200 bg-white',
         ].join(' ')}
       >
-        <PlanInfoDisplay plan={plan} isDark={isDark} locale={locale} />
+        <PlanInfoDisplay
+          plan={plan}
+          isDark={isDark}
+          locale={locale}
+          forceCurrency={selectedPayment === 'bsc-usdt' ? 'usdt' : 'vnd'}
+        />
       </div>
 
       {/* Payment method selector - only show if multiple options */}
@@ -139,17 +144,32 @@ export default function SubscriptionConfirm({
       )}
 
       {/* Amount to pay */}
-      <div
-        className={[
-          'flex items-center justify-between rounded-xl border px-4 py-3',
-          isDark ? 'border-slate-700 bg-slate-800/60' : 'border-slate-200 bg-slate-50',
-        ].join(' ')}
-      >
-        <span className={['text-sm font-medium', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
-          {pickLocaleText(locale, 'Số tiền phải trả', 'Amount Due')}
-        </span>
-        <span className="text-xl font-bold text-emerald-500">{Math.round(plan.price).toLocaleString('vi-VN')} VND</span>
-      </div>
+      {(() => {
+        const isUsdt = selectedPayment === 'bsc-usdt' && plan.priceUsdt !== null;
+        return (
+          <div
+            className={[
+              'flex items-center justify-between rounded-xl border px-4 py-3',
+              isUsdt
+                ? isDark ? 'border-green-800 bg-green-950/30' : 'border-green-200 bg-green-50'
+                : isDark ? 'border-slate-700 bg-slate-800/60' : 'border-slate-200 bg-slate-50',
+            ].join(' ')}
+          >
+            <span className={['text-sm font-medium', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
+              {pickLocaleText(locale, 'Số tiền phải trả', 'Amount Due')}
+            </span>
+            {isUsdt ? (
+              <span className={['text-xl font-bold', isDark ? 'text-green-400' : 'text-green-600'].join(' ')}>
+                {plan.priceUsdt} USDT
+              </span>
+            ) : (
+              <span className="text-xl font-bold text-emerald-500">
+                {Math.round(plan.price).toLocaleString('vi-VN')} VND
+              </span>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Submit button */}
       <button

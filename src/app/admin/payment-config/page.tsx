@@ -39,8 +39,8 @@ function getTexts(locale: Locale) {
         overrideEnvConfig: 'Override Env Config',
         overrideEnvHint: 'When enabled, database settings override environment variables',
         enabledProviders: 'Enabled Provider Types',
-        minRechargeAmount: 'Min Recharge Amount',
-        maxRechargeAmount: 'Max Recharge Amount',
+        minRechargeAmount: 'Min Recharge Amount (VND)',
+        maxRechargeAmount: 'Max Recharge Amount (VND)',
         dailyRechargeLimit: 'Daily Limit (0=unlimited)',
         orderTimeoutMinutes: 'Order Timeout (min)',
         loadingEnvDefaults: 'Loading defaults...',
@@ -102,8 +102,8 @@ function getTexts(locale: Locale) {
         overrideEnvConfig: 'Override Env Config',
         overrideEnvHint: 'When enabled, database settings override environment variables',
         enabledProviders: 'Enabled Provider Types',
-        minRechargeAmount: 'Min Recharge Amount',
-        maxRechargeAmount: 'Max Recharge Amount',
+        minRechargeAmount: 'Min Recharge Amount (VND)',
+        maxRechargeAmount: 'Max Recharge Amount (VND)',
         dailyRechargeLimit: 'Daily Limit (0=unlimited)',
         orderTimeoutMinutes: 'Order Timeout (min)',
         loadingEnvDefaults: 'Loading defaults...',
@@ -138,8 +138,6 @@ function getTexts(locale: Locale) {
 }
 
 // ── Constants ──
-
-const ALL_PROVIDER_KEYS = ['sepay'] as const;
 
 const PAYMENT_TYPE_LABELS: Record<string, { vi: string; en: string }> = {
 };
@@ -231,6 +229,10 @@ function PaymentConfigContent() {
   const [rcMaxAmount, setRcMaxAmount] = useState('');
   const [rcDailyLimit, setRcDailyLimit] = useState('');
   const [rcOrderTimeout, setRcOrderTimeout] = useState('');
+  const [rcRateVnd, setRcRateVnd] = useState('');
+  const [rcRateUsdt, setRcRateUsdt] = useState('');
+  const [rcMinAmountUsdt, setRcMinAmountUsdt] = useState('');
+  const [rcMaxAmountUsdt, setRcMaxAmountUsdt] = useState('');
   const [loadingEnvDefaults, setLoadingEnvDefaults] = useState(false);
 
   // Instances
@@ -282,13 +284,17 @@ function PaymentConfigContent() {
         if (c.key === 'MAX_PENDING_ORDERS') setRcMaxPendingOrders(c.value || '3');
         if (c.key === 'ENABLED_PAYMENT_TYPES') setRcEnabledPaymentTypes(c.value);
         if (c.key === 'ENABLED_PROVIDERS') setRcEnabledProviders(c.value);
-        if (c.key === 'RECHARGE_MIN_AMOUNT') setRcMinAmount(c.value);
-        if (c.key === 'RECHARGE_MAX_AMOUNT') setRcMaxAmount(c.value);
+        if (c.key === 'MIN_RECHARGE_AMOUNT') setRcMinAmount(c.value);
+        if (c.key === 'MAX_RECHARGE_AMOUNT') setRcMaxAmount(c.value);
         if (c.key === 'DAILY_RECHARGE_LIMIT') setRcDailyLimit(c.value);
         if (c.key === 'ORDER_TIMEOUT_MINUTES') setRcOrderTimeout(c.value);
         if (c.key === 'LOAD_BALANCE_STRATEGY') setRcLoadBalanceStrategy(c.value || 'round-robin');
         if (c.key === 'SUB2API_ADMIN_API_KEY') setRcSub2apiKey(/\*{4,}/.test(c.value) ? '' : c.value);
         if (c.key === 'DEFAULT_DEDUCT_BALANCE') setRcAutoRefundEnabled(c.value === 'true');
+        if (c.key === 'RATE_VND') setRcRateVnd(c.value);
+        if (c.key === 'RATE_USDT') setRcRateUsdt(c.value);
+        if (c.key === 'MIN_RECHARGE_AMOUNT_USDT') setRcMinAmountUsdt(c.value);
+        if (c.key === 'MAX_RECHARGE_AMOUNT_USDT') setRcMaxAmountUsdt(c.value);
       }
       setRcOverrideEnv(hasOverride);
       setRcOverrideSaved(hasOverride);
@@ -331,11 +337,15 @@ function PaymentConfigContent() {
           .map((p: { key: string }) => p.key);
         setRcEnabledProviders(configuredProviders.join(','));
         setRcEnabledPaymentTypes(d.ENABLED_PAYMENT_TYPES || '');
-        setRcMinAmount(d.RECHARGE_MIN_AMOUNT || '1');
-        setRcMaxAmount(d.RECHARGE_MAX_AMOUNT || '1000');
-        setRcDailyLimit(d.DAILY_RECHARGE_LIMIT || '10000');
-        setRcOrderTimeout(d.ORDER_TIMEOUT_MINUTES || '5');
+        if (d.MIN_RECHARGE_AMOUNT) setRcMinAmount(d.MIN_RECHARGE_AMOUNT);
+        if (d.MAX_RECHARGE_AMOUNT) setRcMaxAmount(d.MAX_RECHARGE_AMOUNT);
+        if (d.DAILY_RECHARGE_LIMIT) setRcDailyLimit(d.DAILY_RECHARGE_LIMIT);
+        if (d.ORDER_TIMEOUT_MINUTES) setRcOrderTimeout(d.ORDER_TIMEOUT_MINUTES);
         if (d.MAX_PENDING_ORDERS) setRcMaxPendingOrders(d.MAX_PENDING_ORDERS);
+        if (d.RATE_VND) setRcRateVnd(d.RATE_VND);
+        if (d.RATE_USDT) setRcRateUsdt(d.RATE_USDT);
+        if (d.MIN_RECHARGE_AMOUNT_USDT) setRcMinAmountUsdt(d.MIN_RECHARGE_AMOUNT_USDT);
+        if (d.MAX_RECHARGE_AMOUNT_USDT) setRcMaxAmountUsdt(d.MAX_RECHARGE_AMOUNT_USDT);
 
         // Auto-create provider instances (only when no instances exist)
         const instDefaults = data.instanceDefaults || {};
@@ -367,30 +377,6 @@ function PaymentConfigContent() {
     } finally {
       setLoadingEnvDefaults(false);
     }
-  };
-
-  const toggleProvider = (key: string) => {
-    const current = rcEnabledProviders
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    // Prevent disabling if instances exist
-    if (current.includes(key) && instances.some((inst) => inst.providerKey === key)) {
-      setError(
-        locale === 'en'
-          ? `Cannot disable "${PROVIDER_LABELS[key]?.en || key}": instances exist. Delete all instances first.`
-          : `Cannot disable "${PROVIDER_LABELS[key]?.en || key}": instances exist. Delete all instances first.`,
-      );
-      return;
-    }
-    const next = current.includes(key) ? current.filter((k) => k !== key) : [...current, key];
-    setRcEnabledProviders(next.join(','));
-    // Auto-derive enabled payment types
-    const derivedTypes = new Set<string>();
-    for (const pk of next) {
-      for (const pt of PROVIDER_SUPPORTED_TYPES[pk] || []) derivedTypes.add(pt);
-    }
-    setRcEnabledPaymentTypes(Array.from(derivedTypes).join(','));
   };
 
   // ── Instance CRUD ──
@@ -588,8 +574,8 @@ function PaymentConfigContent() {
                     group: 'connection',
                     label: 'Sub2API Admin API Key',
                   },
-                  { key: 'RECHARGE_MIN_AMOUNT', value: rcMinAmount, group: 'payment', label: 'Min Recharge Amount' },
-                  { key: 'RECHARGE_MAX_AMOUNT', value: rcMaxAmount, group: 'payment', label: 'Max Recharge Amount' },
+                  { key: 'MIN_RECHARGE_AMOUNT', value: rcMinAmount, group: 'payment', label: 'Min Recharge Amount' },
+                  { key: 'MAX_RECHARGE_AMOUNT', value: rcMaxAmount, group: 'payment', label: 'Max Recharge Amount' },
                   { key: 'DAILY_RECHARGE_LIMIT', value: rcDailyLimit, group: 'payment', label: 'Daily Recharge Limit' },
                   { key: 'ORDER_TIMEOUT_MINUTES', value: rcOrderTimeout, group: 'payment', label: 'Order Timeout' },
                   { key: 'ENABLED_PROVIDERS', value: rcEnabledProviders, group: 'payment', label: 'Enabled Providers' },
@@ -599,6 +585,10 @@ function PaymentConfigContent() {
                     group: 'payment',
                     label: 'Enabled Payment Types',
                   },
+                  ...(rcRateVnd.trim() ? [{ key: 'RATE_VND', value: rcRateVnd.trim(), group: 'payment', label: 'VND per Coffee' }] : []),
+                  ...(rcRateUsdt.trim() ? [{ key: 'RATE_USDT', value: rcRateUsdt.trim(), group: 'payment', label: 'USDT per Coffee' }] : []),
+                  ...(rcMinAmountUsdt.trim() ? [{ key: 'MIN_RECHARGE_AMOUNT_USDT', value: rcMinAmountUsdt.trim(), group: 'payment', label: 'Min Recharge (USDT)' }] : []),
+                  ...(rcMaxAmountUsdt.trim() ? [{ key: 'MAX_RECHARGE_AMOUNT_USDT', value: rcMaxAmountUsdt.trim(), group: 'payment', label: 'Max Recharge (USDT)' }] : []),
                 ]
               : []),
           ],
@@ -861,36 +851,6 @@ function PaymentConfigContent() {
                   </div>
                 </div>
 
-                {/* Provider type badges */}
-                <div className="mb-3">
-                  <label className={labelCls}>{t.enabledProviders}</label>
-                  <div className="flex flex-wrap gap-2">
-                    {ALL_PROVIDER_KEYS.map((key) => {
-                      const isActive = rcEnabledProviders
-                        .split(',')
-                        .map((s) => s.trim())
-                        .includes(key);
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => toggleProvider(key)}
-                          className={[
-                            'rounded-lg border px-4 py-2 text-sm font-medium transition-all',
-                            isActive
-                              ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
-                              : isDark
-                                ? 'border-slate-500 bg-slate-700 text-slate-300 hover:border-slate-400'
-                                : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:bg-slate-50',
-                          ].join(' ')}
-                        >
-                          {PROVIDER_LABELS[key]?.[locale] || key}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 {/* Amount / timeout fields */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                   <div>
@@ -931,6 +891,58 @@ function PaymentConfigContent() {
                       value={rcOrderTimeout}
                       onChange={(e) => setRcOrderTimeout(e.target.value)}
                       className={inputCls}
+                    />
+                  </div>
+                </div>
+
+                {/* Rate and USDT recharge limit fields */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  <div>
+                    <label className={labelCls}>VND per Coffee</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={rcRateVnd}
+                      onChange={(e) => setRcRateVnd(e.target.value)}
+                      className={inputCls}
+                      placeholder="e.g. 2000"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>USDT per Coffee</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={rcRateUsdt}
+                      onChange={(e) => setRcRateUsdt(e.target.value)}
+                      className={inputCls}
+                      placeholder="e.g. 0.1"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Min Recharge (USDT)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={rcMinAmountUsdt}
+                      onChange={(e) => setRcMinAmountUsdt(e.target.value)}
+                      className={inputCls}
+                      placeholder="e.g. 0.1"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Max Recharge (USDT)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={rcMaxAmountUsdt}
+                      onChange={(e) => setRcMaxAmountUsdt(e.target.value)}
+                      className={inputCls}
+                      placeholder="e.g. 100"
                     />
                   </div>
                 </div>

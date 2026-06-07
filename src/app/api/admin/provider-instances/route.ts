@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '缺少必填字段: config (必须是对象)' }, { status: 400 });
     }
 
-    const validProviders = ['easypay', 'alipay', 'wxpay', 'stripe'];
+    const validProviders = ['easypay', 'alipay', 'wxpay', 'stripe', 'sepay', 'bsc-usdt'];
     if (!validProviders.includes(providerKey)) {
       return NextResponse.json({ error: `无效的 providerKey，可选值: ${validProviders.join(', ')}` }, { status: 400 });
     }

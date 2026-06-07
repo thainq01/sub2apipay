@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 const mockGetCurrentUserByToken = vi.fn();
 const mockGetUser = vi.fn();
 const mockGetSystemConfig = vi.fn();
+const mockGetRequiredNumericConfig = vi.fn();
 const mockQueryMethodLimits = vi.fn();
 const mockGetSupportedTypes = vi.fn();
 
@@ -14,8 +15,6 @@ vi.mock('@/lib/sub2api/client', () => ({
 
 vi.mock('@/lib/config', () => ({
   getEnv: () => ({
-    MIN_RECHARGE_AMOUNT: 1,
-    MAX_RECHARGE_AMOUNT: 1000,
     MAX_DAILY_RECHARGE_AMOUNT: 10000,
     PAY_HELP_IMAGE_URL: undefined,
     PAY_HELP_TEXT: undefined,
@@ -48,6 +47,7 @@ vi.mock('@/lib/locale', () => ({
 
 vi.mock('@/lib/system-config', () => ({
   getSystemConfig: (...args: unknown[]) => mockGetSystemConfig(...args),
+  getRequiredNumericConfig: (...args: unknown[]) => mockGetRequiredNumericConfig(...args),
 }));
 
 vi.mock('@/lib/payment/resolve-enabled-types', () => ({
@@ -85,6 +85,15 @@ describe('GET /api/user', () => {
       if (key === 'ENABLED_PAYMENT_TYPES') return undefined;
       if (key === 'BALANCE_PAYMENT_DISABLED') return 'false';
       return undefined;
+    });
+    mockGetRequiredNumericConfig.mockImplementation(async (key: string) => {
+      if (key === 'MIN_RECHARGE_AMOUNT') return 1;
+      if (key === 'MAX_RECHARGE_AMOUNT') return 1000;
+      if (key === 'RATE_VND') return 2000;
+      if (key === 'RATE_USDT') return 0.1;
+      if (key === 'MIN_RECHARGE_AMOUNT_USDT') return 0.1;
+      if (key === 'MAX_RECHARGE_AMOUNT_USDT') return 100;
+      throw new Error(`Missing required config: ${key}. Set it via admin UI or .env.`);
     });
   });
 
@@ -243,5 +252,48 @@ describe('GET /api/user', () => {
     expect(data.config).toHaveProperty('methodLimits');
     expect(data.config).toHaveProperty('balanceDisabled');
     expect(data.config).toHaveProperty('maxPendingOrders');
+  });
+
+  it('returns rate, rateUsdt, minAmountUsdt, maxAmountUsdt from DB config', async () => {
+    const response = await GET(createRequest());
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.config.rate).toBe(2000);
+    expect(data.config.rateUsdt).toBe(0.1);
+    expect(data.config.minAmount).toBe(1);
+    expect(data.config.maxAmount).toBe(1000);
+    expect(data.config.minAmountUsdt).toBe(0.1);
+    expect(data.config.maxAmountUsdt).toBe(100);
+  });
+
+  it('returns 500 when RATE_VND is missing', async () => {
+    mockGetRequiredNumericConfig.mockImplementation(async (key: string) => {
+      if (key === 'RATE_VND') throw new Error('Missing required config: RATE_VND. Set it via admin UI or .env.');
+      if (key === 'MIN_RECHARGE_AMOUNT') return 1;
+      if (key === 'MAX_RECHARGE_AMOUNT') return 1000;
+      if (key === 'RATE_USDT') return 0.1;
+      if (key === 'MIN_RECHARGE_AMOUNT_USDT') return 0.1;
+      if (key === 'MAX_RECHARGE_AMOUNT_USDT') return 100;
+      throw new Error(`Missing required config: ${key}. Set it via admin UI or .env.`);
+    });
+
+    const response = await GET(createRequest());
+    expect(response.status).toBe(500);
+  });
+
+  it('returns 500 when RATE_USDT is missing', async () => {
+    mockGetRequiredNumericConfig.mockImplementation(async (key: string) => {
+      if (key === 'RATE_USDT') throw new Error('Missing required config: RATE_USDT. Set it via admin UI or .env.');
+      if (key === 'MIN_RECHARGE_AMOUNT') return 1;
+      if (key === 'MAX_RECHARGE_AMOUNT') return 1000;
+      if (key === 'RATE_VND') return 2000;
+      if (key === 'MIN_RECHARGE_AMOUNT_USDT') return 0.1;
+      if (key === 'MAX_RECHARGE_AMOUNT_USDT') return 100;
+      throw new Error(`Missing required config: ${key}. Set it via admin UI or .env.`);
+    });
+
+    const response = await GET(createRequest());
+    expect(response.status).toBe(500);
   });
 });

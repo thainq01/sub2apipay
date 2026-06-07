@@ -14,6 +14,8 @@ interface SubscriptionPlan {
   description: string | null;
   price: number;
   originalPrice: number | null;
+  priceUsdt: number | null;
+  originalPriceUsdt: number | null;
   validDays: number;
   validityUnit: 'day' | 'week' | 'month';
   features: string[];
@@ -335,6 +337,8 @@ function SubscriptionsContent() {
   const [formDescription, setFormDescription] = useState('');
   const [formPrice, setFormPrice] = useState('');
   const [formOriginalPrice, setFormOriginalPrice] = useState('');
+  const [formPriceUsdt, setFormPriceUsdt] = useState('');
+  const [formOriginalPriceUsdt, setFormOriginalPriceUsdt] = useState('');
   const [formValidDays, setFormValidDays] = useState('30');
   const [formValidUnit, setFormValidUnit] = useState<'day' | 'week' | 'month'>('day');
   const [formFeatures, setFormFeatures] = useState('');
@@ -412,6 +416,8 @@ function SubscriptionsContent() {
     setFormDescription('');
     setFormPrice('');
     setFormOriginalPrice('');
+    setFormPriceUsdt('');
+    setFormOriginalPriceUsdt('');
     setFormValidDays('1');
     setFormValidUnit('month');
     setFormFeatures('');
@@ -428,6 +434,8 @@ function SubscriptionsContent() {
     setFormDescription(plan.description ?? '');
     setFormPrice(String(plan.price));
     setFormOriginalPrice(plan.originalPrice != null ? String(plan.originalPrice) : '');
+    setFormPriceUsdt(plan.priceUsdt != null ? String(plan.priceUsdt) : '');
+    setFormOriginalPriceUsdt(plan.originalPriceUsdt != null ? String(plan.originalPriceUsdt) : '');
     setFormValidDays(String(plan.validDays));
     setFormValidUnit(plan.validityUnit ?? 'day');
     setFormFeatures((plan.features ?? []).join('\n'));
@@ -453,6 +461,8 @@ function SubscriptionsContent() {
       description: formDescription.trim() || null,
       price: parseFloat(formPrice),
       original_price: formOriginalPrice ? parseFloat(formOriginalPrice) : null,
+      price_usdt: formPriceUsdt ? parseFloat(formPriceUsdt) : null,
+      original_price_usdt: formOriginalPriceUsdt ? parseFloat(formOriginalPriceUsdt) : null,
       validity_days: parseInt(formValidDays, 10) || 30,
       validity_unit: formValidUnit,
       features: formFeatures
@@ -1352,6 +1362,36 @@ function SubscriptionsContent() {
                     value={formOriginalPrice}
                     onChange={(e) => setFormOriginalPrice(e.target.value)}
                     className={inputCls}
+                  />
+                </div>
+              </div>
+
+              {/* USDT Prices */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Price (USDT)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="99999999.99"
+                    value={formPriceUsdt}
+                    onChange={(e) => setFormPriceUsdt(e.target.value)}
+                    className={inputCls}
+                    placeholder="e.g. 2.1"
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Original Price (USDT)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="99999999.99"
+                    value={formOriginalPriceUsdt}
+                    onChange={(e) => setFormOriginalPriceUsdt(e.target.value)}
+                    className={inputCls}
+                    placeholder="e.g. 3.0"
                   />
                 </div>
               </div>

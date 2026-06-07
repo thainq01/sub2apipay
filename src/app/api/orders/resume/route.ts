@@ -56,8 +56,36 @@ export async function GET(request: NextRequest) {
   const payAmount = Number(order.payAmount ?? order.amount);
   const transferCode = order.rechargeCode || order.id;
   let qrCode: string | undefined;
-  if (bankAccount && bankName) {
-    qrCode = `https://qr.sepay.vn/img?acc=${encodeURIComponent(bankAccount)}&bank=${encodeURIComponent(bankName)}&amount=${Math.round(payAmount)}&des=${encodeURIComponent(transferCode)}`;
+
+  // SePay: regenerate QR and bank info
+  let sepayBankInfo = null;
+  if (order.paymentType === 'sepay') {
+    if (bankAccount && bankName) {
+      qrCode = `https://qr.sepay.vn/img?acc=${encodeURIComponent(bankAccount)}&bank=${encodeURIComponent(bankName)}&amount=${Math.round(payAmount)}&des=${encodeURIComponent(transferCode)}`;
+    }
+    if (bankAccount) {
+      sepayBankInfo = {
+        bankName,
+        accountNumber: bankAccount,
+        accountName,
+        transferCode: order.rechargeCode || order.id,
+      };
+    }
+  }
+
+  // BSC USDT: regenerate wallet QR and payment info
+  let bscPaymentInfo = null;
+  if (order.paymentType === 'bsc-usdt') {
+    const walletAddress = env.BSC_WALLET_ADDRESS || '';
+    if (walletAddress) {
+      qrCode = walletAddress;
+      bscPaymentInfo = {
+        walletAddress,
+        network: 'BNB Smart Chain (BEP-20)',
+        tokenName: 'USDT',
+        usdtAmount: payAmount.toFixed(2),
+      };
+    }
   }
 
   const statusAccessToken = createOrderStatusAccessToken(order.id);
@@ -71,12 +99,8 @@ export async function GET(request: NextRequest) {
     expiresAt: order.expiresAt.toISOString(),
     statusAccessToken,
     qrCode: qrCode || null,
-    sepayBankInfo: bankAccount ? {
-      bankName,
-      accountNumber: bankAccount,
-      accountName,
-      transferCode: order.rechargeCode || order.id,
-    } : null,
+    sepayBankInfo,
+    bscPaymentInfo,
     orderType: order.orderType || 'balance',
   });
 }

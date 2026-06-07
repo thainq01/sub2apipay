@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { Locale } from '@/lib/locale';
 import { pickLocaleText } from '@/lib/locale';
 import { formatValidityLabel, formatValiditySuffix, type ValidityUnit } from '@/lib/subscription-utils';
@@ -13,6 +13,8 @@ export interface PlanInfo {
   name: string;
   price: number;
   originalPrice: number | null;
+  priceUsdt: number | null;
+  originalPriceUsdt: number | null;
   validityDays: number;
   validityUnit?: ValidityUnit;
   features: string[];
@@ -28,8 +30,8 @@ export interface PlanInfo {
   defaultMappedModel: string | null;
 }
 
-/** 套餐信息展示（Header + 价格 + 描述 + 倍率/限额 + 特性），不含操作按钮 */
-export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDark: boolean; locale: Locale }) {
+/** Plan info display — Header + price + description + rate/limits + features (no action buttons) */
+export function PlanInfoDisplay({ plan, isDark, locale, forceCurrency }: { plan: PlanInfo; isDark: boolean; locale: Locale; forceCurrency?: 'vnd' | 'usdt' }) {
   const unit = plan.validityUnit ?? 'day';
   const periodLabel = formatValidityLabel(plan.validityDays, unit, locale);
   const periodSuffix = formatValiditySuffix(plan.validityDays, unit, locale);
@@ -43,6 +45,11 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
   const isOpenAI = plan.platform?.toLowerCase() === 'openai';
   const ps = getPlatformStyle(plan.platform ?? '');
   const accentCls = isDark ? ps.accent.dark : ps.accent.light;
+
+  const hasUsdt = plan.priceUsdt !== null;
+  const [currency, setCurrency] = useState<'vnd' | 'usdt'>(forceCurrency ?? 'vnd');
+  const showToggle = hasUsdt && !forceCurrency;
+  const activeC = forceCurrency ?? currency;
 
   return (
     <>
@@ -77,14 +84,67 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
         </div>
 
         {/* Price */}
-        <div className="flex items-baseline gap-2">
-          {plan.originalPrice !== null && (
-            <span className={['text-sm line-through', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-              {Math.round(plan.originalPrice).toLocaleString('vi-VN')} VND
-            </span>
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            {activeC === 'vnd' ? (
+              <div className="flex items-baseline gap-2">
+                {plan.originalPrice !== null && (
+                  <span className={['text-sm line-through', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+                    {Math.round(plan.originalPrice).toLocaleString('vi-VN')}
+                  </span>
+                )}
+                <span className={['text-3xl font-bold', accentCls].join(' ')}>
+                  {Math.round(plan.price).toLocaleString('vi-VN')}
+                </span>
+                <span className={['text-base font-medium', accentCls].join(' ')}>VND</span>
+                <span className={['text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>{periodSuffix}</span>
+              </div>
+            ) : (
+              <div className="flex items-baseline gap-2">
+                {plan.originalPriceUsdt !== null && (
+                  <span className={['text-sm line-through', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+                    {plan.originalPriceUsdt}
+                  </span>
+                )}
+                <span className={['text-3xl font-bold', isDark ? 'text-green-400' : 'text-green-600'].join(' ')}>
+                  {plan.priceUsdt}
+                </span>
+                <span className={['text-base font-medium', isDark ? 'text-green-400' : 'text-green-600'].join(' ')}>USDT</span>
+                <span className={['text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>{periodSuffix}</span>
+              </div>
+            )}
+          </div>
+          {showToggle && (
+            <div className={[
+              'flex shrink-0 rounded-lg p-0.5 text-xs font-medium',
+              isDark ? 'bg-slate-700' : 'bg-slate-100',
+            ].join(' ')}>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setCurrency('vnd'); }}
+                className={[
+                  'rounded-md px-2 py-1 transition-colors',
+                  currency === 'vnd'
+                    ? isDark ? 'bg-slate-500 text-white' : 'bg-white text-slate-900 shadow-sm'
+                    : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700',
+                ].join(' ')}
+              >
+                VND
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setCurrency('usdt'); }}
+                className={[
+                  'rounded-md px-2 py-1 transition-colors',
+                  currency === 'usdt'
+                    ? isDark ? 'bg-green-700 text-green-100' : 'bg-green-100 text-green-700 shadow-sm'
+                    : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700',
+                ].join(' ')}
+              >
+                USDT
+              </button>
+            </div>
           )}
-          <span className={['text-3xl font-bold', accentCls].join(' ')}>{Math.round(plan.price).toLocaleString('vi-VN')} VND</span>
-          <span className={['text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>{periodSuffix}</span>
         </div>
       </div>
 
